@@ -1,0 +1,494 @@
+"use client";
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+
+interface ImageInput {
+  id?: string;
+  url: string;
+  alt?: string;
+  position?: number;
+}
+interface SizeInput {
+  id?: string;
+  label: string;
+  stock: number;
+}
+interface MetaBrand {
+  id: string;
+  name: string;
+}
+interface MetaCategory {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export function EditProductClient({ product }: { product: any }) {
+  const router = useRouter();
+  const [sku, setSku] = useState(product.sku || "");
+  const [name, setName] = useState(product.name || "");
+  const [description, setDescription] = useState(product.description || "");
+  const [price, setPrice] = useState((product.priceCents / 100).toFixed(2));
+  const [brandId, setBrandId] = useState<string | "">(product.brandId || "");
+  const [categoryId, setCategoryId] = useState<string | "">(
+    product.categoryId || ""
+  );
+  const [images, setImages] = useState<ImageInput[]>(
+    [...product.images].sort((a, b) => a.position - b.position)
+  );
+  const [sizes, setSizes] = useState<SizeInput[]>(product.sizes || []);
+  const [metaBrands, setMetaBrands] = useState<MetaBrand[]>([]);
+  const [metaCategories, setMetaCategories] = useState<MetaCategory[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [skuAvailable, setSkuAvailable] = useState<boolean | null>(null);
+  const [checkingSku, setCheckingSku] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [deleted, setDeleted] = useState<boolean>(!!product.deletedAt);
+
+  useEffect(() => {
+    fetch("/api/admin/meta")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.brands) setMetaBrands(d.brands);
+        if (d.categories) setMetaCategories(d.categories);
+      });
+  }, []);
+
+  // Debounced SKU availability check
+  useEffect(() => {
+    if (!sku.trim()) {
+      setSkuAvailable(null);
+      return;
+    }
+    const handle = setTimeout(() => {
+      setCheckingSku(true);
+      fetch(
+        `/api/admin/products/sku-check?sku=${encodeURIComponent(sku)}&exclude=${
+          product.id
+        }`
+      )
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then((d) => setSkuAvailable(!!d.available))
+        .catch(() => setSkuAvailable(null))
+        .finally(() => setCheckingSku(false));
+    }, 400);
+    return () => clearTimeout(handle);
+  }, [sku, product.id]);
+
+  // Derived duplicate size detection
+  const sizeLabelCollision = (() => {
+    const labels = sizes.map((s) => s.label.trim()).filter(Boolean);
+    return new Set(labels).size !== labels.length;
+  })();
+
+  function updateImage(idx: number, patch: Partial<ImageInput>) {
+    setImages((prev) =>
+      prev.map((im, i) => (i === idx ? { ...im, ...patch } : im))
+    );
+  }
+  function addImage() {
+    setImages((p) => [...p, { url: "", alt: "" }]);
+  }
+  function removeImage(i: number) {
+    setImages((p) => p.filter((_, idx) => idx !== i));
+  }
+  function moveImage(i: number, dir: -1 | 1) {
+    setImages((p) => {
+      const arr = [...p];
+      const j = i + dir;
+      if (j < 0 || j >= arr.length) return p;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      return arr;
+    });
+  }
+  const onDragStart = useCallback(
+    (index: number) => () => {
+      setDragIndex(index);
+    },
+    []
+  );
+  const onDragOver = useCallback(
+    (index: number) => (e: React.DragEvent) => {
+      e.preventDefault();
+      if (dragIndex === null || dragIndex === index) return;
+      setImages((p) => {
+        const arr = [...p];
+        const [moved] = arr.splice(dragIndex, 1);
+        arr.splice(index, 0, moved);
+        return arr;
+      });
+      setDragIndex(index);
+    },
+    [dragIndex]
+  );
+  const onDragEnd = useCallback(() => {
+    setDragIndex(null);
+  }, []);
+
+  // Auto-save image order (debounced) when images array changes (positions)
+  useEffect(() => {
+    // Only trigger after initial load (skip if saving currently or no product id)
+    if (!product?.id) return;
+    const handle = setTimeout(() => {
+      // Only send order if at least one image has position different from index
+      const payloadImages = images.map((im, idx) => ({
+        url: im.url.trim(),
+        alt: im.alt?.trim() || undefined,
+        position: idx,
+      }));
+      fetch(`/api/admin/products/${product.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sku: sku.trim(),
+          name: name.trim(),
+          description: description.trim(),
+          priceCents: Math.round(parseFloat(price || "0") * 100) || 0,
+          brandId: brandId || undefined,
+          categoryId: categoryId || undefined,
+          images: payloadImages,
+          sizes: sizes
+            .filter((s) => s.label.trim())
+            .map((s) => ({ label: s.label.trim(), stock: s.stock || 0 })),
+        }),
+      }).catch(() => {});
+    }, 900);
+    return () => clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [images]);
+  function updateSize(idx: number, patch: Partial<SizeInput>) {
+    setSizes((prev) =>
+      prev.map((s, i) => (i === idx ? { ...s, ...patch } : s))
+    );
+  }
+  function addSize() {
+    setSizes((p) => [...p, { label: "", stock: 0 }]);
+  }
+  function removeSize(i: number) {
+    setSizes((p) => p.filter((_, idx) => idx !== i));
+  }
+
+  async function onSave(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSaving(true);
+    try {
+      if (sizeLabelCollision) {
+        setError("Duplicate size labels");
+        setSaving(false);
+        return;
+      }
+      if (skuAvailable === false) {
+        setError("SKU not available");
+        setSaving(false);
+        return;
+      }
+      const priceFloat = parseFloat(price);
+      const payload = {
+        sku: sku.trim(),
+        name: name.trim(),
+        description: description.trim(),
+        priceCents: isNaN(priceFloat) ? 0 : Math.round(priceFloat * 100),
+        brandId: brandId || undefined,
+        categoryId: categoryId || undefined,
+        images: images
+          .filter((i) => i.url.trim())
+          .map((im, idx) => ({
+            url: im.url.trim(),
+            alt: im.alt?.trim() || undefined,
+            position: idx,
+          })),
+        sizes: sizes
+          .filter((s) => s.label.trim())
+          .map((s) => ({ label: s.label.trim(), stock: s.stock || 0 })),
+      };
+      const res = await fetch(`/api/admin/products/${product.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.error === "sku_exists") setError("SKU already exists");
+        else if (data.error === "invalid_payload")
+          setError("Validation failed");
+        else if (data.error === "forbidden") setError("Not an admin");
+        else if (data.error === "unauthorized") setError("Sign in required");
+        else setError("Update failed");
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setError("Network error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function onDelete() {
+    if (!confirm("Soft delete this product? It can be restored later.")) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setDeleted(true);
+        router.refresh();
+      } else setError("Delete failed");
+    } catch {
+      setError("Network error");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function onRestore() {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}/restore`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        setDeleted(false);
+        router.refresh();
+      } else setError("Restore failed");
+    } catch {
+      setError("Network error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={onSave} className="space-y-8">
+      <section className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <label className="text-sm font-medium">SKU</label>
+          <input
+            value={sku}
+            onChange={(e) => setSku(e.target.value)}
+            required
+            className="w-full border rounded px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Name</label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="w-full border rounded px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Brand</label>
+          <select
+            value={brandId}
+            onChange={(e) => setBrandId(e.target.value)}
+            className="w-full border rounded px-3 py-2 text-sm"
+          >
+            <option value="">(None)</option>
+            {metaBrands.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Category</label>
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className="w-full border rounded px-3 py-2 text-sm"
+          >
+            <option value="">(None)</option>
+            {metaCategories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1 max-w-xs">
+          <label className="text-sm font-medium">Price (USD)</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            required
+            className="w-full border rounded px-3 py-2 text-sm"
+          />
+        </div>
+      </section>
+      <section className="space-y-3">
+        <h2 className="font-medium text-sm uppercase tracking-wide">
+          Description
+        </h2>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={4}
+          className="w-full border rounded px-3 py-2 text-sm"
+        />
+      </section>
+      <section className="space-y-3">
+        <h2 className="font-medium text-sm uppercase tracking-wide">Images</h2>
+        <div className="space-y-4">
+          {images.map((img, i) => (
+            <div
+              key={i}
+              className={`grid md:grid-cols-2 gap-3 items-start border rounded p-2 ${
+                dragIndex === i ? "bg-neutral-50" : ""
+              }`}
+              draggable
+              onDragStart={onDragStart(i)}
+              onDragOver={onDragOver(i)}
+              onDragEnd={onDragEnd}
+            >
+              <input
+                placeholder="Image URL"
+                value={img.url}
+                onChange={(e) => updateImage(i, { url: e.target.value })}
+                required={i === 0}
+                className="border rounded px-3 py-2 text-sm"
+              />
+              <div className="flex gap-2 items-start">
+                <input
+                  placeholder="Alt text"
+                  value={img.alt}
+                  onChange={(e) => updateImage(i, { alt: e.target.value })}
+                  className="border rounded px-3 py-2 text-sm flex-1"
+                />
+                <div className="flex flex-col gap-1">
+                  <button
+                    type="button"
+                    onClick={() => moveImage(i, -1)}
+                    disabled={i === 0}
+                    className="text-[10px] px-2 py-1 border rounded disabled:opacity-30"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveImage(i, 1)}
+                    disabled={i === images.length - 1}
+                    className="text-[10px] px-2 py-1 border rounded disabled:opacity-30"
+                  >
+                    ↓
+                  </button>
+                </div>
+                {images.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    className="text-xs text-red-600 underline"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addImage}
+            className="text-xs underline"
+          >
+            + Add Image
+          </button>
+        </div>
+      </section>
+      <section className="space-y-3">
+        <h2 className="font-medium text-sm uppercase tracking-wide">Sizes</h2>
+        <div className="space-y-3">
+          {sizes.map((s, i) => (
+            <div key={i} className="flex gap-3 items-center">
+              <input
+                placeholder="Label"
+                value={s.label}
+                onChange={(e) => updateSize(i, { label: e.target.value })}
+                className="border rounded px-3 py-2 text-sm w-32"
+              />
+              <input
+                type="number"
+                min={0}
+                value={s.stock}
+                onChange={(e) =>
+                  updateSize(i, { stock: parseInt(e.target.value || "0", 10) })
+                }
+                className="border rounded px-3 py-2 text-sm w-28"
+              />
+              {sizes.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeSize(i)}
+                  className="text-xs text-red-600 underline"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          ))}
+          <button type="button" onClick={addSize} className="text-xs underline">
+            + Add Size
+          </button>
+        </div>
+      </section>
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      <div className="text-xs space-x-2">
+        {checkingSku && <span className="text-neutral-500">Checking SKU…</span>}
+        {sku && skuAvailable === true && (
+          <span className="text-green-600">SKU available</span>
+        )}
+        {sku && skuAvailable === false && (
+          <span className="text-red-600">SKU taken</span>
+        )}
+        {sizeLabelCollision && (
+          <span className="text-red-600">Duplicate size labels</span>
+        )}
+        {deleted && <span className="text-yellow-600">(Deleted)</span>}
+      </div>
+      <div className="flex gap-3 items-center">
+        <button
+          disabled={saving}
+          type="submit"
+          className="rounded bg-neutral-900 text-white px-4 py-2 text-sm font-medium hover:bg-neutral-800 disabled:opacity-50"
+        >
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+        {!deleted && (
+          <button
+            disabled={deleting}
+            type="button"
+            onClick={onDelete}
+            className="text-sm text-red-600 underline disabled:opacity-50"
+          >
+            {deleting ? "Deleting..." : "Delete Product"}
+          </button>
+        )}
+        {deleted && (
+          <button
+            type="button"
+            onClick={onRestore}
+            className="text-sm text-green-600 underline"
+          >
+            Restore
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => router.push("/admin/products")}
+          className="text-sm underline"
+        >
+          Back
+        </button>
+      </div>
+    </form>
+  );
+}
