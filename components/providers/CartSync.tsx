@@ -64,14 +64,38 @@ export function CartSync() {
             );
           }
         } else if (serverLines.length > 0 && items.length > 0) {
-          // merge both sets
+          // If local + server sets are identical (same line ids & quantities), skip work.
+          const localMap = new Map<string, number>();
+            for (const i of items) {
+              localMap.set(lineIdFor(i.productId, i.size), i.qty);
+            }
+          let identical = true;
+          if (serverLines.length !== localMap.size) {
+            identical = false;
+          } else {
+            for (const l of serverLines) {
+              const id = lineIdFor(l.productId, l.size);
+              if (localMap.get(id) !== l.qty) {
+                identical = false;
+                break;
+              }
+            }
+          }
+          if (identical) return; // nothing to sync/merge
+
+          // Merge strategy: start from server (authoritative), add any local-only lines.
+          // If a line exists in both, keep the larger quantity (avoid double adding).
           const merged = new Map<string, number>();
           for (const l of serverLines) {
             merged.set(lineIdFor(l.productId, l.size), l.qty);
           }
           for (const i of items) {
             const id = lineIdFor(i.productId, i.size);
-            merged.set(id, Math.min(99, (merged.get(id) || 0) + i.qty));
+            if (!merged.has(id)) {
+              merged.set(id, i.qty);
+            } else {
+              merged.set(id, Math.min(99, Math.max(merged.get(id) || 0, i.qty)));
+            }
           }
           const linesPayload = Array.from(merged.entries()).map(([id, qty]) => {
             const [productId, size] = id.split("__");
