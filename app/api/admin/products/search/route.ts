@@ -17,29 +17,50 @@ export async function GET(req: NextRequest) {
   const category = searchParams.get("category") || undefined;
   const includeDeleted = searchParams.get("deleted") === "1";
   if (!q && !brand && !category) return NextResponse.json({ items: [] });
-  const items = await prisma.product.findMany({
-    where: {
-      ...(includeDeleted ? {} : { deletedAt: null }),
-      ...(brand ? { brandId: brand } : {}),
-      ...(category ? { categoryId: category } : {}),
-      ...(q
-        ? {
-            OR: [
-              { name: { contains: q, mode: "insensitive" as const } },
-              { sku: { contains: q, mode: "insensitive" as const } },
-            ],
-          }
-        : {}),
-    },
-    orderBy: { createdAt: "desc" },
-    take: 30,
-    select: {
-      id: true,
-      name: true,
-      sku: true,
-      priceCents: true,
-      deletedAt: true,
-    },
-  });
+  // Build base filters excluding case-insensitive logic first
+  const baseFilters = {
+    ...(includeDeleted ? {} : { deletedAt: null }),
+    ...(brand ? { brandId: brand } : {}),
+    ...(category ? { categoryId: category } : {}),
+  } as const;
+
+  let items;
+  if (!q) {
+    items = await prisma.product.findMany({
+      where: baseFilters,
+      orderBy: { createdAt: "desc" },
+      take: 30,
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        priceCents: true,
+        deletedAt: true,
+      },
+    });
+  } else {
+    // Do a broader fetch limited by time/order first then filter in memory for case-insensitive match.
+    // This avoids unsupported 'mode' usage in Prisma with SQLite.
+    const preliminary = await prisma.product.findMany({
+      where: baseFilters,
+      orderBy: { createdAt: "desc" },
+      take: 120, // wider net before filtering
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        priceCents: true,
+        deletedAt: true,
+      },
+    });
+    const qLower = q.toLowerCase();
+    items = preliminary
+      .filter(
+        (p: { name: string; sku: string }) =>
+          p.name.toLowerCase().includes(qLower) ||
+          p.sku.toLowerCase().includes(qLower)
+      )
+      .slice(0, 30);
+  }
   return NextResponse.json({ items });
 }
