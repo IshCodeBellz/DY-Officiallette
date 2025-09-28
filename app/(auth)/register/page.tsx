@@ -44,7 +44,7 @@ export default function RegisterPage() {
           email,
           password,
           redirect: true,
-          callbackUrl: "/",
+          callbackUrl: "/", // will be overridden by middleware if admin
         });
       }
     } catch (e) {

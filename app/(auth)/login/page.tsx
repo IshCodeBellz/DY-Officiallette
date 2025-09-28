@@ -29,17 +29,21 @@ function LoginForm() {
     if (res?.error) {
       setError("Invalid credentials");
     } else {
-      // If user is admin and no explicit non-admin target, route to admin dashboard
-      const isAdmin = (session?.user as any)?.isAdmin;
-      if (
-        isAdmin &&
-        (callbackUrl === "/" || callbackUrl.startsWith("/login"))
-      ) {
-        router.push("/admin/products");
-      } else {
-        router.push(callbackUrl);
-      }
-      router.refresh();
+      // Refetch session (next-auth won't immediately populate useSession state synchronously)
+      setTimeout(async () => {
+        const { getSession } = await import("next-auth/react");
+        const s = await getSession();
+        const isAdmin = (s?.user as any)?.isAdmin;
+        if (
+          isAdmin &&
+          (callbackUrl === "/" || callbackUrl.startsWith("/login"))
+        ) {
+          router.push("/admin");
+        } else {
+          router.push(callbackUrl);
+        }
+        router.refresh();
+      }, 10);
     }
   }
 
@@ -48,7 +52,7 @@ function LoginForm() {
     if (typeof window !== "undefined") {
       const target = search.get("callbackUrl");
       if (!target || target === "/" || target.startsWith("/login")) {
-        router.replace("/admin/products");
+        router.replace("/admin");
       }
     }
   }

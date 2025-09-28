@@ -14,6 +14,7 @@ const validCategories = [
   "shoes",
   "accessories",
   "sportswear",
+  "face-body",
   "brands",
 ];
 
@@ -35,13 +36,18 @@ export default function CategoryPage({
   const [items, setItems] = useState<any[]>([]);
 
   useEffect(() => {
+    // If navigating to face-body, ensure any previously selected apparel size is cleared
+    if (category === "face-body" && size) {
+      setSize("");
+    }
     const controller = new AbortController();
     async function load() {
       setLoading(true);
       const params = new URLSearchParams();
       params.set("category", category);
       if (query) params.set("q", query);
-      if (size) params.set("size", size);
+      // Only include size filter for non face-body categories (apparel sizing)
+      if (size && category !== "face-body") params.set("size", size);
       if (price[0] !== 0) params.set("min", String(price[0]));
       if (price[1] !== 200) params.set("max", String(price[1]));
       try {
@@ -68,10 +74,37 @@ export default function CategoryPage({
     return () => controller.abort();
   }, [category, query, size, price]);
 
+  const isFaceBody = category === "face-body";
   return (
     <div className="container mx-auto px-4 py-10 space-y-10">
+      {isFaceBody && (
+        <section className="relative h-64 md:h-80 w-full overflow-hidden rounded-lg">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://picsum.photos/seed/facebody-hero/1600/900"
+            alt="Face and body care assortment"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+          <div className="relative z-10 h-full flex flex-col justify-end p-6 md:p-10 text-white">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+              Face + Body
+            </h1>
+            <p className="mt-2 max-w-xl text-sm md:text-base text-neutral-100">
+              Skincare, grooming & body care essentials — hydrate, protect and
+              glow.
+            </p>
+          </div>
+        </section>
+      )}
       <header className="flex flex-col md:flex-row md:items-end gap-4">
-        <h1 className="text-3xl font-bold capitalize">{category}</h1>
+        <h1
+          className={`text-3xl font-bold capitalize ${
+            isFaceBody ? "sr-only" : ""
+          }`}
+        >
+          {category}
+        </h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-400">
           Showing {items.length} items {loading && <span>(loading...)</span>}
         </p>
@@ -88,23 +121,25 @@ export default function CategoryPage({
             className="border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1 bg-white dark:bg-neutral-800"
           />
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs uppercase tracking-wide font-semibold">
-            Size
-          </label>
-          <select
-            value={size}
-            onChange={(e) => setSize(e.target.value)}
-            className="border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1 bg-white dark:bg-neutral-800"
-          >
-            <option value="">All</option>
-            {["XS", "S", "M", "L", "XL"].map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </div>
+        {!isFaceBody && (
+          <div className="flex flex-col gap-1">
+            <label className="text-xs uppercase tracking-wide font-semibold">
+              Size
+            </label>
+            <select
+              value={size}
+              onChange={(e) => setSize(e.target.value)}
+              className="border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1 bg-white dark:bg-neutral-800"
+            >
+              <option value="">All</option>
+              {["XS", "S", "M", "L", "XL"].map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="flex flex-col gap-1">
           <label className="text-xs uppercase tracking-wide font-semibold">
             Price ${price[0]} - ${price[1]}

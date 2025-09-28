@@ -23,7 +23,15 @@ export default async function AdminEditProductPage({
   if (!product) redirect("/admin/products");
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 space-y-8">
-      <h1 className="text-2xl font-semibold">Edit Product</h1>
+      <div className="flex items-center gap-3">
+        <a
+          href="/admin"
+          className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded border border-neutral-300 hover:bg-neutral-50"
+        >
+          ← Back
+        </a>
+        <h1 className="text-2xl font-semibold">Edit Product</h1>
+      </div>
       <EditProductClient product={product} />
     </div>
   );

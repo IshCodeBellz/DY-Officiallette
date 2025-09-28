@@ -25,8 +25,8 @@ async function main() {
     { slug: "shoes", name: "Shoes" },
     { slug: "accessories", name: "Accessories" },
     { slug: "sportswear", name: "Sportswear" },
-    { slug: "new-in", name: "New In" },
     { slug: "face-body", name: "Face + Body" },
+    { slug: "new-in", name: "New In" },
   ];
 
   const brands = await Promise.all(
@@ -62,6 +62,16 @@ async function main() {
     images: string[];
     sizes: string[];
   }> = [
+    {
+      sku: "FB-SERUM-NOVA-000",
+      name: "Nova Hydrating Face Serum",
+      desc: "Lightweight daily serum with hyaluronic acid and vitamin B5 for deep hydration.",
+      price: 28,
+      categorySlug: "face-body",
+      brandName: "Nova",
+      images: ["nova-serum-front", "nova-serum-dropper"],
+      sizes: ["30ml"],
+    },
     {
       sku: "TEE-BASIC-WHT-001",
       name: "Essential Cotton Tee - White",
@@ -162,27 +172,6 @@ async function main() {
       images: ["prime-athtee-front", "prime-athtee-vent"],
       sizes: ["S", "M", "L", "XL"],
     },
-    // Face + Body curated additions
-    {
-      sku: "FB-CLEANSER-NOVA-011",
-      name: "Nova Gentle Gel Cleanser",
-      desc: "pH-balanced daily facial cleanser with botanical extracts.",
-      price: 19,
-      categorySlug: "face-body",
-      brandName: "Nova",
-      images: ["nova-cleanser-front", "nova-cleanser-detail"],
-      sizes: ["ONE"],
-    },
-    {
-      sku: "FB-SERUM-AXIS-012",
-      name: "Axis Hydrating Serum 30ml",
-      desc: "Multi-weight hyaluronic acid serum for deep hydration.",
-      price: 29,
-      categorySlug: "face-body",
-      brandName: "Axis",
-      images: ["axis-serum-front", "axis-serum-drop"],
-      sizes: ["ONE"],
-    },
   ];
 
   for (let i = 0; i < curated.length; i++) {
@@ -246,6 +235,7 @@ async function main() {
       "shoes",
       "accessories",
       "sportswear",
+      "face-body",
       "new-in",
     ];
     const letterSizes = ["XS", "S", "M", "L", "XL"];

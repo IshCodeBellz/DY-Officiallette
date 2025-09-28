@@ -8,6 +8,7 @@ import {
   useStripe,
 } from "@stripe/react-stripe-js";
 import { useCart } from "@/components/providers/CartProvider";
+import { useSession } from "next-auth/react";
 import { formatPriceCents } from "@/lib/money";
 
 const stripePromise =
@@ -26,7 +27,8 @@ interface PrimedOrderData {
 }
 
 export default function CheckoutClient() {
-  const { items, subtotal, clear } = useCart();
+  const { items, subtotal, clear, hydrated } = useCart();
+  const { status: authStatus } = useSession();
   const [step, setStep] = useState<"form" | "payment" | "success">("form");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,6 +94,9 @@ export default function CheckoutClient() {
     setError(null);
     setLoading(true);
     try {
+      if (authStatus !== "authenticated")
+        throw new Error("Please sign in first");
+      if (!hydrated) throw new Error("Cart not ready yet");
       if (items.length === 0) throw new Error("Empty cart");
       // Persist cart to backend (replace existing)
       await fetch("/api/cart", {
@@ -135,8 +140,16 @@ export default function CheckoutClient() {
         }),
       });
       if (!checkoutRes.ok) {
-        const data = await checkoutRes.json().catch(() => ({}));
-        throw new Error(data.error || "Checkout failed");
+        const text = await checkoutRes.text();
+        let data: any = {};
+        try {
+          data = JSON.parse(text);
+        } catch {}
+        throw new Error(
+          data.error
+            ? `Checkout failed: ${data.error}`
+            : `Checkout failed (${checkoutRes.status})`
+        );
       }
       const checkoutData = await checkoutRes.json();
       // Create payment intent
@@ -146,8 +159,16 @@ export default function CheckoutClient() {
         body: JSON.stringify({ orderId: checkoutData.orderId }),
       });
       if (!piRes.ok) {
-        const data = await piRes.json().catch(() => ({}));
-        throw new Error(data.error || "Payment intent failed");
+        const text = await piRes.text();
+        let data: any = {};
+        try {
+          data = JSON.parse(text);
+        } catch {}
+        throw new Error(
+          data.error
+            ? `Payment intent failed: ${data.error}`
+            : `Payment intent failed (${piRes.status})`
+        );
       }
       const piData = await piRes.json();
       setPrimed({
@@ -189,6 +210,22 @@ export default function CheckoutClient() {
           }}
         />
       </Elements>
+    );
+  }
+
+  if (authStatus === "loading" || !hydrated) {
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <p className="text-sm text-neutral-600">Preparing checkout…</p>
+      </div>
+    );
+  }
+  if (authStatus !== "authenticated") {
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <h1 className="text-2xl font-semibold mb-4">Checkout</h1>
+        <p className="text-sm">Please sign in to continue.</p>
+      </div>
     );
   }
 

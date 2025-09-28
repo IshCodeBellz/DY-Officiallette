@@ -66,9 +66,9 @@ export function CartSync() {
         } else if (serverLines.length > 0 && items.length > 0) {
           // If local + server sets are identical (same line ids & quantities), skip work.
           const localMap = new Map<string, number>();
-            for (const i of items) {
-              localMap.set(lineIdFor(i.productId, i.size), i.qty);
-            }
+          for (const i of items) {
+            localMap.set(lineIdFor(i.productId, i.size), i.qty);
+          }
           let identical = true;
           if (serverLines.length !== localMap.size) {
             identical = false;
@@ -94,7 +94,10 @@ export function CartSync() {
             if (!merged.has(id)) {
               merged.set(id, i.qty);
             } else {
-              merged.set(id, Math.min(99, Math.max(merged.get(id) || 0, i.qty)));
+              merged.set(
+                id,
+                Math.min(99, Math.max(merged.get(id) || 0, i.qty))
+              );
             }
           }
           const linesPayload = Array.from(merged.entries()).map(([id, qty]) => {

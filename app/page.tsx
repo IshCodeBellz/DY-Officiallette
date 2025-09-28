@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import CategoryTiles from "../src/components/CategoryTiles";
 
 export default function HomePage() {
   return (
@@ -64,18 +63,33 @@ export default function HomePage() {
 
       <section className="container mx-auto px-4">
         <h2 className="text-2xl font-bold mb-6">Shop By Category</h2>
-        <CategoryTiles
-          tiles={[
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+          {[
             { label: "Clothing", slug: "clothing" },
             { label: "Shoes", slug: "shoes" },
             { label: "Accessories", slug: "accessories" },
             { label: "Sportswear", slug: "sportswear" },
             { label: "Face + Body", slug: "face-body" },
             { label: "Brands", slug: "brands" },
-            { label: "New In", slug: "new-in", highlight: true },
-          ]}
-          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4"
-        />
+            { label: "New In", slug: "new-in" },
+          ].map((cat) => (
+            <Link
+              key={cat.label}
+              href={`/${cat.slug}`}
+              className="relative aspect-square bg-neutral-100 rounded flex items-center justify-center text-center text-sm font-semibold hover:bg-neutral-200 transition"
+            >
+              {cat.label}
+              {cat.slug === "new-in" && (
+                <span
+                  className="absolute top-2 right-2 bg-rose-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold tracking-wide shadow"
+                  aria-label="New arrivals"
+                >
+                  NEW
+                </span>
+              )}
+            </Link>
+          ))}
+        </div>
       </section>
     </div>
   );

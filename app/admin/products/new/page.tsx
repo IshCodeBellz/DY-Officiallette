@@ -117,7 +117,16 @@ export default function NewProductPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">
-      <h1 className="text-2xl font-semibold mb-6">New Product</h1>
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          type="button"
+          onClick={() => router.push("/admin")}
+          className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded border border-neutral-300 hover:bg-neutral-50"
+        >
+          ← Back
+        </button>
+        <h1 className="text-2xl font-semibold">New Product</h1>
+      </div>
       <form onSubmit={onSubmit} className="space-y-8">
         <section className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">

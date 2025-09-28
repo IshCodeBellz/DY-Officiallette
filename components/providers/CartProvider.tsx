@@ -55,13 +55,18 @@ export function CommerceProviders({ children }: { children: React.ReactNode }) {
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(() =>
-    loadJSON<CartItem[]>(CART_KEY, [])
-  );
+  // Start with empty array on both server AND initial client render to keep
+  // markup identical and avoid hydration mismatch. We load from localStorage
+  // only after mount.
+  const [items, setItems] = useState<CartItem[]>([]);
   const mounted = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    const stored = loadJSON<CartItem[]>(CART_KEY, []);
+    if (stored.length) setItems(stored);
     mounted.current = true;
+    setHydrated(true);
   }, []);
   useEffect(() => {
     if (mounted.current) saveJSON(CART_KEY, items);
@@ -112,16 +117,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     clear,
     subtotal: subtotalCents / 100,
     totalQuantity,
+    hydrated,
   };
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<WishlistItem[]>(() =>
-    loadJSON<WishlistItem[]>(WISHLIST_KEY, [])
-  );
+  const [items, setItems] = useState<WishlistItem[]>([]);
   const mounted = useRef(false);
   useEffect(() => {
+    const stored = loadJSON<WishlistItem[]>(WISHLIST_KEY, []);
+    if (stored.length) setItems(stored);
     mounted.current = true;
   }, []);
   useEffect(() => {
@@ -159,6 +165,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     },
     [items]
   );
+  const clear = useCallback(() => setItems([]), []);
 
   const value: WishlistContextValue = {
     items,
@@ -167,6 +174,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     toggle,
     moveToCart,
     has,
+    clear,
   };
   return (
     <WishlistContext.Provider value={value}>

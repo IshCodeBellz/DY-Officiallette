@@ -30,6 +30,7 @@ export interface CartContextValue extends CartState {
   clear: () => void;
   subtotal: number;
   totalQuantity: number;
+  hydrated?: boolean; // true once local storage (or server sync) loaded
 }
 
 export interface WishlistContextValue extends WishlistState {
@@ -41,6 +42,7 @@ export interface WishlistContextValue extends WishlistState {
     addToCart: (item: ProductSummary, qty?: number) => void
   ) => void;
   has: (id: string) => boolean;
+  clear: () => void;
 }
 
 export function lineIdFor(productId: string, size?: string) {

@@ -8,6 +8,7 @@ An educational ASOS style fashion e‑commerce front-end clone built with the Ne
 - Tailwind CSS + utility components
 - Layout with sticky header + navigation + footer
 - Home page sections: Hero, Trending grid, Category grid
+  - Categories include Clothing, Shoes, Accessories, Sportswear, Face + Body, Brands, New In (with badge)
 - Basic global providers (React Query)
 - Client-side Cart & Wishlist (localStorage persistence)
 - Category quick add & wishlist toggle

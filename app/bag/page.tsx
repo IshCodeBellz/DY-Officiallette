@@ -1,10 +1,44 @@
 "use client";
 import { useCart } from "@/components/providers/CartProvider";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { formatPriceCents } from "@/lib/money";
 import Image from "next/image";
 
 export default function BagPage() {
   const { items, subtotal, updateQty, removeItem, clear } = useCart();
+  const { status: authStatus } = useSession();
+  const router = useRouter();
+  const [checkingOut, setCheckingOut] = useState(false);
+
+  async function handleCheckout() {
+    if (items.length === 0 || checkingOut) return;
+    setCheckingOut(true);
+    try {
+      if (authStatus !== "authenticated") {
+        // Send user to login, then back to checkout; fallback to /login if callback unsupported.
+        router.push(`/login?callbackUrl=${encodeURIComponent("/checkout")}`);
+        return;
+      }
+      // Persist latest cart snapshot to server before navigating so checkout API sees lines.
+      await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lines: items.map((i) => ({
+            productId: i.productId,
+            size: i.size,
+            qty: i.qty,
+          })),
+        }),
+      }).catch(() => {});
+      router.push("/checkout");
+    } finally {
+      // Do not reset immediately to avoid double-click during navigation
+      setTimeout(() => setCheckingOut(false), 800);
+    }
+  }
   return (
     <div className="container mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold tracking-tight mb-8">Your bag</h1>
@@ -77,10 +111,15 @@ export default function BagPage() {
             <span>{formatPriceCents(Math.round(subtotal * 100))}</span>
           </div>
           <button
-            disabled={items.length === 0}
-            className="btn-primary w-full mt-4"
+            disabled={items.length === 0 || checkingOut}
+            onClick={handleCheckout}
+            className="btn-primary w-full mt-4 disabled:opacity-50"
           >
-            Checkout
+            {checkingOut
+              ? authStatus === "authenticated"
+                ? "Loading checkout..."
+                : "Redirecting to sign in..."
+              : "Checkout"}
           </button>
         </aside>
       </div>
