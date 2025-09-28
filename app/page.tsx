@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import CategoryTiles from "../src/components/CategoryTiles";
 
 export default function HomePage() {
   return (
@@ -63,24 +64,18 @@ export default function HomePage() {
 
       <section className="container mx-auto px-4">
         <h2 className="text-2xl font-bold mb-6">Shop By Category</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-          {[
-            "Clothing",
-            "Shoes",
-            "Accessories",
-            "Sportswear",
-            "Face + Body",
-            "Brands",
-          ].map((cat) => (
-            <Link
-              key={cat}
-              href={`/category/${cat.toLowerCase()}`}
-              className="relative aspect-square bg-neutral-100 rounded flex items-center justify-center text-center text-sm font-semibold hover:bg-neutral-200 transition"
-            >
-              {cat}
-            </Link>
-          ))}
-        </div>
+        <CategoryTiles
+          tiles={[
+            { label: "Clothing", slug: "clothing" },
+            { label: "Shoes", slug: "shoes" },
+            { label: "Accessories", slug: "accessories" },
+            { label: "Sportswear", slug: "sportswear" },
+            { label: "Face + Body", slug: "face-body" },
+            { label: "Brands", slug: "brands" },
+            { label: "New In", slug: "new-in", highlight: true },
+          ]}
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4"
+        />
       </section>
     </div>
   );
