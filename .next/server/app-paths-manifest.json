@@ -1,4 +1,7 @@
 {
   "/page": "app/page.js",
-  "/account/page": "app/account/page.js"
+  "/account/page": "app/account/page.js",
+  "/(catalog)/[category]/page": "app/(catalog)/[category]/page.js",
+  "/bag/page": "app/bag/page.js",
+  "/saved/page": "app/saved/page.js"
 }

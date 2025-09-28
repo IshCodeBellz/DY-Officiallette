@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
+import { sendOrderConfirmation } from "@/lib/server/mailer";
 import { z } from "zod";
+import { rateLimit } from "@/lib/server/rateLimit";
+import { debug } from "@/lib/server/debug";
 
 // Basic Phase 3 draft checkout endpoint:
 // 1. Reads authenticated user's cart
@@ -19,83 +22,223 @@ const addressSchema = z.object({
   region: z.string().optional(),
   postalCode: z.string().min(1),
   country: z.string().min(2),
-  phone: z.string().optional()
+  phone: z.string().optional(),
 });
 
 const payloadSchema = z.object({
   shippingAddress: addressSchema,
   billingAddress: addressSchema.optional(),
   email: z.string().email().optional(),
-  // future: discountCode, shippingMethod, paymentMethod
+  discountCode: z.string().trim().toUpperCase().optional(),
+  idempotencyKey: z.string().min(8).max(100).optional(),
 });
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
-  if (!uid) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  let session: any = null;
+  let uid: string | undefined;
+  const testUser =
+    process.env.NODE_ENV === "test" ? req.headers.get("x-test-user") : null;
+  if (testUser) {
+    uid = testUser;
+    session = {
+      user: { id: testUser, email: "test@example.com", isAdmin: true },
+    };
+  } else {
+    session = await getServerSession(authOptions);
+    uid = (session?.user as any)?.id as string | undefined;
+  }
+  if (!uid) {
+    return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  }
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const bypassRate =
+    process.env.NODE_ENV === "test" &&
+    req.headers.get("x-test-bypass-rate-limit") === "1";
+  if (!bypassRate && !rateLimit(`checkout:${ip}`, 15, 60_000)) {
+    debug("CHECKOUT", "rate_limited");
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
   const body = await req.json().catch(() => null);
   const parsed = payloadSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
+  if (!parsed.success) {
+    debug("CHECKOUT", "invalid_payload", parsed.error.flatten());
+    return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
+  }
 
   // Load cart with product & size info
   const cart = await prisma.cart.findUnique({
     where: { userId: uid },
-    include: { lines: { include: { product: { include: { sizes: true } } } } }
+    include: { lines: { include: { product: { include: { sizes: true } } } } },
+  });
+  debug("CHECKOUT", "loaded_cart", {
+    user: uid,
+    cartId: cart?.id,
+    lines: cart?.lines.length,
   });
   if (!cart || cart.lines.length === 0) {
+    debug("CHECKOUT", "empty_cart");
     return NextResponse.json({ error: "empty_cart" }, { status: 400 });
   }
 
   // Validate stock + compute totals
   let subtotal = 0;
-  const stockErrors: Array<{ productId: string; size?: string; available: number }> = [];
+  const stockErrors: Array<{
+    productId: string;
+    size?: string;
+    available: number;
+  }> = [];
   for (const line of cart.lines) {
     const product = line.product;
     if (product.deletedAt) {
-      stockErrors.push({ productId: product.id, size: line.size || undefined, available: 0 });
+      stockErrors.push({
+        productId: product.id,
+        size: line.size || undefined,
+        available: 0,
+      });
       continue;
     }
-    const sizeVariant = line.size ? product.sizes.find(s => s.label === line.size) : undefined;
+    const sizeVariant = line.size
+      ? product.sizes.find((s) => s.label === line.size)
+      : undefined;
     const available = sizeVariant ? sizeVariant.stock : 999999; // if no size tracked assume plentiful
     if (line.qty > available) {
-      stockErrors.push({ productId: product.id, size: line.size || undefined, available });
+      stockErrors.push({
+        productId: product.id,
+        size: line.size || undefined,
+        available,
+      });
       continue;
     }
     subtotal += line.priceCentsSnapshot * line.qty;
   }
   if (stockErrors.length) {
-    return NextResponse.json({ error: "stock_conflict", stockErrors }, { status: 409 });
+    debug("CHECKOUT", "stock_conflict", stockErrors);
+    return NextResponse.json(
+      { error: "stock_conflict", stockErrors },
+      { status: 409 }
+    );
   }
 
-  // Placeholder tax/shipping calculations
-  const discountCents = 0;
-  const taxCents = Math.round(subtotal * 0.0); // later: proper tax logic
-  const shippingCents = 0; // later: shipping method based
+  const {
+    shippingAddress,
+    billingAddress,
+    email,
+    discountCode,
+    idempotencyKey,
+  } = parsed.data;
+
+  if (idempotencyKey) {
+    const existing = await prisma.order.findFirst({
+      where: {
+        userId: uid,
+        checkoutIdempotencyKey: idempotencyKey,
+      } as any, // cast due to incremental type mismatch after recent migration
+    });
+    if (existing) {
+      return NextResponse.json({
+        orderId: existing.id,
+        status: existing.status,
+        subtotalCents: existing.subtotalCents,
+        discountCents: existing.discountCents,
+        totalCents: existing.totalCents,
+        currency: existing.currency,
+        idempotent: true,
+      });
+    }
+  }
+
+  // Discount code application
+  let discountCents = 0;
+  let discountMeta: {
+    id?: string;
+    code?: string;
+    valueCents?: number;
+    percent?: number;
+  } = {};
+  if (discountCode) {
+    const now = new Date();
+    const dc = await prisma.discountCode.findUnique({
+      where: { code: discountCode.toUpperCase() },
+    });
+    if (dc && dc.startsAt && dc.startsAt > now) {
+      debug("CHECKOUT", "discount_not_started");
+      return NextResponse.json({ error: "invalid_discount" }, { status: 400 });
+    }
+    if (dc && dc.endsAt && dc.endsAt < now) {
+      debug("CHECKOUT", "discount_expired");
+      return NextResponse.json({ error: "invalid_discount" }, { status: 400 });
+    }
+    if (!dc) {
+      debug("CHECKOUT", "invalid_discount", discountCode);
+      return NextResponse.json({ error: "invalid_discount" }, { status: 400 });
+    }
+    if (dc.minSubtotalCents && subtotal < dc.minSubtotalCents) {
+      debug("CHECKOUT", "discount_min_subtotal", {
+        subtotal,
+        required: dc.minSubtotalCents,
+      });
+      return NextResponse.json(
+        { error: "discount_min_subtotal", required: dc.minSubtotalCents },
+        { status: 400 }
+      );
+    }
+    if (dc.usageLimit && dc.timesUsed >= dc.usageLimit) {
+      debug("CHECKOUT", "discount_exhausted");
+      return NextResponse.json(
+        { error: "discount_exhausted" },
+        { status: 400 }
+      );
+    }
+    if (dc.kind === "FIXED" && dc.valueCents) {
+      discountCents = Math.min(subtotal, dc.valueCents);
+      discountMeta = { id: dc.id, code: dc.code, valueCents: dc.valueCents };
+    } else if (dc.kind === "PERCENT" && dc.percent) {
+      discountCents = Math.min(
+        subtotal,
+        Math.floor((subtotal * dc.percent) / 100)
+      );
+      discountMeta = { id: dc.id, code: dc.code, percent: dc.percent };
+    }
+  }
+
+  const taxCents = Math.round(subtotal * 0.0); // placeholder
+  const shippingCents = 0;
   const totalCents = subtotal - discountCents + taxCents + shippingCents;
 
-  const { shippingAddress, billingAddress, email } = parsed.data;
-
   const result = await prisma.$transaction(async (tx) => {
-    // persist addresses (deduplicate by simple fingerprint later)
-    const shipping = await tx.address.create({ data: { ...shippingAddress, userId: uid } });
+    const shipping = await tx.address.create({
+      data: { ...shippingAddress, userId: uid },
+    });
     let billing = shipping;
     if (billingAddress) {
-      billing = await tx.address.create({ data: { ...billingAddress, userId: uid } });
+      billing = await tx.address.create({
+        data: { ...billingAddress, userId: uid },
+      });
     }
 
     const order = await tx.order.create({
       data: {
         userId: uid,
         status: "PENDING",
+        checkoutIdempotencyKey: idempotencyKey,
         subtotalCents: subtotal,
         discountCents,
         taxCents,
         shippingCents,
         totalCents,
-        email: email || (session?.user?.email as string) || shippingAddress.fullName + "@example.local",
+        email:
+          email ||
+          (session?.user?.email as string) ||
+          shippingAddress.fullName + "@example.local",
         shippingAddressId: shipping.id,
-        billingAddressId: billing.id
-      }
+        billingAddressId: billing.id,
+        discountCodeId: discountMeta.id,
+        discountCodeCode: discountMeta.code,
+        discountCodeValueCents: discountMeta.valueCents,
+        discountCodePercent: discountMeta.percent,
+      },
     });
 
     for (const line of cart.lines) {
@@ -103,36 +246,57 @@ export async function POST(req: NextRequest) {
         data: {
           orderId: order.id,
           productId: line.productId,
-            sku: line.product.sku,
+          sku: line.product.sku,
           nameSnapshot: line.product.name,
           size: line.size || null,
           qty: line.qty,
           unitPriceCents: line.priceCentsSnapshot,
-          lineTotalCents: line.priceCentsSnapshot * line.qty
-        }
+          lineTotalCents: line.priceCentsSnapshot * line.qty,
+        },
       });
-      // decrement stock if size variant present
       if (line.size) {
-        const sizeVariant = line.product.sizes.find(s => s.label === line.size);
+        const sizeVariant = line.product.sizes.find(
+          (s) => s.label === line.size
+        );
         if (sizeVariant) {
           await tx.sizeVariant.update({
             where: { id: sizeVariant.id },
-            data: { stock: Math.max(0, sizeVariant.stock - line.qty) }
+            data: { stock: Math.max(0, sizeVariant.stock - line.qty) },
           });
         }
       }
     }
 
+    if (discountMeta.id) {
+      await tx.discountCode.update({
+        where: { id: discountMeta.id },
+        data: { timesUsed: { increment: 1 } },
+      });
+    }
+
     return order;
   });
 
+  // Fire and forget (no await needed) but we purposely await to surface errors in development
+  if (session && session.user?.email && !testUser) {
+    try {
+      const userId = (session.user as any).id as string | undefined;
+      if (userId) {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (user) await sendOrderConfirmation(user, result);
+      }
+    } catch (e) {
+      console.error("order confirmation email failed", e);
+    }
+  }
   // TODO: invoke payment intent creation (Stripe) here and update order.status => AWAITING_PAYMENT
 
   return NextResponse.json({
     orderId: result.id,
     status: result.status,
     subtotalCents: result.subtotalCents,
+    discountCents,
     totalCents: result.totalCents,
-    currency: result.currency
+    currency: result.currency,
   });
 }

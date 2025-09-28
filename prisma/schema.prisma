@@ -141,6 +141,7 @@ model Order {
   id                String        @id @default(cuid())
   userId            String?
   status            String        @default("PENDING") // PENDING | AWAITING_PAYMENT | PAID | FULFILLING | SHIPPED | DELIVERED | CANCELLED | REFUNDED
+  checkoutIdempotencyKey String?  @unique
   subtotalCents     Int           // sum of item (priceSnapshot * qty)
   discountCents     Int           @default(0)
   taxCents          Int           @default(0)
@@ -159,6 +160,11 @@ model Order {
   billingAddress    Address?      @relation("BillingAddress", fields: [billingAddressId], references: [id])
   payments          PaymentRecord[]
   user              User?         @relation(fields: [userId], references: [id])
+  discountCodeId    String?
+  discountCodeCode  String?       // snapshot of applied code text
+  discountCodeValueCents Int?     // snapshot of discount value applied (for fixed codes) when relevant
+  discountCodePercent Int?        // snapshot percent value if percent based
+  discountCode       DiscountCode? @relation(fields: [discountCodeId], references: [id])
 
   @@index([userId])
   @@index([status])
@@ -220,4 +226,25 @@ model PaymentRecord {
   @@unique([provider, providerRef])
   @@index([orderId])
     @@index([status])
+}
+
+// Discount codes with simple fixed or percent logic (SQLite-friendly string type for kind)
+model DiscountCode {
+  id               String    @id @default(cuid())
+  code             String    @unique
+  kind             String    // FIXED | PERCENT
+  valueCents       Int?      // used when kind = FIXED
+  percent          Int?      // 1-100 when kind = PERCENT
+  minSubtotalCents Int?      // optional minimum cart subtotal requirement
+  usageLimit       Int?      // total uses allowed (global)
+  timesUsed        Int       @default(0)
+  startsAt         DateTime? // optional start date
+  endsAt           DateTime? // optional end date
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  orders           Order[]
+
+  @@index([code])
+  @@index([startsAt])
+  @@index([endsAt])
 }

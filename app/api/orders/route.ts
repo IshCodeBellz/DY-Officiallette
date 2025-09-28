@@ -19,8 +19,8 @@ export async function GET() {
       createdAt: true,
       currency: true,
       paidAt: true,
-      cancelledAt: true
-    }
+      cancelledAt: true,
+    },
   });
   return NextResponse.json({ orders });
 }

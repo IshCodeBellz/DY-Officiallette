@@ -9,4 +9,19 @@ module.exports = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
+  setupFilesAfterEnv: ["<rootDir>/tests/setup/sessionMock.ts"],
+  collectCoverageFrom: [
+    "app/**/*.{ts,tsx}",
+    "lib/**/*.{ts,tsx}",
+    "!app/**/page.tsx",
+    "!app/**/layout.tsx",
+  ],
+  coverageThreshold: {
+    global: {
+      lines: 70,
+      statements: 70,
+      branches: 60,
+      functions: 65,
+    },
+  },
 };
