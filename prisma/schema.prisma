@@ -83,6 +83,8 @@ model User {
   updatedAt    DateTime  @updatedAt
   cart         Cart?
   wishlist     Wishlist?
+  orders       Order[]
+  addresses    Address[]
 }
 
 model Cart {
@@ -131,4 +133,91 @@ model WishlistItem {
 
   @@unique([wishlistId, productId, size])
   @@index([productId])
+}
+
+// Phase 3: Order & Checkout domain models
+// We snapshot monetary values at order time to preserve historical accuracy even if product pricing changes later.
+model Order {
+  id                String        @id @default(cuid())
+  userId            String?
+  status            String        @default("PENDING") // PENDING | AWAITING_PAYMENT | PAID | FULFILLING | SHIPPED | DELIVERED | CANCELLED | REFUNDED
+  subtotalCents     Int           // sum of item (priceSnapshot * qty)
+  discountCents     Int           @default(0)
+  taxCents          Int           @default(0)
+  shippingCents     Int           @default(0)
+  totalCents        Int           // subtotal - discount + tax + shipping
+  currency          String        @default("USD")
+  email             String        // snapshot of customer email at time of order
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  paidAt            DateTime?
+  cancelledAt       DateTime?
+  items             OrderItem[]
+  shippingAddressId String?
+  billingAddressId  String?
+  shippingAddress   Address?      @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
+  billingAddress    Address?      @relation("BillingAddress", fields: [billingAddressId], references: [id])
+  payments          PaymentRecord[]
+  user              User?         @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id              String   @id @default(cuid())
+  orderId         String
+  productId       String   // reference for analytics; product could later be deleted
+  sku             String
+  nameSnapshot    String
+  size            String?
+  qty             Int      @default(1)
+  unitPriceCents  Int      // snapshot of price per unit at time of ordering
+  lineTotalCents  Int      // unitPriceCents * qty
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Address {
+  id         String    @id @default(cuid())
+  userId     String?
+  fullName   String
+  line1      String
+  line2      String?
+  city       String
+  region     String?   // state / province
+  postalCode String
+  country    String
+  phone      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       User?     @relation(fields: [userId], references: [id])
+  shippingOrders Order[] @relation("ShippingAddress")
+  billingOrders  Order[] @relation("BillingAddress")
+
+  @@index([userId])
+  @@index([country])
+}
+
+model PaymentRecord {
+  id              String       @id @default(cuid())
+  orderId         String
+  provider        String       // e.g. STRIPE
+  providerRef     String       // e.g. payment_intent id
+  amountCents     Int
+  currency        String       @default("USD")
+  status          String       @default("PAYMENT_PENDING") // PAYMENT_PENDING | AUTHORIZED | CAPTURED | FAILED | REFUNDED | CANCELLED
+  rawPayload      String?      // JSON string snapshot (SQLite lacks native JSON type)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  order           Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerRef])
+  @@index([orderId])
+    @@index([status])
 }
