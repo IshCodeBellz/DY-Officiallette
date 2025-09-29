@@ -19,7 +19,6 @@ export function SearchBar({ className }: Props) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Suggestion[]>([]);
-  const [activeIndex, setActiveIndex] = useState<number>(-1);
   const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<any>();
   const router = useRouter();
@@ -52,67 +51,29 @@ export function SearchBar({ className }: Props) {
     };
   }, [q]);
 
-  function submitSearch(term: string) {
-    const value = term.trim();
-    if (!value) return;
-    setOpen(false);
-    setActiveIndex(-1);
-    router.push(`/search?q=${encodeURIComponent(value)}`);
-  }
-
   return (
     <div className={cn("relative w-full max-w-md", className)}>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          submitSearch(q);
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        onFocus={() => {
+          if (items.length) setOpen(true);
         }}
-        role="search"
-        aria-label="Site search"
-      >
-        <input
-          value={q}
-          onChange={(e) => {
-            setQ(e.target.value);
-            setActiveIndex(-1);
-          }}
-          onFocus={() => {
-            if (items.length) setOpen(true);
-          }}
-          onBlur={() => setTimeout(() => setOpen(false), 150)}
-          onKeyDown={(e) => {
-            if (!open) return;
-            if (e.key === "ArrowDown") {
-              e.preventDefault();
-              setActiveIndex((i) => Math.min(items.length - 1, i + 1));
-            } else if (e.key === "ArrowUp") {
-              e.preventDefault();
-              setActiveIndex((i) => Math.max(-1, i - 1));
-            } else if (e.key === "Enter") {
-              if (activeIndex >= 0 && activeIndex < items.length) {
-                e.preventDefault();
-                const it = items[activeIndex];
-                router.push(`/product/${it.id}`);
-                setOpen(false);
-                return;
-              }
-              // fall through to form submit (already handled)
-            } else if (e.key === "Escape") {
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            const query = q.trim();
+            if (query) {
               setOpen(false);
+              router.push(`/search?q=${encodeURIComponent(query)}`);
             }
-          }}
-          type="search"
-          placeholder="Search for items and brands"
-          className="w-full rounded-full border border-neutral-300 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 bg-neutral-100 px-4 py-2 pr-16 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500"
-          aria-autocomplete="list"
-          aria-expanded={open}
-          aria-controls="search-suggestions"
-        />
-        {/* Submit button visually hidden but accessible to screen readers */}
-        <button type="submit" className="sr-only">
-          Search
-        </button>
-      </form>
+          }
+        }}
+        type="search"
+        placeholder="Search for items and brands"
+        className="w-full rounded-full border border-neutral-300 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100 bg-neutral-100 px-4 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500"
+      />
       <div className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-400">
         {loading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -121,21 +82,12 @@ export function SearchBar({ className }: Props) {
         )}
       </div>
       {open && items.length > 0 && (
-        <ul
-          id="search-suggestions"
-          role="listbox"
-          className="absolute z-50 mt-2 w-full overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg text-sm divide-y divide-neutral-100 dark:divide-neutral-800"
-        >
-          {items.map((it, idx) => (
-            <li key={it.id} role="option" aria-selected={idx === activeIndex}>
+        <ul className="absolute z-50 mt-2 w-full overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg text-sm divide-y divide-neutral-100 dark:divide-neutral-800">
+          {items.map((it) => (
+            <li key={it.id}>
               <Link
                 href={`/product/${it.id}`}
-                className={cn(
-                  "flex items-center gap-3 p-2 hover:bg-neutral-50 dark:hover:bg-neutral-800",
-                  idx === activeIndex && "bg-neutral-100 dark:bg-neutral-800"
-                )}
-                onMouseEnter={() => setActiveIndex(idx)}
-                onMouseLeave={() => setActiveIndex(-1)}
+                className="flex items-center gap-3 p-2 hover:bg-neutral-50 dark:hover:bg-neutral-800"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -152,7 +104,6 @@ export function SearchBar({ className }: Props) {
             <Link
               href={`/search?q=${encodeURIComponent(q)}`}
               className="block px-3 py-2 text-center text-xs uppercase tracking-wide font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800"
-              onClick={() => submitSearch(q)}
             >
               View all results
             </Link>
