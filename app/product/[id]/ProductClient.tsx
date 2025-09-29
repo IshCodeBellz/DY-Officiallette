@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart, useWishlist } from "@/components/providers/CartProvider";
 import { lineIdFor } from "@/lib/types";
+import { pushRecentlyViewed } from "@/components/home/RecentlyViewed";
 import { useToast } from "@/components/providers/ToastProvider";
 
 interface ProductClientProps {
@@ -23,6 +24,11 @@ export default function ProductClient({ product }: ProductClientProps) {
   const wishId = lineIdFor(product.id, size || undefined);
   const { push } = useToast();
 
+  // Track recently viewed (client only, once on mount / product change)
+  useEffect(() => {
+    pushRecentlyViewed(product.id);
+  }, [product.id]);
+
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     if (product.sizes.length && !size) {
@@ -39,6 +45,13 @@ export default function ProductClient({ product }: ProductClientProps) {
       },
       1
     );
+    // Fire-and-forget engagement event (add to cart)
+    try {
+      navigator.sendBeacon?.(
+        "/api/events",
+        new Blob([JSON.stringify([{ productId: product.id, type: "ADD_TO_CART" }])], { type: "application/json" })
+      );
+    } catch {}
     push({ type: "success", message: "Added to bag" });
   }
 
@@ -50,6 +63,12 @@ export default function ProductClient({ product }: ProductClientProps) {
       image: product.image,
       size: size || undefined,
     });
+    try {
+      navigator.sendBeacon?.(
+        "/api/events",
+        new Blob([JSON.stringify([{ productId: product.id, type: has(wishId) ? "UNWISHLIST" : "WISHLIST" }])], { type: "application/json" })
+      );
+    } catch {}
     push({
       type: has(wishId) ? "info" : "success",
       message: has(wishId) ? "Removed from saved" : "Saved",

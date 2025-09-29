@@ -248,3 +248,17 @@ model DiscountCode {
   @@index([startsAt])
   @@index([endsAt])
 }
+
+// Lightweight aggregated engagement metrics to power Trending Now.
+model ProductMetrics {
+  productId   String  @id
+  views       Int     @default(0) // tile impressions
+  detailViews Int     @default(0)
+  wishlists   Int     @default(0)
+  addToCart   Int     @default(0)
+  purchases   Int     @default(0)
+  updatedAt   DateTime @updatedAt
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([updatedAt])
+}
