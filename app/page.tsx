@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { RecentlyViewed } from "../components/home/RecentlyViewed";
 
 export default function HomePage() {
   return (
@@ -42,7 +43,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4">
+  {/* Recently Viewed (client only, appears when user has viewed >=3 products) */}
+  <RecentlyViewed />
+
+  <section className="container mx-auto px-4">
         <h2 className="text-2xl font-bold mb-6">Trending Now</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {Array.from({ length: 10 }).map((_, i) => (
@@ -66,12 +70,36 @@ export default function HomePage() {
         {/* Enhanced category grid: show primary categories as image cards & a wide New In banner */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 auto-rows-[140px] md:auto-rows-[160px]">
           {[
-            { label: "Clothing", slug: "clothing", img: "https://picsum.photos/seed/clothing/800/1000" },
-            { label: "Shoes", slug: "shoes", img: "https://picsum.photos/seed/shoes/800/1000" },
-            { label: "Accessories", slug: "accessories", img: "https://picsum.photos/seed/accessories/800/1000" },
-            { label: "Sportswear", slug: "sportswear", img: "https://picsum.photos/seed/sportswear/800/1000" },
-            { label: "Face + Body", slug: "face-body", img: "https://picsum.photos/seed/face-body/800/1000" },
-            { label: "Brands", slug: "brands", img: "https://picsum.photos/seed/brands/800/1000" },
+            {
+              label: "Clothing",
+              slug: "clothing",
+              img: "https://picsum.photos/seed/clothing/800/1000",
+            },
+            {
+              label: "Shoes",
+              slug: "shoes",
+              img: "https://picsum.photos/seed/shoes/800/1000",
+            },
+            {
+              label: "Accessories",
+              slug: "accessories",
+              img: "https://picsum.photos/seed/accessories/800/1000",
+            },
+            {
+              label: "Sportswear",
+              slug: "sportswear",
+              img: "https://picsum.photos/seed/sportswear/800/1000",
+            },
+            {
+              label: "Face + Body",
+              slug: "face-body",
+              img: "https://picsum.photos/seed/face-body/800/1000",
+            },
+            {
+              label: "Brands",
+              slug: "brands",
+              img: "https://picsum.photos/seed/brands/800/1000",
+            },
           ].map((cat) => (
             <Link
               key={cat.slug}
@@ -103,10 +131,15 @@ export default function HomePage() {
           >
             <div className="absolute inset-0 opacity-40 mix-blend-overlay bg-[url('https://picsum.photos/seed/newin/1200/600')] bg-cover bg-center" />
             <div className="relative z-10 text-center px-6">
-              <span className="block text-xs tracking-[0.2em] font-bold mb-1">JUST DROPPED</span>
-              <span className="block text-2xl md:text-3xl font-black tracking-tight">New In</span>
+              <span className="block text-xs tracking-[0.2em] font-bold mb-1">
+                JUST DROPPED
+              </span>
+              <span className="block text-2xl md:text-3xl font-black tracking-tight">
+                New In
+              </span>
               <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold bg-white/15 px-2 py-1 rounded-full backdrop-blur-sm border border-white/30 group-hover:bg-white/25 transition">
-                <span className="inline-block h-2 w-2 rounded-full bg-lime-300 animate-pulse" /> Fresh Styles Added
+                <span className="inline-block h-2 w-2 rounded-full bg-lime-300 animate-pulse" />{" "}
+                Fresh Styles Added
               </span>
             </div>
             <span className="absolute top-2 right-2 bg-white text-rose-600 text-[10px] px-2 py-0.5 rounded-full font-bold tracking-wide shadow">
