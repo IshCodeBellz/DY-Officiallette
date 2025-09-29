@@ -27,6 +27,13 @@ export default function ProductClient({ product }: ProductClientProps) {
   // Track recently viewed (client only, once on mount / product change)
   useEffect(() => {
     pushRecentlyViewed(product.id);
+    // Fire a DETAIL_VIEW engagement event
+    try {
+      navigator.sendBeacon?.(
+        "/api/events",
+        new Blob([JSON.stringify([{ productId: product.id, type: "DETAIL_VIEW" }])], { type: "application/json" })
+      );
+    } catch {}
   }, [product.id]);
 
   function handleAdd(e: React.FormEvent) {
@@ -49,7 +56,10 @@ export default function ProductClient({ product }: ProductClientProps) {
     try {
       navigator.sendBeacon?.(
         "/api/events",
-        new Blob([JSON.stringify([{ productId: product.id, type: "ADD_TO_CART" }])], { type: "application/json" })
+        new Blob(
+          [JSON.stringify([{ productId: product.id, type: "ADD_TO_CART" }])],
+          { type: "application/json" }
+        )
       );
     } catch {}
     push({ type: "success", message: "Added to bag" });
@@ -66,7 +76,17 @@ export default function ProductClient({ product }: ProductClientProps) {
     try {
       navigator.sendBeacon?.(
         "/api/events",
-        new Blob([JSON.stringify([{ productId: product.id, type: has(wishId) ? "UNWISHLIST" : "WISHLIST" }])], { type: "application/json" })
+        new Blob(
+          [
+            JSON.stringify([
+              {
+                productId: product.id,
+                type: has(wishId) ? "UNWISHLIST" : "WISHLIST",
+              },
+            ]),
+          ],
+          { type: "application/json" }
+        )
       );
     } catch {}
     push({

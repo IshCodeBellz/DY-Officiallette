@@ -2,7 +2,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { useWishlist, useCart } from "@/components/providers/CartProvider";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { lineIdFor } from "@/lib/types";
 import { formatPriceCents } from "@/lib/money";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -34,6 +34,7 @@ export default function CategoryPage({
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<any[]>([]);
+  const viewedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     // If navigating to face-body, ensure any previously selected apparel size is cleared
@@ -184,6 +185,30 @@ export default function CategoryPage({
             <div
               key={p.id}
               className="group relative bg-neutral-100 aspect-[3/4] overflow-hidden rounded flex flex-col"
+              ref={(el) => {
+                if (!el) return;
+                if (viewedRef.current.has(p.id)) return;
+                const io = new IntersectionObserver(
+                  (entries) => {
+                    entries.forEach((e) => {
+                      if (e.isIntersecting) {
+                        viewedRef.current.add(p.id);
+                        try {
+                          navigator.sendBeacon?.(
+                            "/api/events",
+                            new Blob([
+                              JSON.stringify([{ productId: p.id, type: "VIEW" }]),
+                            ], { type: "application/json" })
+                          );
+                        } catch {}
+                        io.disconnect();
+                      }
+                    });
+                  },
+                  { threshold: 0.4 }
+                );
+                io.observe(el);
+              }}
             >
               <Link href={`/product/${p.id}`} className="absolute inset-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -203,6 +228,16 @@ export default function CategoryPage({
                       priceCents: p.priceCents,
                       image: p.image,
                     });
+                    try {
+                      navigator.sendBeacon?.(
+                        "/api/events",
+                        new Blob([
+                          JSON.stringify([
+                            { productId: p.id, type: already ? "UNWISHLIST" : "WISHLIST" },
+                          ]),
+                        ], { type: "application/json" })
+                      );
+                    } catch {}
                     push({
                       type: already ? "info" : "success",
                       message: already ? "Removed from saved" : "Saved",
@@ -225,6 +260,14 @@ export default function CategoryPage({
                       },
                       1
                     );
+                    try {
+                      navigator.sendBeacon?.(
+                        "/api/events",
+                        new Blob([
+                          JSON.stringify([{ productId: p.id, type: "ADD_TO_CART" }]),
+                        ], { type: "application/json" })
+                      );
+                    } catch {}
                     push({ type: "success", message: "Added to bag" });
                   }}
                   className="rounded-full h-8 w-8 text-[11px] font-semibold flex items-center justify-center backdrop-blur bg-white/80 border border-transparent"

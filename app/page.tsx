@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { RecentlyViewed } from "../components/home/RecentlyViewed";
+import { TrendingNow } from "../components/home/TrendingNow";
 
 export default function HomePage() {
   return (
@@ -43,27 +44,11 @@ export default function HomePage() {
         </div>
       </section>
 
-  {/* Recently Viewed (client only, appears when user has viewed >=3 products) */}
-  <RecentlyViewed />
+      {/* Recently Viewed (client only, appears when user has viewed >=3 products) */}
+      <RecentlyViewed />
 
-  <section className="container mx-auto px-4">
-        <h2 className="text-2xl font-bold mb-6">Trending Now</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div
-              key={i}
-              className="group relative bg-neutral-100 aspect-[3/4] overflow-hidden rounded"
-            >
-              <Image
-                src={`https://picsum.photos/seed/trend-${i}/500/700`}
-                alt="Trending item"
-                fill
-                className="object-cover group-hover:scale-105 transition-transform"
-              />
-            </div>
-          ))}
-        </div>
-      </section>
+  {/* Data-driven Trending Now */}
+  <TrendingNow />
 
       <section className="container mx-auto px-4">
         <h2 className="text-2xl font-bold mb-6">Shop By Category</h2>
