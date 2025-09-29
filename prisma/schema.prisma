@@ -41,6 +41,7 @@ model Product {
   images        ProductImage[]
   sizes         SizeVariant[]
   wishlistItems WishlistItem[]
+  metrics       ProductMetrics?
 
   @@index([categoryId])
   @@index([brandId])
