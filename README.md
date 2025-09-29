@@ -1,6 +1,6 @@
-# ASOS Clone (Next.js 14 + Tailwind CSS)
+# DY OFFICIAL (Next.js 14 + Tailwind CSS)
 
-An educational ASOS style fashion e‑commerce front-end clone built with the Next.js App Router, Tailwind CSS, TypeScript and modern tooling.
+Educational fashion e‑commerce demo (formerly titled "ASOS Clone") built with the Next.js App Router, Tailwind CSS, TypeScript and modern tooling.
 
 ## Features
 
@@ -137,7 +137,7 @@ Utilities live in `app/globals.css`. Add component classes in `@layer components
 
 ## Disclaimer
 
-This is an educational clone, not affiliated with or endorsed by ASOS.
+This is an educational demo, not affiliated with or endorsed by ASOS.
 
 ## Admin Product API
 

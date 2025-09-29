@@ -37,8 +37,8 @@ export function Footer() {
       </div>
       <div className="container mx-auto px-4 mt-10 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p className="text-xs text-neutral-500">
-          &copy; {new Date().getFullYear()} ASOS Clone. Not affiliated with
-          ASOS.
+          &copy; {new Date().getFullYear()} DY Official. Independent demo
+          project not affiliated with ASOS.
         </p>
         <div className="flex gap-4 text-xs text-neutral-500">
           <span>Privacy</span>
