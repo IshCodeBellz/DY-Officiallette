@@ -63,32 +63,56 @@ export default function HomePage() {
 
       <section className="container mx-auto px-4">
         <h2 className="text-2xl font-bold mb-6">Shop By Category</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+        {/* Enhanced category grid: show primary categories as image cards & a wide New In banner */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 auto-rows-[140px] md:auto-rows-[160px]">
           {[
-            { label: "Clothing", slug: "clothing" },
-            { label: "Shoes", slug: "shoes" },
-            { label: "Accessories", slug: "accessories" },
-            { label: "Sportswear", slug: "sportswear" },
-            { label: "Face + Body", slug: "face-body" },
-            { label: "Brands", slug: "brands" },
-            { label: "New In", slug: "new-in" },
+            { label: "Clothing", slug: "clothing", img: "https://picsum.photos/seed/clothing/800/1000" },
+            { label: "Shoes", slug: "shoes", img: "https://picsum.photos/seed/shoes/800/1000" },
+            { label: "Accessories", slug: "accessories", img: "https://picsum.photos/seed/accessories/800/1000" },
+            { label: "Sportswear", slug: "sportswear", img: "https://picsum.photos/seed/sportswear/800/1000" },
+            { label: "Face + Body", slug: "face-body", img: "https://picsum.photos/seed/face-body/800/1000" },
+            { label: "Brands", slug: "brands", img: "https://picsum.photos/seed/brands/800/1000" },
           ].map((cat) => (
             <Link
-              key={cat.label}
+              key={cat.slug}
               href={`/${cat.slug}`}
-              className="relative aspect-square bg-neutral-100 rounded flex items-center justify-center text-center text-sm font-semibold hover:bg-neutral-200 transition"
+              className="group relative rounded-xl overflow-hidden ring-1 ring-neutral-200 bg-neutral-100 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-black/50 transition-all"
+              aria-label={`Shop ${cat.label}`}
             >
-              {cat.label}
-              {cat.slug === "new-in" && (
-                <span
-                  className="absolute top-2 right-2 bg-rose-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold tracking-wide shadow"
-                  aria-label="New arrivals"
-                >
-                  NEW
+              <Image
+                src={cat.img}
+                alt={cat.label}
+                fill
+                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 16vw"
+                className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/10 to-black/60" />
+              <div className="absolute bottom-2 left-2 right-2">
+                <span className="inline-block rounded bg-white/90 px-2 py-1 text-xs font-semibold tracking-wide text-neutral-900 backdrop-blur-sm shadow-sm group-hover:bg-white">
+                  {cat.label}
                 </span>
-              )}
+              </div>
             </Link>
           ))}
+
+          {/* New In banner spanning all columns */}
+          <Link
+            href="/new-in"
+            className="relative col-span-2 sm:col-span-3 md:col-span-6 h-[140px] md:h-[180px] overflow-hidden rounded-xl group flex items-center justify-center ring-2 ring-rose-200 bg-gradient-to-r from-rose-600 via-rose-500 to-orange-400 text-white shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-rose-400/50 transition-all"
+            aria-label="Shop New In arrivals"
+          >
+            <div className="absolute inset-0 opacity-40 mix-blend-overlay bg-[url('https://picsum.photos/seed/newin/1200/600')] bg-cover bg-center" />
+            <div className="relative z-10 text-center px-6">
+              <span className="block text-xs tracking-[0.2em] font-bold mb-1">JUST DROPPED</span>
+              <span className="block text-2xl md:text-3xl font-black tracking-tight">New In</span>
+              <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold bg-white/15 px-2 py-1 rounded-full backdrop-blur-sm border border-white/30 group-hover:bg-white/25 transition">
+                <span className="inline-block h-2 w-2 rounded-full bg-lime-300 animate-pulse" /> Fresh Styles Added
+              </span>
+            </div>
+            <span className="absolute top-2 right-2 bg-white text-rose-600 text-[10px] px-2 py-0.5 rounded-full font-bold tracking-wide shadow">
+              NEW
+            </span>
+          </Link>
         </div>
       </section>
     </div>
