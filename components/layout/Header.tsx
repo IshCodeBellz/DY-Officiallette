@@ -56,7 +56,7 @@ export function Header() {
                 href="/"
                 className="font-black text-lg md:text-xl tracking-tight whitespace-nowrap"
               >
-                DY <span className="text-brand-accent">OFFICIAL</span>
+                DY<span className="text-brand-accent">OFFICIAL</span>
               </Link>
               <SearchBar className="hidden md:flex flex-1" />
             </div>
@@ -317,7 +317,7 @@ export function Header() {
               </div>
             </div>
             <div className="px-4 py-3 border-t text-[10px] text-neutral-500">
-              © {new Date().getFullYear()} DY Official
+              © {new Date().getFullYear()} DYOFFICIAL
             </div>
           </div>
         </div>

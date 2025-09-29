@@ -1,4 +1,4 @@
-# DY OFFICIAL (Next.js 14 + Tailwind CSS)
+# DYOFFICIAL (Next.js 14 + Tailwind CSS)
 
 Educational fashion e‑commerce demo (formerly titled "ASOS Clone") built with the Next.js App Router, Tailwind CSS, TypeScript and modern tooling.
 

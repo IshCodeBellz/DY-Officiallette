@@ -8,9 +8,9 @@ import { CartSync } from "../components/providers/CartSync";
 import { AuthProvider } from "../components/providers/AuthProvider";
 
 export const metadata: Metadata = {
-  title: "DY Official",
+  title: "DYOFFICIAL",
   description:
-    "DY OFFICIAL fashion storefront built with Next.js 14 & Tailwind (educational demo)",
+    "DYOFFICIAL fashion storefront built with Next.js 14 & Tailwind (educational demo)",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
