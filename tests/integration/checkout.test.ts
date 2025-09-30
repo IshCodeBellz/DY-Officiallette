@@ -72,7 +72,10 @@ describe("checkout flow", () => {
     });
     const json = await res.json();
     expect(json.discountCents).toBe(500);
-    expect(json.totalCents).toBe(json.subtotalCents - 500);
+    // total = subtotal - discount + tax + shipping
+    expect(json.totalCents).toBe(
+      json.subtotalCents - 500 + (json.taxCents || 0) + (json.shippingCents || 0)
+    );
   });
 
   test("discount usage increments and then exhausts", async () => {

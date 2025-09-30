@@ -5,6 +5,8 @@ import { prisma } from "@/lib/server/prisma";
 import { sendOrderConfirmation } from "@/lib/server/mailer";
 import { z } from "zod";
 import { rateLimit } from "@/lib/server/rateLimit";
+import { buildDraftFromCart, calculateRates } from "@/lib/server/taxShipping";
+import { decrementSizeStock } from "@/lib/server/inventory";
 import { debug } from "@/lib/server/debug";
 import { withRequest } from "@/lib/server/logger";
 
@@ -263,8 +265,22 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     }
   }
 
-  const taxCents = Math.round(subtotal * 0.0); // placeholder
-  const shippingCents = 0;
+  // Dynamic tax & shipping
+  const rateDraft = buildDraftFromCart({
+    lines: cart.lines.map((l) => ({
+      priceCentsSnapshot: l.priceCentsSnapshot,
+      qty: l.qty,
+      productId: l.productId,
+    })),
+    destination: {
+      country: shippingAddress.country,
+      region: shippingAddress.region || null,
+      postalCode: shippingAddress.postalCode,
+    },
+  });
+  const rateResult = await calculateRates(rateDraft);
+  const taxCents = rateResult.taxCents;
+  const shippingCents = rateResult.shippingCents;
   const totalCents = subtotal - discountCents + taxCents + shippingCents;
 
   let result;
@@ -317,20 +333,10 @@ export const POST = withRequest(async function POST(req: NextRequest) {
           },
         });
         if (line.size) {
-          const sizeVariant = line.product.sizes.find(
-            (s) => s.label === line.size
-          );
+          const sizeVariant = line.product.sizes.find((s) => s.label === line.size);
           if (sizeVariant) {
-            // Atomic conditional decrement to avoid race oversell
-            const affected = await tx.$executeRawUnsafe(
-              `UPDATE SizeVariant SET stock = stock - ? WHERE id = ? AND stock >= ?`,
-              line.qty,
-              sizeVariant.id,
-              line.qty
-            );
-            if (!affected) {
-              throw new Error("STOCK_RACE_CONFLICT");
-            }
+            const ok = await decrementSizeStock(tx as any, sizeVariant.id, line.qty);
+            if (!ok) throw new Error("STOCK_RACE_CONFLICT");
           }
         }
       }
@@ -400,6 +406,8 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     status: result.status,
     subtotalCents: result.subtotalCents,
     discountCents,
+    taxCents: result.taxCents,
+    shippingCents: result.shippingCents,
     totalCents: result.totalCents,
     currency: result.currency,
   });
