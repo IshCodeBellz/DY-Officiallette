@@ -28,13 +28,13 @@ export default async function CategoryPage({
         suppressHydrationWarning
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'CollectionPage',
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
             name: category.name,
             mainEntity: {
-              '@type': 'ItemList',
+              "@type": "ItemList",
               itemListElement: category.products.map((p, idx) => ({
-                '@type': 'ListItem',
+                "@type": "ListItem",
                 position: idx + 1,
                 url: `https://example.com/product/${p.id}`,
                 name: p.name,

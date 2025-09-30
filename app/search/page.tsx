@@ -38,7 +38,7 @@ async function getData(params: PageSearchParams) {
   const url = `${base.replace(/\/$/, "")}/api/search?${sp.toString()}`;
   try {
     const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) return { items: [], facets: null, total: 0, totalCount: 0 };
+    if (!res.ok) return { items: [], facets: null, total: 0, totalCount: 0 };
     return res.json();
   } catch (e) {
     // Silent fallback; UI will show empty state
@@ -127,7 +127,10 @@ export default async function SearchPage({
             </ul>
           )}
           {data.items.length > 0 && totalPages > 1 && (
-            <nav className="flex items-center justify-center gap-2 pt-4 flex-wrap text-xs" aria-label="Pagination">
+            <nav
+              className="flex items-center justify-center gap-2 pt-4 flex-wrap text-xs"
+              aria-label="Pagination"
+            >
               {page > 1 && (
                 <Link
                   href={pageHref(page - 1)}
@@ -136,28 +139,30 @@ export default async function SearchPage({
                   Prev
                 </Link>
               )}
-              {Array.from({ length: totalPages }).slice(0, 7).map((_, idx) => {
-                const p = idx + 1;
-                if (p === page) {
+              {Array.from({ length: totalPages })
+                .slice(0, 7)
+                .map((_, idx) => {
+                  const p = idx + 1;
+                  if (p === page) {
+                    return (
+                      <span
+                        key={p}
+                        className="px-3 py-1 rounded border border-neutral-900 bg-neutral-900 text-white"
+                      >
+                        {p}
+                      </span>
+                    );
+                  }
                   return (
-                    <span
+                    <Link
                       key={p}
-                      className="px-3 py-1 rounded border border-neutral-900 bg-neutral-900 text-white"
+                      href={pageHref(p)}
+                      className="px-3 py-1 rounded border bg-white hover:bg-neutral-50"
                     >
                       {p}
-                    </span>
+                    </Link>
                   );
-                }
-                return (
-                  <Link
-                    key={p}
-                    href={pageHref(p)}
-                    className="px-3 py-1 rounded border bg-white hover:bg-neutral-50"
-                  >
-                    {p}
-                  </Link>
-                );
-              })}
+                })}
               {page < totalPages && (
                 <Link
                   href={pageHref(page + 1)}

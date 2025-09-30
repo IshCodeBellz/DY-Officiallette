@@ -234,11 +234,20 @@ export default function CheckoutClient() {
           </div>
         )}
         <div className="border rounded p-4 space-y-2 text-sm mb-6">
-          <div className="flex justify-between"><span>Subtotal</span><span>{formatPriceCents(primed.subtotalCents)}</span></div>
+          <div className="flex justify-between">
+            <span>Subtotal</span>
+            <span>{formatPriceCents(primed.subtotalCents)}</span>
+          </div>
           {primed.discountCents > 0 && (
-            <div className="flex justify-between text-green-700"><span>Discount</span><span>-{formatPriceCents(primed.discountCents)}</span></div>
+            <div className="flex justify-between text-green-700">
+              <span>Discount</span>
+              <span>-{formatPriceCents(primed.discountCents)}</span>
+            </div>
           )}
-          <div className="flex justify-between font-semibold border-t pt-2"><span>Total</span><span>{formatPriceCents(primed.totalCents)}</span></div>
+          <div className="flex justify-between font-semibold border-t pt-2">
+            <span>Total</span>
+            <span>{formatPriceCents(primed.totalCents)}</span>
+          </div>
         </div>
         <button
           className="btn-primary w-full mb-3"
@@ -273,7 +282,7 @@ export default function CheckoutClient() {
         </button>
         <button
           type="button"
-            className="w-full text-sm text-neutral-500 underline"
+          className="w-full text-sm text-neutral-500 underline"
           onClick={() => {
             // Allow user to go back and edit details
             setStep("form");

@@ -43,17 +43,17 @@ export default async function ProductPage({
         suppressHydrationWarning
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Product',
+            "@context": "https://schema.org",
+            "@type": "Product",
             name: product.name,
             description: product.description,
             sku: product.sku,
-            image: product.images.map((im:any)=>im.url),
+            image: product.images.map((im: any) => im.url),
             offers: {
-              '@type': 'Offer',
-              priceCurrency: 'USD',
+              "@type": "Offer",
+              priceCurrency: "USD",
               price: (product.priceCents / 100).toFixed(2),
-              availability: 'https://schema.org/InStock',
+              availability: "https://schema.org/InStock",
               url: `https://example.com/product/${product.id}`,
             },
             category: product.category?.name,

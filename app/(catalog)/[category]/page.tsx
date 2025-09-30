@@ -267,10 +267,10 @@ export default function CategoryPage({
                     onClick={(e) => {
                       if (hasSizes) {
                         // Open size chooser popover (toggle) instead of immediate add
-                        const host = (e.currentTarget.parentElement as HTMLElement)!
-                          .querySelector<HTMLElement>(
-                            "[data-size-popover]"
-                          );
+                        const host = (e.currentTarget
+                          .parentElement as HTMLElement)!.querySelector<HTMLElement>(
+                          "[data-size-popover]"
+                        );
                         if (host) host.toggleAttribute("data-open");
                         return;
                       }
@@ -332,7 +332,10 @@ export default function CategoryPage({
                                   new Blob(
                                     [
                                       JSON.stringify([
-                                        { productId: p.id, type: "ADD_TO_CART" },
+                                        {
+                                          productId: p.id,
+                                          type: "ADD_TO_CART",
+                                        },
                                       ]),
                                     ],
                                     { type: "application/json" }
@@ -343,9 +346,10 @@ export default function CategoryPage({
                                 type: "success",
                                 message: `Added ${s}`,
                               });
-                              const host = (document.querySelector(
-                                `[data-size-popover][data-open]`
-                              ) as HTMLElement) || null;
+                              const host =
+                                (document.querySelector(
+                                  `[data-size-popover][data-open]`
+                                ) as HTMLElement) || null;
                               host?.removeAttribute("data-open");
                             }}
                             className="px-2 py-1 text-[11px] rounded border border-neutral-300 hover:bg-neutral-100 active:bg-neutral-200"
@@ -356,9 +360,10 @@ export default function CategoryPage({
                       </div>
                       <button
                         onClick={() => {
-                          const host = (document.querySelector(
-                            `[data-size-popover][data-open]`
-                          ) as HTMLElement) || null;
+                          const host =
+                            (document.querySelector(
+                              `[data-size-popover][data-open]`
+                            ) as HTMLElement) || null;
                           host?.removeAttribute("data-open");
                         }}
                         className="mt-2 text-[10px] text-neutral-500 hover:text-neutral-700"

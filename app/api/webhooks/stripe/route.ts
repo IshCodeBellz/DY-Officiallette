@@ -38,14 +38,22 @@ export async function POST(req: NextRequest) {
 
   const pi = event.data?.object || event; // robust fallback in simulated mode
   const orderId = pi.metadata?.orderId;
-  if (!orderId) return NextResponse.json({ error: "no_order" }, { status: 400 });
+  if (!orderId)
+    return NextResponse.json({ error: "no_order" }, { status: 400 });
 
   // Idempotent: only move PENDING / AWAITING_PAYMENT -> PAID
-  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { items: true } });
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { items: true },
+  });
   if (!order) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  if (order.status === "PAID") return NextResponse.json({ ok: true, idempotent: true });
+  if (order.status === "PAID")
+    return NextResponse.json({ ok: true, idempotent: true });
   if (order.status !== "PENDING" && order.status !== "AWAITING_PAYMENT") {
-    return NextResponse.json({ error: "invalid_status", status: order.status }, { status: 400 });
+    return NextResponse.json(
+      { error: "invalid_status", status: order.status },
+      { status: 400 }
+    );
   }
 
   await prisma.$transaction(async (tx) => {
@@ -68,11 +76,18 @@ export async function POST(req: NextRequest) {
 
   // Fire-and-forget purchase events ingestion (non-blocking). We don't await to keep webhook fast.
   try {
-    fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/events`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(order.items.map(i => ({ type: 'PURCHASE', productId: i.productId })))
-    }).catch(() => {});
+    fetch(
+      `${
+        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+      }/api/events`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          order.items.map((i) => ({ type: "PURCHASE", productId: i.productId }))
+        ),
+      }
+    ).catch(() => {});
   } catch (_) {
     // ignore network errors in serverless env
   }

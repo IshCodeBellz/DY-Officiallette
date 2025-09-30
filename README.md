@@ -1,36 +1,107 @@
 # DYOFFICIAL (Next.js 14 + Tailwind CSS)
 
-Educational fashion e‑commerce demo (formerly titled "ASOS Clone") built with the Next.js App Router, Tailwind CSS, TypeScript and modern tooling.
+Educational fashion e‑commerce demo (formerly "ASOS Clone") showcasing modern commerce patterns: App Router, server + client composition, search relevance, analytics events, and a full checkout → payment → webhook lifecycle.
 
-## Features
+## Current Feature Set
 
-- Next.js 14 App Router
-- Tailwind CSS + utility components
-- Layout with sticky header + navigation + footer
-- Home page sections: Hero, Trending grid, Category grid
-  - Categories include Clothing, Shoes, Accessories, Sportswear, Face + Body, Brands, New In (with badge)
-- Basic global providers (React Query)
-- Client-side Cart & Wishlist (localStorage persistence)
-- Category quick add & wishlist toggle
-- Product page: size select, add to bag, save/remove
-- Bag page: quantity edit, remove, clear, subtotal summary
-- Saved items page: remove or move to bag
-- Image optimization domains configured
-- Live search suggestions & API (`/api/search`)
-- In-page category filtering (query/size/price)
-- Dark mode with persistent toggle
-- Real product data layer (Prisma + SQLite dev DB)
+### Platform & UI
 
-## Planned Enhancements
+- Next.js 14 App Router (RSC + edge-friendly patterns where practical)
+- Tailwind CSS utility-first styling
+- Global layout (sticky header, navigation, footer, dark mode persistence)
+- Home landing sections: Hero, Trending Now, Category grid, New In
+- Category pages with client filtering (search within page, size, price range)
+- Product gallery with:
+  - Multi-image thumbnails + keyboard & swipe navigation
+  - Zoom modal, preload of adjacent images, image index overlays
+  - Structured data (JSON-LD Product + ItemList for categories)
+- Wishlist & Cart UI (local → server sync strategy)
+- Quick-add button with size enforcement popover (cannot add size-tracked item without picking a size)
 
-- Faceted filtering + search suggestions (server driven)
-- Server rendered category filters & pagination
-- Dedicated /search results page
-- Account area & extended profile management
-- Checkout flow (Server Actions + payment provider)
-- SEO metadata (next-seo) & structured data
-- Move cart/wishlist persistence to server session / database
-- Accessibility pass & keyboard navigation audit
+### Data & Domain
+
+- Prisma schema: Products, Brands, Categories, Images, SizeVariants, Users, Cart/CartLines, Wishlist, Orders, OrderItems, PaymentRecords, DiscountCodes, ProductMetrics
+- SQLite for development (easy file reset); compatible with Postgres in production
+- Admin endpoints + pages for Brands, Categories, Products (SKU uniqueness, soft-delete / restore for products)
+- Random seed script for catalog variety (`prisma/seed-random.ts`)
+
+### Search & Discovery
+
+- `/api/search` relevance scoring (term frequency + field weighting)
+- Synonym & plural expansion (e.g. "hat" -> "hats", synonyms list)
+- Facets (category & brand counts) with scoped totals
+- Sorting: relevance, newest, price asc/desc, trending
+- Pagination with total counts & pages
+- Trending endpoint using time-decay on engagement metrics (views, detail views, wishlist, add-to-cart, purchases)
+- Raw SQL fallback path for resilience if complex query returns zero (defensive search robustness)
+
+### Analytics & Events
+
+- Lightweight event ingestion `/api/events` batching VIEW / DETAIL_VIEW / WISHLIST / ADD_TO_CART / PURCHASE
+- Aggregation into `ProductMetrics` via raw upsert (efficient increment patterns for SQLite/Postgres)
+- Purchase metrics incremented on payment webhook (plus optional events emission) powering Trending Now
+
+### Checkout & Payments
+
+- Checkout endpoint `/api/checkout`:
+  - Validates cart (stock, deleted items, size existence)
+  - Rebuild fallback from client-provided lines to avoid race where server cart not synced
+  - Discount code validation (fixed or percent + min subtotal + usage limits + temporal windows)
+  - Creates Order + snapshot OrderItems + address records (shipping / billing)
+  - Idempotency via optional `idempotencyKey`
+- Payment intent endpoint `/api/payments/intent` (Stripe or simulated when keys absent)
+- Stripe webhook `/api/webhooks/stripe` finalizes order (PAID) + metrics increment
+- Simulated payment mode UI when publishable key not configured (Confirm Payment button triggers webhook)
+- Success page + basic order status handling
+
+### Discounts
+
+- DiscountCode model supporting FIXED or PERCENT kinds
+- Live validation endpoint `/api/discount-codes/validate` + debounced client validation with feedback
+
+### Environment & Observability
+
+- Centralized env validation (`lib/server/env.ts`) logging grouped WARN/ERROR only once
+- Debug logging helper `debug(tag, event, payload)` sprinkled through checkout & search layers
+- Purchase/order flow integration test + unit tests for search expansion & trending decay
+
+### Testing
+
+```
+__tests__/searchExpansion.test.ts      # synonym & plural logic
+__tests__/trendingDecay.test.ts        # decay math correctness
+__tests__/checkoutFlow.int.test.ts     # full checkout → payment intent → webhook flow
+```
+
+Run with:
+
+```bash
+npm test
+```
+
+### Security & Data Integrity
+
+- Size & stock validation on checkout and cart API (clamps quantity, prevents over-selling in dev model)
+- Order + payment idempotency safeguards
+- Optional Stripe signature verification when `STRIPE_WEBHOOK_SECRET` configured
+- Rate limiting on checkout endpoint (simple token bucket)
+
+### SEO
+
+- Structured data: Product JSON-LD on PDP; ItemList / Collection context on category pages
+- Canonical product URL patterns prepared for future sitemap integration
+
+## Roadmap / Potential Enhancements
+
+- Full fuzzy search (typo tolerance) & brand boosting
+- Move cart & wishlist persistence fully server-side (DB) + SSR badges
+- Email templating (HTML) & retry / queue for transactional mail
+- Payment failure / refund events + PaymentRecord status transitions
+- Advanced analytics export (batch events to queue / worker)
+- Automated Lighthouse & a11y test pipeline
+- Graph-based recommendation ("Customers also viewed")
+
+---
 
 ## Getting Started
 
@@ -68,7 +139,7 @@ npx prisma studio
 npm run dev
 ```
 
-API routes:
+API routes (selected):
 
 - `GET /api/products` list (filters: q, category, size, min, max, page, pageSize)
 - `GET /api/products/:id` detail
@@ -102,10 +173,11 @@ Wishlist:
 Persistence: `localStorage` keys `app.cart.v1` & `app.wishlist.v1`.
 Graceful JSON parse failure fallback to empty arrays.
 
-Limitations:
+Limitations / Notes:
 
-- No inventory or stock validation yet
-- Counts hydrate client-side (no SSR hydration state yet)
+- Local cart is authoritative until first authenticated sync; server rebuild fallback handles race for checkout
+- Stock logic is simplistic (no reservations / optimistic locking yet)
+- Counts hydrate client-side (no SSR hydration of bag count yet)
 
 ### Pricing Model
 
@@ -135,11 +207,55 @@ Planned improvements:
 
 Utilities live in `app/globals.css`. Add component classes in `@layer components`.
 
+## Events & Metrics
+
+Endpoint: `POST /api/events` accepts JSON array of `{ productId, type }`.
+
+Accumulated counters in `ProductMetrics`:
+
+- views, detailViews, wishlists, addToCart, purchases
+
+Used by Trending algorithm (time decay + weight factors) and for purchase popularity.
+
+## Environment Variables
+
+Copy `.env.example` → `.env` and adjust. Key variables:
+
+| Variable                           | Purpose                                              |
+| ---------------------------------- | ---------------------------------------------------- |
+| NEXTAUTH_SECRET                    | Session encryption secret                            |
+| DATABASE_URL                       | Prisma connection (SQLite file or Postgres URL)      |
+| NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY | Enables real PaymentElement UI                       |
+| STRIPE_SECRET_KEY                  | Server-side Stripe API calls                         |
+| STRIPE_WEBHOOK_SECRET              | Verifies incoming Stripe webhooks                    |
+| RESEND_API_KEY                     | Email provider (optional; logs to console if absent) |
+
+`lib/server/env.ts` logs grouped warnings once on first Stripe usage / webhook request.
+
+## Stripe Setup
+
+1. Add keys to `.env`.
+2. Run dev server, ensure publishable key presence removes simulated payment message.
+3. Start listener:
+
+```bash
+stripe listen --events payment_intent.succeeded --forward-to http://localhost:3000/api/webhooks/stripe
+```
+
+4. Copy the `whsec_...` secret to `STRIPE_WEBHOOK_SECRET` and restart.
+5. Use test card `4242 4242 4242 4242` in checkout.
+
+## Simulated Payment Mode
+
+If `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is missing, checkout falls back to a simulated payment confirmation screen (no external network call); a synthetic webhook payload finalizes the order & metrics.
+
 ## Disclaimer
 
 This is an educational demo, not affiliated with or endorsed by ASOS.
 
-## Admin Product API
+## Admin / Management APIs
+
+### Products
 
 An admin-only endpoint allows creating products.
 
@@ -172,3 +288,42 @@ Payload example:
 ```
 
 Errors: `unauthorized`, `forbidden`, `sku_exists`, `invalid_payload`.
+
+### Brands / Categories
+
+`POST /api/admin/brands` & `POST /api/admin/categories` simple CRUD (name/slug uniqueness). Admin pages exist for quick management.
+
+### Discount Codes
+
+`POST /api/discount-codes` (admin) & `GET /api/discount-codes/validate?code=XYZ` (client validation). Supports fixed or percent, usage limit, min subtotal, start/end windows.
+
+## Orders & Payments
+
+Lifecycle:
+
+1. Local cart sync → `/api/checkout` (creates PENDING order)
+2. `/api/payments/intent` returns Stripe PaymentIntent (moves order → AWAITING_PAYMENT) or simulated intent
+3. Stripe (or simulated) webhook marks order PAID + increments purchase metrics
+4. Future: fulfillment states (FULFILLING, SHIPPED, DELIVERED) & refunds
+
+## Tests
+
+Run all tests:
+
+```bash
+npm test
+```
+
+Add focused test with watch mode (Jest default; see `jest.config.js`).
+
+## Quick-Add Size Enforcement
+
+Grid “+” now opens a size popover if the product has size variants. This ensures orders always include a size for size-governed products. PDP add-to-bag already enforced selection via client alert.
+
+## Contributing / Local Development Tips
+
+- Reset DB: delete `prisma/dev.db` then run `npx prisma migrate dev --name init && ts-node prisma/seed-random.ts` (or npm script variant)
+- Inspect metrics: `sqlite3 prisma/dev.db "SELECT * FROM ProductMetrics ORDER BY purchases DESC LIMIT 10;"`
+- Update env and restart dev server to ensure Next.js picks changes.
+
+---

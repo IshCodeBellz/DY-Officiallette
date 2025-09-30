@@ -60,10 +60,10 @@ export default async function CheckoutSuccessPage({
             <span>Tax</span>
             <span>{formatPriceCents(order.taxCents)}</span>
           </div>
-            <div className="flex justify-between">
-              <span>Shipping</span>
-              <span>{formatPriceCents(order.shippingCents)}</span>
-            </div>
+          <div className="flex justify-between">
+            <span>Shipping</span>
+            <span>{formatPriceCents(order.shippingCents)}</span>
+          </div>
           <div className="flex justify-between font-semibold border-t pt-2">
             <span>Total</span>
             <span>{formatPriceCents(order.totalCents)}</span>

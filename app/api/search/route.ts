@@ -111,7 +111,8 @@ export async function GET(req: NextRequest) {
   }
 
   // Always fetch a bit more when trending or relevance so we can score then slice
-  const overFetchMultiplier = sort === "trending" || sort === "relevance" ? 2 : 1;
+  const overFetchMultiplier =
+    sort === "trending" || sort === "relevance" ? 2 : 1;
   const take = Math.min(limit * overFetchMultiplier, 100);
 
   // totalCount for pagination (without skip/limit)
@@ -383,10 +384,10 @@ export async function GET(req: NextRequest) {
   if (!includeFacets) {
     return NextResponse.json({
       items,
-  total: items.length,
-  totalCount,
-  page,
-  pageSize: limit,
+      total: items.length,
+      totalCount,
+      page,
+      pageSize: limit,
       ...(debugRequested
         ? {
             debug: {
@@ -416,7 +417,10 @@ export async function GET(req: NextRequest) {
   const [allCategories, allBrands, priceAgg] = await Promise.all([
     prisma.category.findMany({ select: { id: true, slug: true, name: true } }),
     prisma.brand.findMany({ select: { id: true, name: true } }),
-    prisma.product.aggregate({ _min: { priceCents: true }, _max: { priceCents: true } }),
+    prisma.product.aggregate({
+      _min: { priceCents: true },
+      _max: { priceCents: true },
+    }),
   ]);
 
   // Count per category under current (non-category) constraints

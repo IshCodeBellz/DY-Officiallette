@@ -88,13 +88,17 @@ export async function POST(req: NextRequest) {
   if (!cart || cart.lines.length === 0) {
     // Attempt fallback rebuild if client provided lines (recent sync race)
     if (parsed.success && parsed.data.lines && parsed.data.lines.length) {
-      debug("CHECKOUT", "rebuild_cart_attempt", { count: parsed.data.lines.length });
+      debug("CHECKOUT", "rebuild_cart_attempt", {
+        count: parsed.data.lines.length,
+      });
       // Get or create cart record
       cart = await prisma.cart.upsert({
         where: { userId: uid },
         update: {},
         create: { userId: uid },
-        include: { lines: { include: { product: { include: { sizes: true } } } } },
+        include: {
+          lines: { include: { product: { include: { sizes: true } } } },
+        },
       });
       // Clear any existing (should be zero) then recreate
       await prisma.cartLine.deleteMany({ where: { cartId: cart.id } });
@@ -108,7 +112,7 @@ export async function POST(req: NextRequest) {
         if (l.size) {
           const sv = product.sizes.find((s) => s.label === l.size);
           if (!sv) continue;
-            finalQty = Math.min(finalQty, sv.stock, 99);
+          finalQty = Math.min(finalQty, sv.stock, 99);
           if (finalQty <= 0) continue;
         } else {
           finalQty = Math.min(finalQty, 99);
@@ -125,7 +129,9 @@ export async function POST(req: NextRequest) {
       }
       cart = await prisma.cart.findUnique({
         where: { userId: uid },
-        include: { lines: { include: { product: { include: { sizes: true } } } } },
+        include: {
+          lines: { include: { product: { include: { sizes: true } } } },
+        },
       });
       debug("CHECKOUT", "rebuild_cart_result", { lines: cart?.lines.length });
     }
