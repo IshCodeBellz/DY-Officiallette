@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
+import { withRequest } from "@/lib/server/logger";
 
 // One-time diagnostic logging guard (helps confirm DB file / env in dev)
 let diagLogged = false;
@@ -7,7 +8,7 @@ const BUILD_SIGNATURE = "search-v3.1"; // bump when changing search logic
 
 const HALF_LIFE_HOURS = 72; // for trending sort scoring
 
-export async function GET(req: NextRequest) {
+export const GET = withRequest(async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") || "").trim();
   const category = searchParams.get("category") || undefined; // category slug
@@ -212,6 +213,67 @@ export async function GET(req: NextRequest) {
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error("[search:raw-fallback-error]", (e as Error).message);
+      }
+    }
+    // Fuzzy fallback (very small in-memory pass) if still zero
+    if (products.length === 0 && q.length >= 3) {
+      try {
+        // Pull a capped candidate pool (newest 300) to score with simple edit-distance and token inclusion
+        const candidatePool = await prisma.product.findMany({
+          where: { deletedAt: null },
+          orderBy: { createdAt: "desc" },
+          take: 300,
+          include: { images: { orderBy: { position: "asc" }, take: 1 } },
+        });
+        const target = q.toLowerCase();
+        const maxDistance = target.length <= 5 ? 1 : target.length <= 8 ? 2 : 3;
+        const distance = (a: string, b: string) => {
+          if (a === b) return 0;
+            // Bounded Wagner-Fischer with early exit if row minimum > maxDistance
+            const m = a.length;
+            const n = b.length;
+            if (Math.abs(m - n) > maxDistance) return maxDistance + 1;
+            const prev = new Array(n + 1).fill(0);
+            const curr = new Array(n + 1).fill(0);
+            for (let j = 0; j <= n; j++) prev[j] = j;
+            for (let i = 1; i <= m; i++) {
+              curr[0] = i;
+              let rowMin = curr[0];
+              const ca = a.charCodeAt(i - 1);
+              for (let j = 1; j <= n; j++) {
+                const cost = ca === b.charCodeAt(j - 1) ? 0 : 1;
+                curr[j] = Math.min(
+                  prev[j] + 1,
+                  curr[j - 1] + 1,
+                  prev[j - 1] + cost
+                );
+                if (curr[j] < rowMin) rowMin = curr[j];
+              }
+              if (rowMin > maxDistance) return maxDistance + 1; // prune
+              for (let j = 0; j <= n; j++) prev[j] = curr[j];
+            }
+            return curr[n];
+        };
+        const scored = candidatePool
+          .map((p) => {
+            const nameLower = p.name.toLowerCase();
+            const d = distance(target, nameLower.slice(0, 60));
+            if (d > maxDistance && !nameLower.includes(target)) return null;
+            const tokenHit = nameLower.includes(target) ? 1 : 0;
+            const score = -(d) + tokenHit * 2 + (p.createdAt ? Date.now() - new Date(p.createdAt).getTime() : 0) * -1e-12;
+            return { p, d, score };
+          })
+          .filter(Boolean) as any[];
+        scored.sort((a, b) => b.score - a.score);
+        const top = scored.slice(0, limit);
+        if (top.length) {
+          products = top.map((t) => t.p);
+          // eslint-disable-next-line no-console
+          console.log("[search:fuzzy-fallback-hit]", { q, count: products.length, maxDistance });
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error("[search:fuzzy-fallback-error]", (e as Error).message);
       }
     }
   }
@@ -474,4 +536,4 @@ export async function GET(req: NextRequest) {
     page,
     pageSize: limit,
   });
-}
+});
