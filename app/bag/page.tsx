@@ -59,11 +59,9 @@ export default function BagPage() {
               </div>
               <div className="flex-1 min-w-0 space-y-1">
                 <div className="font-medium truncate">{line.name}</div>
-                {line.size && (
-                  <div className="text-xs text-neutral-600">
-                    Size: {line.size}
-                  </div>
-                )}
+                <div className="text-xs text-neutral-600">
+                  Size: {line.size ? line.size : "One size"}
+                </div>
                 <div className="text-sm font-semibold">
                   {formatPriceCents(line.priceCents)}
                 </div>
