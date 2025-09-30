@@ -43,6 +43,7 @@ export interface WishlistContextValue extends WishlistState {
   ) => void;
   has: (id: string) => boolean;
   clear: () => void;
+  syncing?: boolean; // true while merging with server
 }
 
 export function lineIdFor(productId: string, size?: string) {
