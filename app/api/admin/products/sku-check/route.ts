@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
+import { withRequest } from "@/lib/server/logger";
 
-export async function GET(req: NextRequest) {
+export const GET = withRequest(async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const uid = (session?.user as any)?.id as string | undefined;
   if (!uid)
@@ -19,4 +20,4 @@ export async function GET(req: NextRequest) {
     where: { sku, id: { not: exclude || "" } },
   });
   return NextResponse.json({ available: !existing });
-}
+});

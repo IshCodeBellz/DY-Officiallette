@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
+import { withRequest } from "@/lib/server/logger";
 
 const ALLOWED = [
   "PENDING",
@@ -25,7 +26,7 @@ const transitions: Record<string, string[]> = {
   REFUNDED: [],
 };
 
-export async function POST(
+export const POST = withRequest(async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -67,4 +68,4 @@ export async function POST(
   }
   await prisma.order.update({ where: { id: order.id }, data: { status } });
   return NextResponse.redirect(new URL("/admin/orders", req.url));
-}
+});

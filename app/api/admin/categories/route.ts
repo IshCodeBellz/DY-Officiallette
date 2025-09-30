@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
+import { withRequest } from "@/lib/server/logger";
 import { z } from "zod";
 
 const categorySchema = z.object({
@@ -23,16 +24,16 @@ async function ensureAdmin() {
   return user;
 }
 
-export async function GET() {
+export const GET = withRequest(async function GET() {
   const admin = await ensureAdmin();
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const categories = await prisma.category.findMany({
     orderBy: { name: "asc" },
   });
   return NextResponse.json({ categories });
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withRequest(async function POST(req: NextRequest) {
   const admin = await ensureAdmin();
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const body = await req.json().catch(() => null);
@@ -46,9 +47,9 @@ export async function POST(req: NextRequest) {
   if (exists) return NextResponse.json({ error: "exists" }, { status: 409 });
   const created = await prisma.category.create({ data: { slug, name } });
   return NextResponse.json({ category: created }, { status: 201 });
-}
+});
 
-export async function PUT(req: NextRequest) {
+export const PUT = withRequest(async function PUT(req: NextRequest) {
   const admin = await ensureAdmin();
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const body = await req.json().catch(() => null);
@@ -66,9 +67,9 @@ export async function PUT(req: NextRequest) {
   if (!updated)
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   return NextResponse.json({ category: updated });
-}
+});
 
-export async function DELETE(req: NextRequest) {
+export const DELETE = withRequest(async function DELETE(req: NextRequest) {
   const admin = await ensureAdmin();
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const { searchParams } = new URL(req.url);
@@ -82,4 +83,4 @@ export async function DELETE(req: NextRequest) {
   if (!deleted)
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   return NextResponse.json({ ok: true });
-}
+});

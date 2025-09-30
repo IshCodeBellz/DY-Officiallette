@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
+import { withRequest } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 
-export async function GET() {
+export const GET = withRequest(async function GET() {
   const session = await getServerSession(authOptions);
   const uid = (session?.user as any)?.id as string | undefined;
   if (!uid)
@@ -23,4 +24,4 @@ export async function GET() {
     }),
   ]);
   return NextResponse.json({ brands, categories });
-}
+});
