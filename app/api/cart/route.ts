@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { withRequest } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
@@ -26,7 +27,7 @@ async function getOrCreateCart(userId: string) {
   return cart;
 }
 
-export async function GET() {
+export const GET = withRequest(async function GET() {
   const session = await getServerSession(authOptions);
   const uid = (session?.user as any)?.id as string | undefined;
   if (!uid) return NextResponse.json({ lines: [] });
@@ -43,10 +44,10 @@ export async function GET() {
       priceCentsSnapshot: l.priceCentsSnapshot,
     })),
   });
-}
+});
 
 // Replace cart
-export async function POST(req: NextRequest) {
+export const POST = withRequest(async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const uid = (session?.user as any)?.id as string | undefined;
   if (!uid)
@@ -88,10 +89,10 @@ export async function POST(req: NextRequest) {
     })
   );
   return NextResponse.json({ ok: true, created: data.filter(Boolean).length });
-}
+});
 
 // Merge cart (accumulate qty)
-export async function PATCH(req: NextRequest) {
+export const PATCH = withRequest(async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const uid = (session?.user as any)?.id as string | undefined;
   if (!uid)
@@ -153,4 +154,4 @@ export async function PATCH(req: NextRequest) {
         priceCentsSnapshot: l.priceCentsSnapshot,
       })) || [],
   });
-}
+});
