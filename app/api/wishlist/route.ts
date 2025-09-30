@@ -9,7 +9,11 @@ export const GET = withRequest(async function GET(req: NextRequest) {
   if (!userId) return NextResponse.json({ items: [] });
   const wishlist = await prisma.wishlist.findUnique({
     where: { userId },
-    include: { items: { include: { product: { include: { images: true, sizes: true } } } } },
+    include: {
+      items: {
+        include: { product: { include: { images: true, sizes: true } } },
+      },
+    },
   });
   return NextResponse.json({
     items: (wishlist?.items || []).map((i) => ({
@@ -33,14 +37,17 @@ export const POST = withRequest(async function POST(req: NextRequest) {
   const userId = await getSessionUserId(req).catch(() => null);
   if (!userId) return NextResponse.json({ error: "auth" }, { status: 401 });
   const body = await req.json().catch(() => ({}));
-  const { productId, size }: { productId?: string; size?: string | null } = body || {};
-  if (!productId) return NextResponse.json({ error: "missing_product" }, { status: 400 });
+  const { productId, size }: { productId?: string; size?: string | null } =
+    body || {};
+  if (!productId)
+    return NextResponse.json({ error: "missing_product" }, { status: 400 });
 
   const product = await prisma.product.findUnique({
     where: { id: productId },
     select: { id: true },
   });
-  if (!product) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!product)
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const wishlist = await prisma.wishlist.upsert({
     where: { userId },
@@ -52,13 +59,25 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     // Prisma composite unique where does not accept null union easily; branch logic
     if (size) {
       await tx.wishlistItem.upsert({
-        where: { wishlistId_productId_size: { wishlistId: wishlist.id, productId, size } },
+        where: {
+          wishlistId_productId_size: {
+            wishlistId: wishlist.id,
+            productId,
+            size,
+          },
+        },
         update: {},
         create: { wishlistId: wishlist.id, productId, size },
       });
     } else {
       await tx.wishlistItem.upsert({
-        where: { wishlistId_productId_size: { wishlistId: wishlist.id, productId, size: null as any } },
+        where: {
+          wishlistId_productId_size: {
+            wishlistId: wishlist.id,
+            productId,
+            size: null as any,
+          },
+        },
         update: {},
         create: { wishlistId: wishlist.id, productId, size: null },
       });
@@ -82,7 +101,8 @@ export const DELETE = withRequest(async function DELETE(req: NextRequest) {
   const productId = searchParams.get("productId");
   const sizeParam = searchParams.get("size");
   const size = sizeParam === null || sizeParam === "" ? null : sizeParam;
-  if (!productId) return NextResponse.json({ error: "missing_product" }, { status: 400 });
+  if (!productId)
+    return NextResponse.json({ error: "missing_product" }, { status: 400 });
 
   const wishlist = await prisma.wishlist.findUnique({ where: { userId } });
   if (!wishlist) return NextResponse.json({ ok: true }); // nothing to delete
@@ -90,11 +110,23 @@ export const DELETE = withRequest(async function DELETE(req: NextRequest) {
   try {
     if (size) {
       await prisma.wishlistItem.delete({
-        where: { wishlistId_productId_size: { wishlistId: wishlist.id, productId, size } },
+        where: {
+          wishlistId_productId_size: {
+            wishlistId: wishlist.id,
+            productId,
+            size,
+          },
+        },
       });
     } else {
       await prisma.wishlistItem.delete({
-        where: { wishlistId_productId_size: { wishlistId: wishlist.id, productId, size: null as any } },
+        where: {
+          wishlistId_productId_size: {
+            wishlistId: wishlist.id,
+            productId,
+            size: null as any,
+          },
+        },
       });
     }
   } catch {

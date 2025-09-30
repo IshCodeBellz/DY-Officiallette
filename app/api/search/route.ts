@@ -229,30 +229,30 @@ export const GET = withRequest(async function GET(req: NextRequest) {
         const maxDistance = target.length <= 5 ? 1 : target.length <= 8 ? 2 : 3;
         const distance = (a: string, b: string) => {
           if (a === b) return 0;
-            // Bounded Wagner-Fischer with early exit if row minimum > maxDistance
-            const m = a.length;
-            const n = b.length;
-            if (Math.abs(m - n) > maxDistance) return maxDistance + 1;
-            const prev = new Array(n + 1).fill(0);
-            const curr = new Array(n + 1).fill(0);
-            for (let j = 0; j <= n; j++) prev[j] = j;
-            for (let i = 1; i <= m; i++) {
-              curr[0] = i;
-              let rowMin = curr[0];
-              const ca = a.charCodeAt(i - 1);
-              for (let j = 1; j <= n; j++) {
-                const cost = ca === b.charCodeAt(j - 1) ? 0 : 1;
-                curr[j] = Math.min(
-                  prev[j] + 1,
-                  curr[j - 1] + 1,
-                  prev[j - 1] + cost
-                );
-                if (curr[j] < rowMin) rowMin = curr[j];
-              }
-              if (rowMin > maxDistance) return maxDistance + 1; // prune
-              for (let j = 0; j <= n; j++) prev[j] = curr[j];
+          // Bounded Wagner-Fischer with early exit if row minimum > maxDistance
+          const m = a.length;
+          const n = b.length;
+          if (Math.abs(m - n) > maxDistance) return maxDistance + 1;
+          const prev = new Array(n + 1).fill(0);
+          const curr = new Array(n + 1).fill(0);
+          for (let j = 0; j <= n; j++) prev[j] = j;
+          for (let i = 1; i <= m; i++) {
+            curr[0] = i;
+            let rowMin = curr[0];
+            const ca = a.charCodeAt(i - 1);
+            for (let j = 1; j <= n; j++) {
+              const cost = ca === b.charCodeAt(j - 1) ? 0 : 1;
+              curr[j] = Math.min(
+                prev[j] + 1,
+                curr[j - 1] + 1,
+                prev[j - 1] + cost
+              );
+              if (curr[j] < rowMin) rowMin = curr[j];
             }
-            return curr[n];
+            if (rowMin > maxDistance) return maxDistance + 1; // prune
+            for (let j = 0; j <= n; j++) prev[j] = curr[j];
+          }
+          return curr[n];
         };
         const scored = candidatePool
           .map((p) => {
@@ -260,7 +260,11 @@ export const GET = withRequest(async function GET(req: NextRequest) {
             const d = distance(target, nameLower.slice(0, 60));
             if (d > maxDistance && !nameLower.includes(target)) return null;
             const tokenHit = nameLower.includes(target) ? 1 : 0;
-            const score = -(d) + tokenHit * 2 + (p.createdAt ? Date.now() - new Date(p.createdAt).getTime() : 0) * -1e-12;
+            const score =
+              -d +
+              tokenHit * 2 +
+              (p.createdAt ? Date.now() - new Date(p.createdAt).getTime() : 0) *
+                -1e-12;
             return { p, d, score };
           })
           .filter(Boolean) as any[];
@@ -269,7 +273,11 @@ export const GET = withRequest(async function GET(req: NextRequest) {
         if (top.length) {
           products = top.map((t) => t.p);
           // eslint-disable-next-line no-console
-          console.log("[search:fuzzy-fallback-hit]", { q, count: products.length, maxDistance });
+          console.log("[search:fuzzy-fallback-hit]", {
+            q,
+            count: products.length,
+            maxDistance,
+          });
         }
       } catch (e) {
         // eslint-disable-next-line no-console

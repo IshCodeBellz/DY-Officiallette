@@ -128,10 +128,13 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const mounted = useRef(false);
 
   // Helper to decompose id -> productId + size
-  const parseId = useCallback((id: string): { productId: string; size?: string } => {
-    const [pid, size] = id.split("__");
-    return { productId: pid, size: size || undefined };
-  }, []);
+  const parseId = useCallback(
+    (id: string): { productId: string; size?: string } => {
+      const [pid, size] = id.split("__");
+      return { productId: pid, size: size || undefined };
+    },
+    []
+  );
 
   // Initial load: localStorage first, then server merge
   useEffect(() => {
@@ -171,59 +174,79 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     if (mounted.current) saveJSON(WISHLIST_KEY, items);
   }, [items]);
 
-  const optimisticServer = useCallback(async (action: "add" | "remove", item: ProductSummary | { id: string }) => {
-    try {
-      if (action === "add") {
-        const it = item as ProductSummary;
-        await fetch("/api/wishlist", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productId: it.productId, size: it.size }),
-        });
-      } else {
-        const { id } = item as { id: string };
-        const { productId, size } = parseId(id);
-        const qs = new URLSearchParams({ productId });
-        if (size) qs.set("size", size);
-        await fetch(`/api/wishlist?${qs.toString()}`, { method: "DELETE" });
+  const optimisticServer = useCallback(
+    async (action: "add" | "remove", item: ProductSummary | { id: string }) => {
+      try {
+        if (action === "add") {
+          const it = item as ProductSummary;
+          await fetch("/api/wishlist", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productId: it.productId, size: it.size }),
+          });
+        } else {
+          const { id } = item as { id: string };
+          const { productId, size } = parseId(id);
+          const qs = new URLSearchParams({ productId });
+          if (size) qs.set("size", size);
+          await fetch(`/api/wishlist?${qs.toString()}`, { method: "DELETE" });
+        }
+      } catch {
+        /* network failures ignored - next sync will reconcile */
       }
-    } catch {
-      /* network failures ignored - next sync will reconcile */
-    }
-  }, [parseId]);
+    },
+    [parseId]
+  );
 
-  const add = useCallback((item: ProductSummary) => {
-    const id = lineIdFor(item.productId, item.size);
-    setItems((prev) => (prev.some((i) => i.id === id) ? prev : [...prev, { id, ...item }]));
-    optimisticServer("add", item);
-  }, [optimisticServer]);
-
-  const remove = useCallback((id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
-    optimisticServer("remove", { id });
-  }, [optimisticServer]);
-
-  const toggle = useCallback((item: ProductSummary) => {
-    const id = lineIdFor(item.productId, item.size);
-    setItems((prev) => {
-      if (prev.some((i) => i.id === id)) {
-        optimisticServer("remove", { id });
-        return prev.filter((i) => i.id !== id);
-      }
+  const add = useCallback(
+    (item: ProductSummary) => {
+      const id = lineIdFor(item.productId, item.size);
+      setItems((prev) =>
+        prev.some((i) => i.id === id) ? prev : [...prev, { id, ...item }]
+      );
       optimisticServer("add", item);
-      return [...prev, { id, ...item }];
-    });
-  }, [optimisticServer]);
+    },
+    [optimisticServer]
+  );
 
-  const has = useCallback((id: string) => items.some((i) => i.id === id), [items]);
+  const remove = useCallback(
+    (id: string) => {
+      setItems((prev) => prev.filter((i) => i.id !== id));
+      optimisticServer("remove", { id });
+    },
+    [optimisticServer]
+  );
 
-  const moveToCart = useCallback((id: string, addToCart: (item: ProductSummary, qty?: number) => void) => {
-    const line = items.find((i) => i.id === id);
-    if (!line) return;
-    addToCart(line, 1);
-    setItems((prev) => prev.filter((i) => i.id !== id));
-    optimisticServer("remove", { id });
-  }, [items, optimisticServer]);
+  const toggle = useCallback(
+    (item: ProductSummary) => {
+      const id = lineIdFor(item.productId, item.size);
+      setItems((prev) => {
+        if (prev.some((i) => i.id === id)) {
+          optimisticServer("remove", { id });
+          return prev.filter((i) => i.id !== id);
+        }
+        optimisticServer("add", item);
+        return [...prev, { id, ...item }];
+      });
+    },
+    [optimisticServer]
+  );
+
+  const has = useCallback(
+    (id: string) => items.some((i) => i.id === id),
+    [items]
+  );
+
+  const moveToCart = useCallback(
+    (id: string, addToCart: (item: ProductSummary, qty?: number) => void) => {
+      const line = items.find((i) => i.id === id);
+      if (!line) return;
+      addToCart(line, 1);
+      setItems((prev) => prev.filter((i) => i.id !== id));
+      optimisticServer("remove", { id });
+    },
+    [items, optimisticServer]
+  );
 
   const clear = useCallback(() => {
     // Clear locally; not sending individual deletes to avoid N calls.

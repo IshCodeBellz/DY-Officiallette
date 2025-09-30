@@ -4,13 +4,14 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { z } from "zod";
 import { getStripe } from "@/lib/server/stripe";
+import { withRequest } from "@/lib/server/logger";
 
 // Stub: would call Stripe to create a PaymentIntent. For now, we simulate one.
 // Later replace with: const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' });
 
 const schema = z.object({ orderId: z.string() });
 
-export async function POST(req: NextRequest) {
+export const POST = withRequest(async function POST(req: NextRequest) {
   let uid: string | undefined;
   const testUser =
     process.env.NODE_ENV === "test" ? req.headers.get("x-test-user") : null;
@@ -100,7 +101,34 @@ export async function POST(req: NextRequest) {
         reused: true,
       });
     } catch (_) {
-      // if retrieval fails, fall through and create new
+      // existing placeholder (likely simulated) – create real intent then UPDATE record instead of creating duplicate
+      const intent = await stripe.paymentIntents.create({
+        amount: order.totalCents,
+        currency: order.currency.toLowerCase(),
+        metadata: { orderId: order.id },
+        automatic_payment_methods: { enabled: true },
+      });
+      await prisma.paymentRecord.update({
+        where: { id: existingPayment.id },
+        data: {
+          providerRef: intent.id,
+          rawPayload: JSON.stringify({
+            upgradedFrom: existingPayment.providerRef,
+          }),
+        },
+      });
+      if (order.status === "PENDING") {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { status: "AWAITING_PAYMENT" },
+        });
+      }
+      return NextResponse.json({
+        orderId: order.id,
+        clientSecret: intent.client_secret,
+        paymentIntentId: intent.id,
+        upgraded: true,
+      });
     }
   }
 
@@ -131,4 +159,4 @@ export async function POST(req: NextRequest) {
     clientSecret: intent.client_secret,
     paymentIntentId: intent.id,
   });
-}
+});

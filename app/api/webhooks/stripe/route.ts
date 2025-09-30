@@ -47,7 +47,10 @@ export async function POST(req: NextRequest) {
     const pi = event.data?.object || event;
     const orderId = pi.metadata?.orderId;
     if (orderId) {
-      const order = await prisma.order.findUnique({ where: { id: orderId }, include: { payments: true } });
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: { payments: true },
+      });
       if (order && order.status !== "PAID" && order.status !== "CANCELLED") {
         await prisma.$transaction(async (tx) => {
           await tx.order.update({
@@ -56,7 +59,10 @@ export async function POST(req: NextRequest) {
           });
           // Update any pending payment record(s) to FAILED
           for (const pay of order.payments) {
-            if (pay.status === "PAYMENT_PENDING" || pay.status === "AUTHORIZED") {
+            if (
+              pay.status === "PAYMENT_PENDING" ||
+              pay.status === "AUTHORIZED"
+            ) {
               await tx.paymentRecord.update({
                 where: { id: pay.id },
                 data: { status: "FAILED" },
@@ -121,7 +127,9 @@ export async function POST(req: NextRequest) {
       data: { status: "PAID", paidAt: new Date() },
     });
     // Update payment record(s) to CAPTURED
-    const payments = await tx.paymentRecord.findMany({ where: { orderId: order.id } });
+    const payments = await tx.paymentRecord.findMany({
+      where: { orderId: order.id },
+    });
     for (const pay of payments) {
       if (pay.status === "PAYMENT_PENDING" || pay.status === "AUTHORIZED") {
         await tx.paymentRecord.update({

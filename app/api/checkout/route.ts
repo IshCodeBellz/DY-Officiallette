@@ -269,39 +269,39 @@ export const POST = withRequest(async function POST(req: NextRequest) {
 
   let result;
   try {
-  result = await prisma.$transaction(async (tx) => {
-    const shipping = await tx.address.create({
-      data: { ...shippingAddress, userId: uid },
-    });
-    let billing = shipping;
-    if (billingAddress) {
-      billing = await tx.address.create({
-        data: { ...billingAddress, userId: uid },
+    result = await prisma.$transaction(async (tx) => {
+      const shipping = await tx.address.create({
+        data: { ...shippingAddress, userId: uid },
       });
-    }
+      let billing = shipping;
+      if (billingAddress) {
+        billing = await tx.address.create({
+          data: { ...billingAddress, userId: uid },
+        });
+      }
 
-    const order = await tx.order.create({
-      data: {
-        userId: uid,
-        status: "AWAITING_PAYMENT",
-        checkoutIdempotencyKey: idempotencyKey,
-        subtotalCents: subtotal,
-        discountCents,
-        taxCents,
-        shippingCents,
-        totalCents,
-        email:
-          email ||
-          (session?.user?.email as string) ||
-          shippingAddress.fullName + "@example.local",
-        shippingAddressId: shipping.id,
-        billingAddressId: billing.id,
-        discountCodeId: discountMeta.id,
-        discountCodeCode: discountMeta.code,
-        discountCodeValueCents: discountMeta.valueCents,
-        discountCodePercent: discountMeta.percent,
-      },
-    });
+      const order = await tx.order.create({
+        data: {
+          userId: uid,
+          status: "AWAITING_PAYMENT",
+          checkoutIdempotencyKey: idempotencyKey,
+          subtotalCents: subtotal,
+          discountCents,
+          taxCents,
+          shippingCents,
+          totalCents,
+          email:
+            email ||
+            (session?.user?.email as string) ||
+            shippingAddress.fullName + "@example.local",
+          shippingAddressId: shipping.id,
+          billingAddressId: billing.id,
+          discountCodeId: discountMeta.id,
+          discountCodeCode: discountMeta.code,
+          discountCodeValueCents: discountMeta.valueCents,
+          discountCodePercent: discountMeta.percent,
+        },
+      });
 
       for (const line of cart.lines) {
         await tx.orderItem.create({
@@ -335,29 +335,48 @@ export const POST = withRequest(async function POST(req: NextRequest) {
         }
       }
 
-    if (discountMeta.id) {
-      await tx.discountCode.update({
-        where: { id: discountMeta.id },
-        data: { timesUsed: { increment: 1 } },
-      });
-    }
+      if (discountMeta.id) {
+        // Concurrency guard: ensure we only increment if still under usageLimit (if defined)
+        const dc = await tx.discountCode.findUnique({
+          where: { id: discountMeta.id },
+          select: { usageLimit: true, timesUsed: true },
+        });
+        if (dc) {
+          if (dc.usageLimit && dc.timesUsed >= dc.usageLimit) {
+            throw new Error("DISCOUNT_RACE_EXHAUSTED");
+          }
+          // Optimistic increment; a second concurrent transaction could still slip between read & write in SQLite.
+          // (When migrating to Postgres we will switch to: UPDATE ... SET times_used = times_used + 1 WHERE id = $1 AND (usage_limit IS NULL OR times_used < usage_limit) RETURNING id)
+          await tx.discountCode.update({
+            where: { id: discountMeta.id },
+            data: { timesUsed: { increment: 1 } },
+          });
+        }
+      }
 
-    // Create a pending payment record placeholder (simulated intent id for now)
-    await tx.paymentRecord.create({
-      data: {
-        orderId: order.id,
-        provider: "STRIPE",
-        providerRef: `pi_sim_${order.id}`,
-        amountCents: order.totalCents,
-        status: "PAYMENT_PENDING",
-      },
+      // Create a pending payment record placeholder (simulated intent id for now)
+      await tx.paymentRecord.create({
+        data: {
+          orderId: order.id,
+          provider: "STRIPE",
+          providerRef: `pi_sim_${order.id}`,
+          amountCents: order.totalCents,
+          status: "PAYMENT_PENDING",
+        },
+      });
+      return order;
     });
-    return order;
-  });
   } catch (e: any) {
     if (e?.message === "STOCK_RACE_CONFLICT") {
       debug("CHECKOUT", "stock_race_conflict");
       return NextResponse.json({ error: "stock_conflict" }, { status: 409 });
+    }
+    if (e?.message === "DISCOUNT_RACE_EXHAUSTED") {
+      debug("CHECKOUT", "discount_race_exhausted");
+      return NextResponse.json(
+        { error: "discount_exhausted" },
+        { status: 400 }
+      );
     }
     throw e;
   }

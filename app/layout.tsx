@@ -6,6 +6,7 @@ import { Footer } from "../components/layout/Footer";
 import Providers from "../components/providers/Providers";
 import { CartSync } from "../components/providers/CartSync";
 import { AuthProvider } from "../components/providers/AuthProvider";
+import { LiveRegion } from "../components/a11y/LiveRegion";
 
 export const metadata: Metadata = {
   title: "DYOFFICIAL",
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <AuthProvider>
           <Providers>
             <Header />
+            <LiveRegion />
             <CartSync />
             <main className="flex-1">{children}</main>
             <Footer />

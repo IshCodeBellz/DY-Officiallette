@@ -263,3 +263,13 @@ model ProductMetrics {
 
   @@index([updatedAt])
 }
+
+// Tracks processed third‑party webhook events (e.g. Stripe) for idempotency
+model ProcessedWebhookEvent {
+  id        String   @id @default(cuid())
+  provider  String
+  eventId   String   @unique
+  createdAt DateTime @default(now())
+
+  @@index([provider, eventId])
+}
