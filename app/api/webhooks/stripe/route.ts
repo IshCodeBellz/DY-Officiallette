@@ -47,13 +47,22 @@ export async function POST(req: NextRequest) {
     const pi = event.data?.object || event;
     const orderId = pi.metadata?.orderId;
     if (orderId) {
-      const order = await prisma.order.findUnique({ where: { id: orderId } });
+      const order = await prisma.order.findUnique({ where: { id: orderId }, include: { payments: true } });
       if (order && order.status !== "PAID" && order.status !== "CANCELLED") {
         await prisma.$transaction(async (tx) => {
           await tx.order.update({
             where: { id: orderId },
             data: { status: "CANCELLED", cancelledAt: new Date() },
           });
+          // Update any pending payment record(s) to FAILED
+          for (const pay of order.payments) {
+            if (pay.status === "PAYMENT_PENDING" || pay.status === "AUTHORIZED") {
+              await tx.paymentRecord.update({
+                where: { id: pay.id },
+                data: { status: "FAILED" },
+              });
+            }
+          }
           if (eventId) {
             await tx.$executeRawUnsafe(
               `INSERT INTO ProcessedWebhookEvent (id, provider, eventId, createdAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(eventId) DO NOTHING;`,
@@ -111,6 +120,16 @@ export async function POST(req: NextRequest) {
       where: { id: order.id },
       data: { status: "PAID", paidAt: new Date() },
     });
+    // Update payment record(s) to CAPTURED
+    const payments = await tx.paymentRecord.findMany({ where: { orderId: order.id } });
+    for (const pay of payments) {
+      if (pay.status === "PAYMENT_PENDING" || pay.status === "AUTHORIZED") {
+        await tx.paymentRecord.update({
+          where: { id: pay.id },
+          data: { status: "CAPTURED" },
+        });
+      }
+    }
     const productIds = Array.from(new Set(order.items.map((i) => i.productId)));
     for (const pid of productIds) {
       await tx.$executeRawUnsafe(

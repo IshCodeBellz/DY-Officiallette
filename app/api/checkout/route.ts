@@ -283,7 +283,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     const order = await tx.order.create({
       data: {
         userId: uid,
-        status: "PENDING",
+        status: "AWAITING_PAYMENT",
         checkoutIdempotencyKey: idempotencyKey,
         subtotalCents: subtotal,
         discountCents,
@@ -342,6 +342,16 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       });
     }
 
+    // Create a pending payment record placeholder (simulated intent id for now)
+    await tx.paymentRecord.create({
+      data: {
+        orderId: order.id,
+        provider: "STRIPE",
+        providerRef: `pi_sim_${order.id}`,
+        amountCents: order.totalCents,
+        status: "PAYMENT_PENDING",
+      },
+    });
     return order;
   });
   } catch (e: any) {
