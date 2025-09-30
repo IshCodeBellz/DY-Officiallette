@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/server/stripe";
 import { prisma } from "@/lib/server/prisma";
 import { validateEnv } from "@/lib/server/env";
+import { log, warn } from "@/lib/server/logger";
 
 // Stripe webhook handler: listens for payment_intent.succeeded and updates order & metrics.
 // Expects STRIPE_WEBHOOK_SECRET if real Stripe is used; if absent, treats body as JSON (simulated mode).
@@ -32,8 +33,57 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  if (event.type === "payment_intent.payment_failed") {
+    const eventId = event.id as string | undefined;
+    if (eventId) {
+      const existing = await prisma.$queryRawUnsafe<[{ eventId: string }] | []>(
+        `SELECT eventId FROM ProcessedWebhookEvent WHERE eventId = ? LIMIT 1`,
+        eventId
+      );
+      if (Array.isArray(existing) && existing.length > 0) {
+        return NextResponse.json({ ok: true, idempotent: true });
+      }
+    }
+    const pi = event.data?.object || event;
+    const orderId = pi.metadata?.orderId;
+    if (orderId) {
+      const order = await prisma.order.findUnique({ where: { id: orderId } });
+      if (order && order.status !== "PAID" && order.status !== "CANCELLED") {
+        await prisma.$transaction(async (tx) => {
+          await tx.order.update({
+            where: { id: orderId },
+            data: { status: "CANCELLED", cancelledAt: new Date() },
+          });
+          if (eventId) {
+            await tx.$executeRawUnsafe(
+              `INSERT INTO ProcessedWebhookEvent (id, provider, eventId, createdAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(eventId) DO NOTHING;`,
+              crypto.randomUUID(),
+              "STRIPE",
+              eventId
+            );
+          }
+        });
+      }
+    }
+    return NextResponse.json({ ok: true, failure: true });
+  }
+
   if (event.type !== "payment_intent.succeeded") {
     return NextResponse.json({ received: true });
+  }
+
+  const eventId = event.id as string | undefined;
+  if (!eventId) {
+    warn("stripe_webhook_missing_id", { type: event.type });
+  } else {
+    // Raw lookup (avoids needing regenerated Prisma client immediately)
+    const existing = await prisma.$queryRawUnsafe<[{ eventId: string }] | []>(
+      `SELECT eventId FROM ProcessedWebhookEvent WHERE eventId = ? LIMIT 1`,
+      eventId
+    );
+    if (Array.isArray(existing) && existing.length > 0) {
+      return NextResponse.json({ ok: true, idempotent: true });
+    }
   }
 
   const pi = event.data?.object || event; // robust fallback in simulated mode
@@ -72,25 +122,18 @@ export async function POST(req: NextRequest) {
         pid
       );
     }
+    if (eventId) {
+      await tx.$executeRawUnsafe(
+        `INSERT INTO ProcessedWebhookEvent (id, provider, eventId, createdAt)
+         VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+         ON CONFLICT(eventId) DO NOTHING;`,
+        crypto.randomUUID(),
+        "STRIPE",
+        eventId
+      );
+    }
   });
-
-  // Fire-and-forget purchase events ingestion (non-blocking). We don't await to keep webhook fast.
-  try {
-    fetch(
-      `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-      }/api/events`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          order.items.map((i) => ({ type: "PURCHASE", productId: i.productId }))
-        ),
-      }
-    ).catch(() => {});
-  } catch (_) {
-    // ignore network errors in serverless env
-  }
+  log("stripe_webhook_success", { orderId, eventId });
 
   return NextResponse.json({ ok: true });
 }

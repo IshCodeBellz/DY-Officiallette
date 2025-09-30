@@ -6,6 +6,7 @@ import { sendOrderConfirmation } from "@/lib/server/mailer";
 import { z } from "zod";
 import { rateLimit } from "@/lib/server/rateLimit";
 import { debug } from "@/lib/server/debug";
+import { withRequest } from "@/lib/server/logger";
 
 // Basic Phase 3 draft checkout endpoint:
 // 1. Reads authenticated user's cart
@@ -41,7 +42,7 @@ const payloadSchema = z.object({
   lines: z.array(lineSchema).max(200).optional(),
 });
 
-export async function POST(req: NextRequest) {
+export const POST = withRequest(async function POST(req: NextRequest) {
   let session: any = null;
   let uid: string | undefined;
   const testUser =
@@ -266,7 +267,9 @@ export async function POST(req: NextRequest) {
   const shippingCents = 0;
   const totalCents = subtotal - discountCents + taxCents + shippingCents;
 
-  const result = await prisma.$transaction(async (tx) => {
+  let result;
+  try {
+  result = await prisma.$transaction(async (tx) => {
     const shipping = await tx.address.create({
       data: { ...shippingAddress, userId: uid },
     });
@@ -300,31 +303,37 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    for (const line of cart.lines) {
-      await tx.orderItem.create({
-        data: {
-          orderId: order.id,
-          productId: line.productId,
-          sku: line.product.sku,
-          nameSnapshot: line.product.name,
-          size: line.size || null,
-          qty: line.qty,
-          unitPriceCents: line.priceCentsSnapshot,
-          lineTotalCents: line.priceCentsSnapshot * line.qty,
-        },
-      });
-      if (line.size) {
-        const sizeVariant = line.product.sizes.find(
-          (s) => s.label === line.size
-        );
-        if (sizeVariant) {
-          await tx.sizeVariant.update({
-            where: { id: sizeVariant.id },
-            data: { stock: Math.max(0, sizeVariant.stock - line.qty) },
-          });
+      for (const line of cart.lines) {
+        await tx.orderItem.create({
+          data: {
+            orderId: order.id,
+            productId: line.productId,
+            sku: line.product.sku,
+            nameSnapshot: line.product.name,
+            size: line.size || null,
+            qty: line.qty,
+            unitPriceCents: line.priceCentsSnapshot,
+            lineTotalCents: line.priceCentsSnapshot * line.qty,
+          },
+        });
+        if (line.size) {
+          const sizeVariant = line.product.sizes.find(
+            (s) => s.label === line.size
+          );
+          if (sizeVariant) {
+            // Atomic conditional decrement to avoid race oversell
+            const affected = await tx.$executeRawUnsafe(
+              `UPDATE SizeVariant SET stock = stock - ? WHERE id = ? AND stock >= ?`,
+              line.qty,
+              sizeVariant.id,
+              line.qty
+            );
+            if (!affected) {
+              throw new Error("STOCK_RACE_CONFLICT");
+            }
+          }
         }
       }
-    }
 
     if (discountMeta.id) {
       await tx.discountCode.update({
@@ -335,6 +344,13 @@ export async function POST(req: NextRequest) {
 
     return order;
   });
+  } catch (e: any) {
+    if (e?.message === "STOCK_RACE_CONFLICT") {
+      debug("CHECKOUT", "stock_race_conflict");
+      return NextResponse.json({ error: "stock_conflict" }, { status: 409 });
+    }
+    throw e;
+  }
 
   // Fire and forget (no await needed) but we purposely await to surface errors in development
   if (session && session.user?.email && !testUser) {
@@ -358,4 +374,4 @@ export async function POST(req: NextRequest) {
     totalCents: result.totalCents,
     currency: result.currency,
   });
-}
+});
