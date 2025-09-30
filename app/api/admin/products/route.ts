@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
+import { withRequest } from "@/lib/server/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -27,7 +28,7 @@ const productSchema = z.object({
     .optional(),
 });
 
-export async function POST(req: NextRequest) {
+export const POST = withRequest(async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const uid = (session?.user as any)?.id as string | undefined;
   if (!uid)
@@ -61,9 +62,9 @@ export async function POST(req: NextRequest) {
     include: { images: true, sizes: true },
   });
   return NextResponse.json({ product: created }, { status: 201 });
-}
+});
 
-export async function GET() {
+export const GET = withRequest(async function GET() {
   // Simple list for admin UI scaffolding (limit 50 newest)
   const products = await prisma.product.findMany({
     orderBy: { createdAt: "desc" },
@@ -78,4 +79,4 @@ export async function GET() {
     },
   });
   return NextResponse.json({ products });
-}
+});

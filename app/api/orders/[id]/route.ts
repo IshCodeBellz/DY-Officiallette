@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
+import { withRequest } from "@/lib/server/logger";
 
 // GET /api/orders/:id - detail for current user's order (includes items & addresses)
-export async function GET(
+export const GET = withRequest(async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -32,4 +33,4 @@ export async function GET(
   });
   if (!order) return NextResponse.json({ error: "not_found" }, { status: 404 });
   return NextResponse.json({ order });
-}
+});

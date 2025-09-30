@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
+import { withRequest } from "@/lib/server/logger";
 
 // GET /api/orders - list current user's orders (most recent first)
-export async function GET() {
+export const GET = withRequest(async function GET() {
   const session = await getServerSession(authOptions);
   const uid = (session?.user as any)?.id as string | undefined;
   if (!uid) return NextResponse.json({ orders: [] });
@@ -23,4 +24,4 @@ export async function GET() {
     },
   });
   return NextResponse.json({ orders });
-}
+});
