@@ -111,6 +111,14 @@ export async function POST(req: NextRequest) {
         where: { id: order.id },
         data: { status: "PAID", paidAt: new Date() },
       });
+      await (tx as any).orderEvent.create({
+        data: {
+          orderId: order.id,
+          kind: "PAYMENT_UPDATE",
+          message: "Payment captured",
+          meta: JSON.stringify({ paymentId: payment.id, providerRef: payment.providerRef }),
+        },
+      });
       if (order.userId) {
         const cart = await tx.cart.findUnique({
           where: { userId: order.userId },
@@ -132,9 +140,19 @@ export async function POST(req: NextRequest) {
     }
   } else if (status === "failed") {
     if (payment.status !== "FAILED") {
-      await prisma.paymentRecord.update({
-        where: { id: payment.id },
-        data: { status: "FAILED" },
+      await prisma.$transaction(async (tx) => {
+        await tx.paymentRecord.update({
+          where: { id: payment.id },
+          data: { status: "FAILED" },
+        });
+        await (tx as any).orderEvent.create({
+          data: {
+            orderId: order.id,
+            kind: "PAYMENT_UPDATE",
+            message: "Payment failed",
+            meta: JSON.stringify({ paymentId: payment.id, providerRef: payment.providerRef }),
+          },
+        });
       });
     }
   }

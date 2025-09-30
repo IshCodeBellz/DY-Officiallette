@@ -167,6 +167,7 @@ model Order {
   discountCodeValueCents Int?     // snapshot of discount value applied (for fixed codes) when relevant
   discountCodePercent Int?        // snapshot percent value if percent based
   discountCode       DiscountCode? @relation(fields: [discountCodeId], references: [id])
+  events            OrderEvent[]
 
   @@index([userId])
   @@index([status])
@@ -273,6 +274,21 @@ model ProcessedWebhookEvent {
   createdAt DateTime @default(now())
 
   @@index([provider, eventId])
+}
+
+// Order timeline / audit events
+model OrderEvent {
+  id        String   @id @default(cuid())
+  orderId   String
+  kind      String   // CREATED | STATUS_CHANGE | PAYMENT_UPDATE | DISCOUNT_APPLIED | NOTE | REFUND | CANCELLATION
+  message   String?
+  meta      String?  // JSON serialized metadata snapshot
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([kind])
+  @@index([createdAt])
 }
 
 // Password reset tokens (one-time use). We allow multiple active tokens per user but prune expired ones on use/request.

@@ -319,6 +319,22 @@ export const POST = withRequest(async function POST(req: NextRequest) {
         },
       });
 
+      await (tx as any).orderEvent.create({
+        data: {
+          orderId: order.id,
+          kind: "CREATED",
+          message: "Order created and awaiting payment",
+          meta: JSON.stringify({
+            subtotalCents: subtotal,
+            discountCents,
+            taxCents,
+            shippingCents,
+            totalCents,
+            discountApplied: !!discountMeta.id,
+          }),
+        },
+      });
+
       for (const line of cart.lines) {
         await tx.orderItem.create({
           data: {

@@ -66,6 +66,16 @@ export const POST = withRequest(async function POST(
       { status: 400 }
     );
   }
-  await prisma.order.update({ where: { id: order.id }, data: { status } });
+  await prisma.$transaction(async (tx) => {
+    await tx.order.update({ where: { id: order.id }, data: { status } });
+    await (tx as any).orderEvent.create({
+      data: {
+        orderId: order.id,
+        kind: "STATUS_CHANGE",
+        message: `Status ${order.status} -> ${status}`,
+        meta: JSON.stringify({ from: order.status, to: status }),
+      },
+    });
+  });
   return NextResponse.redirect(new URL("/admin/orders", req.url));
 });
