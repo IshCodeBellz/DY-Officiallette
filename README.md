@@ -55,29 +55,14 @@ Educational fashion e‑commerce demo (formerly "ASOS Clone") showcasing modern 
 - Success page + basic order status handling
 
 ### Discounts
-
-- DiscountCode model supporting FIXED or PERCENT kinds
-- Live validation endpoint `/api/discount-codes/validate` + debounced client validation with feedback
-
-### Environment & Observability
-
 - Centralized env validation (`lib/server/env.ts`) logging grouped WARN/ERROR only once
 - Debug logging helper `debug(tag, event, payload)` sprinkled through checkout & search layers
 - Purchase/order flow integration test + unit tests for search expansion & trending decay
 
-### Health & CI
-
 - Health probe: `GET /api/health` returns `{ ok: boolean, db: 'up'|'down', ms }` (200 when healthy, 503 if DB unavailable).
 - GitHub Actions workflow (`.github/workflows/ci.yml`) runs install → migrate → tests → build on pushes & PRs to `main`.
-
-### Containerization
-
 - Added a production-oriented multi-stage `Dockerfile` (Node 20 alpine). Usage:
 
-```bash
-docker build -t dyofficial:dev .
-docker run --env-file .env -p 3000:3000 dyofficial:dev
-```
 
 For Postgres in production, override `DATABASE_URL` at runtime; mount a volume or use an external DB instead of the bundled SQLite file.
 

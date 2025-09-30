@@ -40,6 +40,7 @@ export async function resetDb() {
   await prisma.brand.deleteMany();
   await prisma.category.deleteMany();
   await prisma.discountCode.deleteMany();
+  await prisma.passwordResetToken.deleteMany();
   await prisma.user.deleteMany();
 }
 

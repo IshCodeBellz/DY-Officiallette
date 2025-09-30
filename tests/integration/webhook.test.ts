@@ -32,22 +32,12 @@ async function createOrderAndIntent() {
   );
   const json = await res.json();
   const orderId = json.orderId as string;
-  // Directly create simulated payment intent record (mirrors intent route logic) for deterministic webhook testing
-  const fakePaymentIntentId = `pi_${orderId
-    .replace(/[^a-zA-Z0-9]/g, "")
-    .slice(0, 10)}`;
-  await prisma.paymentRecord.create({
-    data: {
-      orderId,
-      provider: "STRIPE",
-      providerRef: fakePaymentIntentId,
-      amountCents: json.totalCents,
-      currency: "USD",
-      status: "PAYMENT_PENDING",
-      rawPayload: JSON.stringify({ simulated: true }),
-    },
+  // Checkout already creates a paymentRecord; reuse its providerRef
+  const existing = await prisma.paymentRecord.findFirst({
+    where: { orderId },
   });
-  return { orderId, paymentIntentId: fakePaymentIntentId };
+  if (!existing) throw new Error("missing_payment_record");
+  return { orderId, paymentIntentId: existing.providerRef };
 }
 
 beforeEach(async () => {

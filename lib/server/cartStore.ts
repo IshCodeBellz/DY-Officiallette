@@ -1,19 +1,42 @@
 // Hybrid cart store: DB persistence with graceful memory fallback.
 // Public async API maintained for easy future swap (e.g., Redis).
 import { CartItem } from "../types";
-import { getCartLines, replaceCart, mergeCart, clearCart } from "./cartRepository";
+import {
+  getCartLines,
+  replaceCart,
+  mergeCart,
+  clearCart,
+} from "./cartRepository";
 import { prisma } from "./prisma";
 
 let memoryFallback = false;
-interface MemRecord { items: CartItem[]; updatedAt: number }
+interface MemRecord {
+  items: CartItem[];
+  updatedAt: number;
+}
 const mem = new Map<string, MemRecord>();
 
-async function toCartItems(dbLines: { productId: string; size?: string; qty: number; priceCentsSnapshot: number }[]): Promise<CartItem[]> {
+async function toCartItems(
+  dbLines: {
+    productId: string;
+    size?: string;
+    qty: number;
+    priceCentsSnapshot: number;
+  }[]
+): Promise<CartItem[]> {
   if (!dbLines.length) return [];
-  const productIds = Array.from(new Set(dbLines.map(l => l.productId)));
-  const products = await prisma.product.findMany({ where: { id: { in: productIds } }, select: { id: true, name: true, priceCents: true, images: { take: 1, select: { url: true } } } });
-  const pMap = new Map(products.map(p => [p.id, p] as const));
-  return dbLines.map(l => {
+  const productIds = Array.from(new Set(dbLines.map((l) => l.productId)));
+  const products = await prisma.product.findMany({
+    where: { id: { in: productIds } },
+    select: {
+      id: true,
+      name: true,
+      priceCents: true,
+      images: { take: 1, select: { url: true } },
+    },
+  });
+  const pMap = new Map(products.map((p) => [p.id, p] as const));
+  return dbLines.map((l) => {
     const p = pMap.get(l.productId);
     return {
       id: `${l.productId}${l.size ? `__${l.size}` : ""}`,
@@ -30,8 +53,8 @@ async function toCartItems(dbLines: { productId: string; size?: string; qty: num
 export async function getUserCart(userId: string): Promise<CartItem[]> {
   if (memoryFallback) return mem.get(userId)?.items || [];
   try {
-  const lines = await getCartLines(userId);
-  return await toCartItems(lines as any);
+    const lines = await getCartLines(userId);
+    return await toCartItems(lines as any);
   } catch {
     memoryFallback = true;
     return mem.get(userId)?.items || [];
@@ -44,12 +67,15 @@ export async function setUserCart(userId: string, items: CartItem[]) {
     return;
   }
   try {
-    await replaceCart(userId, items.map(i => ({
-      productId: i.productId,
-      size: i.size,
-      qty: i.qty,
-      priceCentsSnapshot: i.priceCents,
-    })));
+    await replaceCart(
+      userId,
+      items.map((i) => ({
+        productId: i.productId,
+        size: i.size,
+        qty: i.qty,
+        priceCentsSnapshot: i.priceCents,
+      }))
+    );
   } catch {
     memoryFallback = true;
     mem.set(userId, { items, updatedAt: Date.now() });
@@ -60,7 +86,7 @@ export async function mergeUserCart(userId: string, incoming: CartItem[]) {
   if (memoryFallback) {
     const existing = mem.get(userId)?.items || [];
     const map = new Map<string, CartItem>();
-    [...existing, ...incoming].forEach(l => {
+    [...existing, ...incoming].forEach((l) => {
       const prev = map.get(l.id);
       if (prev) map.set(l.id, { ...prev, qty: Math.min(99, prev.qty + l.qty) });
       else map.set(l.id, l);
@@ -70,12 +96,15 @@ export async function mergeUserCart(userId: string, incoming: CartItem[]) {
     return merged;
   }
   try {
-    const merged = await mergeCart(userId, incoming.map(i => ({
-      productId: i.productId,
-      size: i.size,
-      qty: i.qty,
-      priceCentsSnapshot: i.priceCents,
-    })));
+    const merged = await mergeCart(
+      userId,
+      incoming.map((i) => ({
+        productId: i.productId,
+        size: i.size,
+        qty: i.qty,
+        priceCentsSnapshot: i.priceCents,
+      }))
+    );
     return await toCartItems(merged as any);
   } catch {
     memoryFallback = true;

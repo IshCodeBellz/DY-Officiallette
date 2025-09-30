@@ -14,6 +14,7 @@ export interface EnvSnapshot {
   EMAIL_FROM?: string;
   RESEND_API_KEY?: string;
   NODE_ENV?: string;
+  PASSWORD_RESET_TOKEN_TTL_MINUTES?: string; // optional override, defaults to 30
 }
 
 export function snapshotEnv(): EnvSnapshot {
@@ -27,6 +28,8 @@ export function snapshotEnv(): EnvSnapshot {
     EMAIL_FROM: process.env.EMAIL_FROM,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     NODE_ENV: process.env.NODE_ENV,
+    PASSWORD_RESET_TOKEN_TTL_MINUTES:
+      process.env.PASSWORD_RESET_TOKEN_TTL_MINUTES,
   };
 }
 
@@ -101,6 +104,18 @@ export function validateEnv(): EnvIssue[] {
       "No default FROM email configured. Some providers may reject mail.",
       "warn"
     );
+  }
+
+  // Password reset TTL sanity check (optional)
+  if (env.PASSWORD_RESET_TOKEN_TTL_MINUTES) {
+    const ttl = parseInt(env.PASSWORD_RESET_TOKEN_TTL_MINUTES, 10);
+    if (Number.isNaN(ttl) || ttl < 5 || ttl > 1440) {
+      push(
+        "PASSWORD_RESET_TOKEN_TTL_MINUTES",
+        "TTL must be integer minutes between 5 and 1440; falling back to default (30).",
+        "warn"
+      );
+    }
   }
 
   issuesCache = issues;

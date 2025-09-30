@@ -86,6 +86,7 @@ model User {
   wishlist     Wishlist?
   orders       Order[]
   addresses    Address[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Cart {
@@ -272,4 +273,18 @@ model ProcessedWebhookEvent {
   createdAt DateTime @default(now())
 
   @@index([provider, eventId])
+}
+
+// Password reset tokens (one-time use). We allow multiple active tokens per user but prune expired ones on use/request.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
