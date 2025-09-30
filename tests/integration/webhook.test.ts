@@ -62,7 +62,7 @@ describe("payment webhook simulation", () => {
       webhookRoute,
       "/api/payments/webhook",
       hookBody,
-      { "x-debug": "1" }
+      { "x-debug": "1", "x-test-simulate-webhook": "1" }
     );
     if (hookRes.status !== 200) {
       const dbg = await hookRes.json();
@@ -84,7 +84,7 @@ describe("payment webhook simulation", () => {
       webhookRoute,
       "/api/payments/webhook",
       hookBody,
-      { "x-debug": "1" }
+      { "x-debug": "1", "x-test-simulate-webhook": "1" }
     );
     if (hookRes.status !== 200) {
       const dbg = await hookRes.json();
@@ -105,7 +105,7 @@ describe("payment webhook simulation", () => {
       webhookRoute,
       "/api/payments/webhook",
       { paymentIntentId, status: "succeeded" },
-      { "x-debug": "1" }
+      { "x-debug": "1", "x-test-simulate-webhook": "1" }
     );
     const firstOrder = await prisma.order.findUnique({
       where: { id: orderId },
@@ -116,7 +116,7 @@ describe("payment webhook simulation", () => {
       webhookRoute,
       "/api/payments/webhook",
       { paymentIntentId, status: "succeeded" },
-      {}
+      { "x-test-simulate-webhook": "1" }
     );
     expect(replay.status).toBe(200);
     const after = await prisma.order.findUnique({ where: { id: orderId } });

@@ -114,6 +114,10 @@ jest-cache/
 jest-tmp/
 playwright-report/
 test-results/
+jest-results.json
+
+### Docker compose local volumes
+pgdata/
 
 ### Prevent committing generated OpenAPI or similar unless intentional
 openapi.generated.*

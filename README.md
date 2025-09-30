@@ -81,6 +81,26 @@ docker run --env-file .env -p 3000:3000 dyofficial:dev
 
 For Postgres in production, override `DATABASE_URL` at runtime; mount a volume or use an external DB instead of the bundled SQLite file.
 
+#### Local Postgres (docker-compose)
+
+Spin up Postgres + the production build image:
+
+```bash
+docker compose up --build
+```
+
+Run migrations if needed inside the container:
+
+```bash
+docker compose exec app npx prisma migrate deploy
+```
+
+Override your local `.env` when developing against Postgres:
+
+```
+DATABASE_URL=postgresql://dy:dysecret@localhost:5432/dyofficial?schema=public
+```
+
 ### Testing
 
 ```
@@ -245,6 +265,8 @@ Copy `.env.example` → `.env` and adjust. Key variables:
 | STRIPE_SECRET_KEY                  | Server-side Stripe API calls                         |
 | STRIPE_WEBHOOK_SECRET              | Verifies incoming Stripe webhooks                    |
 | RESEND_API_KEY                     | Email provider (optional; logs to console if absent) |
+| SENTRY_DSN                         | Enables Sentry error & performance monitoring        |
+| SENTRY_TRACES_SAMPLE_RATE          | (Optional) Sample rate for performance traces        |
 
 `lib/server/env.ts` logs grouped warnings once on first Stripe usage / webhook request.
 
@@ -264,6 +286,10 @@ stripe listen --events payment_intent.succeeded --forward-to http://localhost:30
 ## Simulated Payment Mode
 
 If `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is missing, checkout falls back to a simulated payment confirmation screen (no external network call); a synthetic webhook payload finalizes the order & metrics.
+
+## Sentry
+
+Optional error monitoring: set `SENTRY_DSN` and (optionally) `SENTRY_TRACES_SAMPLE_RATE` (default 0.05). Errors inside API route handlers wrapped with `withRequest` are forwarded with request metadata (path, method, latency, request id). When unset, Sentry code is inert with minimal overhead.
 
 ## Disclaimer
 

@@ -6,7 +6,10 @@ import Stripe from "stripe";
 
 // Handles both simulated (no Stripe key) and real Stripe webhook events.
 export async function POST(req: NextRequest) {
-  const stripe = getStripe();
+  const forceSim =
+    process.env.NODE_ENV === "test" &&
+    req.headers.get("x-test-simulate-webhook") === "1";
+  const stripe = forceSim ? null : getStripe();
   let paymentIntentId: string | undefined;
   let status: string | undefined;
 
