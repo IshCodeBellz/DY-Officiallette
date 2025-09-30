@@ -31,6 +31,11 @@ export async function resetDb() {
   await prisma.wishlist.deleteMany();
   await prisma.sizeVariant.deleteMany();
   await prisma.productImage.deleteMany();
+  // Remove aggregated metrics and webhook records which reference products/orders
+  await prisma.productMetrics.deleteMany();
+  await prisma.processedWebhookEvent.deleteMany();
+  // Addresses reference users; remove before users
+  await prisma.address.deleteMany();
   await prisma.product.deleteMany();
   await prisma.brand.deleteMany();
   await prisma.category.deleteMany();

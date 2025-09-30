@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  # (Optional) add security-events write if later integrating code scanning
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run Prisma Migrate (SQLite dev)
+        run: npx prisma migrate deploy || npx prisma migrate dev --name init --skip-generate
+
+      - name: Seed (optional)
+        run: npm run prisma:seed || echo "Seed script optional – continuing"
+
+      - name: Run Tests
+        run: npm test --silent
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload test results (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-or-raw-jest
+          path: |
+            jest-results.json
+            coverage
+          if-no-files-found: ignore
