@@ -219,6 +219,72 @@ export default function CheckoutClient() {
     );
   }
 
+  // Simulated payment mode (no publishable key). Provide a confirmation UI.
+  if (step === "payment" && primed && !stripePromise) {
+    return (
+      <div className="container mx-auto px-4 py-12 max-w-lg">
+        <h1 className="text-2xl font-semibold mb-4">Payment (Simulated)</h1>
+        <p className="text-sm text-neutral-600 mb-4">
+          Stripe publishable key is not configured. This environment runs in
+          simulated mode. Confirm below to mark the order as paid.
+        </p>
+        {error && (
+          <div className="bg-red-100 text-red-700 p-2 rounded text-sm mb-4">
+            {error}
+          </div>
+        )}
+        <div className="border rounded p-4 space-y-2 text-sm mb-6">
+          <div className="flex justify-between"><span>Subtotal</span><span>{formatPriceCents(primed.subtotalCents)}</span></div>
+          {primed.discountCents > 0 && (
+            <div className="flex justify-between text-green-700"><span>Discount</span><span>-{formatPriceCents(primed.discountCents)}</span></div>
+          )}
+          <div className="flex justify-between font-semibold border-t pt-2"><span>Total</span><span>{formatPriceCents(primed.totalCents)}</span></div>
+        </div>
+        <button
+          className="btn-primary w-full mb-3"
+          onClick={async () => {
+            setLoading(true);
+            setError(null);
+            try {
+              // Simulate webhook success so downstream metrics update.
+              const res = await fetch("/api/webhooks/stripe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  type: "payment_intent.succeeded",
+                  data: { object: { metadata: { orderId: primed.orderId } } },
+                }),
+              });
+              if (!res.ok) {
+                const t = await res.text();
+                throw new Error(`Webhook simulate failed (${res.status}) ${t}`);
+              }
+              clear();
+              setStep("success");
+            } catch (e: any) {
+              setError(e.message || "Simulate failed");
+            } finally {
+              setLoading(false);
+            }
+          }}
+          disabled={loading}
+        >
+          {loading ? "Confirming..." : "Confirm payment"}
+        </button>
+        <button
+          type="button"
+            className="w-full text-sm text-neutral-500 underline"
+          onClick={() => {
+            // Allow user to go back and edit details
+            setStep("form");
+          }}
+        >
+          Edit details
+        </button>
+      </div>
+    );
+  }
+
   if (authStatus === "loading" || !hydrated) {
     return (
       <div className="container mx-auto px-4 py-12">
