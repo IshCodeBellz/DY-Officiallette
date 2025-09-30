@@ -196,9 +196,14 @@ export default function CategoryPage({
                         try {
                           navigator.sendBeacon?.(
                             "/api/events",
-                            new Blob([
-                              JSON.stringify([{ productId: p.id, type: "VIEW" }]),
-                            ], { type: "application/json" })
+                            new Blob(
+                              [
+                                JSON.stringify([
+                                  { productId: p.id, type: "VIEW" },
+                                ]),
+                              ],
+                              { type: "application/json" }
+                            )
                           );
                         } catch {}
                         io.disconnect();
@@ -231,11 +236,17 @@ export default function CategoryPage({
                     try {
                       navigator.sendBeacon?.(
                         "/api/events",
-                        new Blob([
-                          JSON.stringify([
-                            { productId: p.id, type: already ? "UNWISHLIST" : "WISHLIST" },
-                          ]),
-                        ], { type: "application/json" })
+                        new Blob(
+                          [
+                            JSON.stringify([
+                              {
+                                productId: p.id,
+                                type: already ? "UNWISHLIST" : "WISHLIST",
+                              },
+                            ]),
+                          ],
+                          { type: "application/json" }
+                        )
                       );
                     } catch {}
                     push({
@@ -263,9 +274,14 @@ export default function CategoryPage({
                     try {
                       navigator.sendBeacon?.(
                         "/api/events",
-                        new Blob([
-                          JSON.stringify([{ productId: p.id, type: "ADD_TO_CART" }]),
-                        ], { type: "application/json" })
+                        new Blob(
+                          [
+                            JSON.stringify([
+                              { productId: p.id, type: "ADD_TO_CART" },
+                            ]),
+                          ],
+                          { type: "application/json" }
+                        )
                       );
                     } catch {}
                     push({ type: "success", message: "Added to bag" });

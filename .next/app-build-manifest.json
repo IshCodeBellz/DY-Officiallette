@@ -11,45 +11,40 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/(auth)/login/page": [
+    "/error": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(auth)/login/page.js"
+      "static/chunks/app/error.js"
     ],
-    "/account/page": [
+    "/product/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/account/page.js"
+      "static/chunks/app/product/[id]/page.js"
     ],
-    "/(catalog)/[category]/page": [
+    "/product/[id]/error": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(catalog)/[category]/page.js"
+      "static/chunks/app/product/[id]/error.js"
     ],
-    "/(catalog)/[category]/error": [
+    "/product/[id]/loading": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(catalog)/[category]/error.js"
-    ],
-    "/(catalog)/[category]/loading": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(catalog)/[category]/loading.js"
+      "static/chunks/app/product/[id]/loading.js"
     ],
     "/bag/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/bag/page.js"
     ],
-    "/saved/page": [
+    "/checkout/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/saved/page.js"
+      "static/chunks/app/checkout/page.js"
     ],
-    "/error": [
+    "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/error.js"
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }

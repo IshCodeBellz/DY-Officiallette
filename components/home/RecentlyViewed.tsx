@@ -7,7 +7,7 @@ import Image from "next/image";
 interface ProductLite {
   id: string;
   name: string;
-  slug: string;
+  slug?: string | null; // optional – some API variants may not provide
   image: string;
   price: number;
   discountPrice?: number | null;
@@ -61,14 +61,26 @@ export function RecentlyViewed() {
           return;
         }
         const map = new Map<string, ProductLite>(
-          (data.items as any[]).map((p: any) => [p.id as string, {
-            id: p.id,
-            name: p.name,
-            slug: p.slug,
-            image: p.image,
-            price: p.price,
-            discountPrice: p.discountPrice ?? null,
-          }])
+          (data.items as any[]).map((p: any) => {
+            const pid = p.id || p.productId || p.code; // tolerate alternative shapes
+            if (!pid) return ["", null] as any;
+            return [
+              pid as string,
+              {
+                id: pid,
+                name: p.name || p.title || "Untitled",
+                slug: p.slug || null,
+                image: p.image || p.img || "/placeholder.svg",
+                price:
+                  p.price != null
+                    ? p.price
+                    : p.priceCents != null
+                    ? Math.round(p.priceCents / 100)
+                    : 0,
+                discountPrice: p.discountPrice ?? null,
+              },
+            ];
+          })
         );
         const ordered: ProductLite[] = ids
           .map((id) => map.get(id))
@@ -84,41 +96,48 @@ export function RecentlyViewed() {
   return (
     <section className="container mx-auto px-4">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold tracking-tight">Recently Viewed</h2>
+        <h2 className="text-lg font-semibold tracking-tight">
+          Recently Viewed
+        </h2>
       </div>
       <div className="flex gap-4 overflow-x-auto snap-x pb-2 -mx-4 px-4 scrollbar-thin">
-        {items.map((p) => (
-          <Link
-            key={p.id}
-            href={`/product/${p.slug}`}
-            className="min-w-[140px] max-w-[140px] snap-start group"
-          >
-            <div className="relative aspect-[3/4] rounded-md overflow-hidden bg-neutral-100 ring-1 ring-neutral-200">
-              <Image
-                src={p.image}
-                alt={p.name}
-                fill
-                sizes="140px"
-                className="object-cover transition-transform group-hover:scale-105"
-              />
-            </div>
-            <p className="mt-2 text-[11px] font-medium line-clamp-2 leading-tight">
-              {p.name}
-            </p>
-            <div className="mt-1 text-[12px]">
-              {p.discountPrice ? (
-                <>
-                  <span className="text-rose-600 font-semibold mr-1">
-                    £{p.discountPrice}
-                  </span>
-                  <span className="line-through text-neutral-400">£{p.price}</span>
-                </>
-              ) : (
-                <span>£{p.price}</span>
-              )}
-            </div>
-          </Link>
-        ))}
+        {items.map((p) => {
+          const href = p.slug ? `/product/${p.slug}` : `/product/${p.id}`;
+          return (
+            <Link
+              key={p.id}
+              href={href}
+              className="min-w-[140px] max-w-[140px] snap-start group"
+            >
+              <div className="relative aspect-[3/4] rounded-md overflow-hidden bg-neutral-100 ring-1 ring-neutral-200">
+                <Image
+                  src={p.image}
+                  alt={p.name}
+                  fill
+                  sizes="140px"
+                  className="object-cover transition-transform group-hover:scale-105"
+                />
+              </div>
+              <p className="mt-2 text-[11px] font-medium line-clamp-2 leading-tight">
+                {p.name}
+              </p>
+              <div className="mt-1 text-[12px]">
+                {p.discountPrice ? (
+                  <>
+                    <span className="text-rose-600 font-semibold mr-1">
+                      £{p.discountPrice}
+                    </span>
+                    <span className="line-through text-neutral-400">
+                      £{p.price}
+                    </span>
+                  </>
+                ) : (
+                  <span>£{p.price}</span>
+                )}
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );

@@ -1,7 +1,10 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
-  "/account/page": "app/account/page.js",
-  "/(catalog)/[category]/page": "app/(catalog)/[category]/page.js",
+  "/api/cart/route": "app/api/cart/route.js",
+  "/api/checkout/route": "app/api/checkout/route.js",
+  "/checkout/page": "app/checkout/page.js",
+  "/product/[id]/page": "app/product/[id]/page.js",
   "/bag/page": "app/bag/page.js",
-  "/saved/page": "app/saved/page.js"
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js"
 }

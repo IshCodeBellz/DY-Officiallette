@@ -47,8 +47,8 @@ export default function HomePage() {
       {/* Recently Viewed (client only, appears when user has viewed >=3 products) */}
       <RecentlyViewed />
 
-  {/* Data-driven Trending Now */}
-  <TrendingNow />
+      {/* Data-driven Trending Now */}
+      <TrendingNow />
 
       <section className="container mx-auto px-4">
         <h2 className="text-2xl font-bold mb-6">Shop By Category</h2>

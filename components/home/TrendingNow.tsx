@@ -1,36 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 
-async function getTrendingOrFallback(): Promise<any[]> {
+export async function TrendingNow() {
+  let items: any[] = [];
   try {
-    // Relative fetch works on server (Next will resolve origin); revalidate every 5 min
-    const res = await fetch(`/api/trending`, { next: { revalidate: 300 } });
+    const res = await fetch(`/api/trending`, { next: { revalidate: 120 } });
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data.items) && data.items.length) return data.items;
+      if (Array.isArray(data.items)) items = data.items;
     }
   } catch {}
-  // Fallback: latest products (lightweight subset) so homepage never blanks
-  try {
-    const res2 = await fetch(`/api/products?pageSize=12`, {
-      next: { revalidate: 180 },
-    });
-    if (res2.ok) {
-      const d = await res2.json();
-      return (d.items || []).map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        priceCents: p.priceCents ?? Math.round((p.price || 0) * 100),
-        image: p.image,
-        fallback: true,
-      }));
-    }
-  } catch {}
-  return [];
-}
-
-export async function TrendingNow() {
-  const items = await getTrendingOrFallback();
   if (!items.length) return null;
   return (
     <section className="container mx-auto px-4">

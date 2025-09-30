@@ -63,14 +63,25 @@ export async function POST(req: NextRequest) {
     parsed.data.lines.map(async (l) => {
       const product = await prisma.product.findUnique({
         where: { id: l.productId },
+        include: { sizes: true },
       });
       if (!product) return null;
+      if (product.deletedAt) return null;
+      let finalQty = l.qty;
+      if (l.size) {
+        const sv = product.sizes.find((s) => s.label === l.size);
+        if (!sv) return null;
+        finalQty = Math.min(finalQty, sv.stock, 99);
+        if (finalQty <= 0) return null;
+      } else {
+        finalQty = Math.min(finalQty, 99);
+      }
       return prisma.cartLine.create({
         data: {
           cartId: cart.id,
           productId: product.id,
           size: l.size,
-          qty: l.qty,
+          qty: finalQty,
           priceCentsSnapshot: product.priceCents,
         },
       });
@@ -93,15 +104,28 @@ export async function PATCH(req: NextRequest) {
   for (const l of parsed.data.lines) {
     const product = await prisma.product.findUnique({
       where: { id: l.productId },
+      include: { sizes: true },
     });
     if (!product) continue;
+    if (product.deletedAt) continue;
     const existing = await prisma.cartLine.findFirst({
       where: { cartId: cart.id, productId: l.productId, size: l.size || null },
     });
+    let finalQty = l.qty;
+    if (l.size) {
+      const sv = product.sizes.find((s) => s.label === l.size);
+      if (!sv) continue;
+      const base = existing ? existing.qty + l.qty : l.qty;
+      finalQty = Math.min(base, sv.stock, 99);
+      if (finalQty <= 0) continue;
+    } else {
+      const base = existing ? existing.qty + l.qty : l.qty;
+      finalQty = Math.min(base, 99);
+    }
     if (existing) {
       await prisma.cartLine.update({
         where: { id: existing.id },
-        data: { qty: Math.min(99, existing.qty + l.qty) },
+        data: { qty: finalQty },
       });
     } else {
       await prisma.cartLine.create({
@@ -109,7 +133,7 @@ export async function PATCH(req: NextRequest) {
           cartId: cart.id,
           productId: product.id,
           size: l.size,
-          qty: l.qty,
+          qty: finalQty,
           priceCentsSnapshot: product.priceCents,
         },
       });

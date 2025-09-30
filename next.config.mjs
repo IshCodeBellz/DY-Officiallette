@@ -5,6 +5,7 @@ const nextConfig = {
       { protocol: "https", hostname: "images.asos-media.com" },
       { protocol: "https", hostname: "static.asosservices.com" },
       { protocol: "https", hostname: "picsum.photos" },
+      { protocol: "https", hostname: "m.media-amazon.com" },
     ],
   },
 };

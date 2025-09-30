@@ -9,6 +9,7 @@
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
+    "prisma:seed:random": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed-random.ts",
     "postinstall": "prisma generate",
     "test": "NODE_ENV=test jest",
     "test:coverage": "NODE_ENV=test jest --coverage"

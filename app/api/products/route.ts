@@ -38,7 +38,12 @@ export async function GET(req: NextRequest) {
       .filter(Boolean)
       .slice(0, 50); // safety cap
     if (ids.length === 0) {
-      return NextResponse.json({ total: 0, page: 1, pageSize: ids.length, items: [] });
+      return NextResponse.json({
+        total: 0,
+        page: 1,
+        pageSize: ids.length,
+        items: [],
+      });
     }
     const products = await prisma.product.findMany({
       where: { id: { in: ids } },
@@ -58,12 +63,12 @@ export async function GET(req: NextRequest) {
         .filter(Boolean)
         .map((p: any) => ({
           id: p.id,
-            name: p.name,
-            priceCents: p.priceCents,
-            price: p.priceCents / 100,
-            image: p.images[0]?.url,
-            brand: p.brand?.name,
-            category: p.category?.slug,
+          name: p.name,
+          priceCents: p.priceCents,
+          price: p.priceCents / 100,
+          image: p.images[0]?.url,
+          brand: p.brand?.name,
+          category: p.category?.slug,
         })),
     });
   }

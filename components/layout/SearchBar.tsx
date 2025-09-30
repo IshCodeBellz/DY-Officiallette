@@ -22,6 +22,12 @@ export function SearchBar({ className }: Props) {
   const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<any>();
   const router = useRouter();
+  function executeSearch() {
+    const query = q.trim();
+    if (!query) return;
+    setOpen(false);
+    router.push(`/search?q=${encodeURIComponent(query)}`);
+  }
 
   useEffect(() => {
     if (!q.trim()) {
@@ -63,11 +69,7 @@ export function SearchBar({ className }: Props) {
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
-            const query = q.trim();
-            if (query) {
-              setOpen(false);
-              router.push(`/search?q=${encodeURIComponent(query)}`);
-            }
+            executeSearch();
           }
         }}
         type="search"
@@ -78,11 +80,19 @@ export function SearchBar({ className }: Props) {
         {loading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : (
-          <Search className="h-5 w-5" />
+          <button
+            type="button"
+            aria-label="Search"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={executeSearch}
+            className="p-0.5 rounded focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200"
+          >
+            <Search className="h-5 w-5" />
+          </button>
         )}
       </div>
       {open && items.length > 0 && (
-        <ul className="absolute z-50 mt-2 w-full overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg text-sm divide-y divide-neutral-100 dark:divide-neutral-800">
+        <ul className="absolute z-50 top-full left-0 mt-2 w-full max-h-80 overflow-auto rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg text-sm divide-y divide-neutral-100 dark:divide-neutral-800">
           {items.map((it) => (
             <li key={it.id}>
               <Link
