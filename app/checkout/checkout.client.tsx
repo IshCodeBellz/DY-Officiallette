@@ -137,6 +137,12 @@ export default function CheckoutClient() {
           email,
           discountCode: codeToSend,
           idempotencyKey,
+          // Provide lines as safety net if server cart lost (race / db reset)
+          lines: items.map((i) => ({
+            productId: i.productId,
+            size: i.size,
+            qty: i.qty,
+          })),
         }),
       });
       if (!checkoutRes.ok) {

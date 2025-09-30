@@ -25,12 +25,20 @@ const addressSchema = z.object({
   phone: z.string().optional(),
 });
 
+const lineSchema = z.object({
+  productId: z.string().min(5),
+  size: z.string().min(1).optional(),
+  qty: z.number().int().min(1).max(99),
+});
+
 const payloadSchema = z.object({
   shippingAddress: addressSchema,
   billingAddress: addressSchema.optional(),
   email: z.string().email().optional(),
   discountCode: z.string().trim().toUpperCase().optional(),
   idempotencyKey: z.string().min(8).max(100).optional(),
+  // Optional fallback: client can send current cart lines so server can rebuild if persistence lagged
+  lines: z.array(lineSchema).max(200).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -68,7 +76,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Load cart with product & size info
-  const cart = await prisma.cart.findUnique({
+  let cart = await prisma.cart.findUnique({
     where: { userId: uid },
     include: { lines: { include: { product: { include: { sizes: true } } } } },
   });
@@ -78,8 +86,53 @@ export async function POST(req: NextRequest) {
     lines: cart?.lines.length,
   });
   if (!cart || cart.lines.length === 0) {
-    debug("CHECKOUT", "empty_cart");
-    return NextResponse.json({ error: "empty_cart" }, { status: 400 });
+    // Attempt fallback rebuild if client provided lines (recent sync race)
+    if (parsed.success && parsed.data.lines && parsed.data.lines.length) {
+      debug("CHECKOUT", "rebuild_cart_attempt", { count: parsed.data.lines.length });
+      // Get or create cart record
+      cart = await prisma.cart.upsert({
+        where: { userId: uid },
+        update: {},
+        create: { userId: uid },
+        include: { lines: { include: { product: { include: { sizes: true } } } } },
+      });
+      // Clear any existing (should be zero) then recreate
+      await prisma.cartLine.deleteMany({ where: { cartId: cart.id } });
+      for (const l of parsed.data.lines) {
+        const product = await prisma.product.findUnique({
+          where: { id: l.productId },
+          include: { sizes: true },
+        });
+        if (!product || product.deletedAt) continue;
+        let finalQty = l.qty;
+        if (l.size) {
+          const sv = product.sizes.find((s) => s.label === l.size);
+          if (!sv) continue;
+            finalQty = Math.min(finalQty, sv.stock, 99);
+          if (finalQty <= 0) continue;
+        } else {
+          finalQty = Math.min(finalQty, 99);
+        }
+        await prisma.cartLine.create({
+          data: {
+            cartId: cart.id,
+            productId: product.id,
+            size: l.size,
+            qty: finalQty,
+            priceCentsSnapshot: product.priceCents,
+          },
+        });
+      }
+      cart = await prisma.cart.findUnique({
+        where: { userId: uid },
+        include: { lines: { include: { product: { include: { sizes: true } } } } },
+      });
+      debug("CHECKOUT", "rebuild_cart_result", { lines: cart?.lines.length });
+    }
+    if (!cart || cart.lines.length === 0) {
+      debug("CHECKOUT", "empty_cart");
+      return NextResponse.json({ error: "empty_cart" }, { status: 400 });
+    }
   }
 
   // Validate stock + compute totals
