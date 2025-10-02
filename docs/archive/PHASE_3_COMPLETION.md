@@ -1,0 +1,1 @@
+Completion notes integrated; see EXECUTIVE SNAPSHOT & Roadmap.

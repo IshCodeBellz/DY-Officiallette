@@ -1,0 +1,1 @@
+UI gaps integrated into Roadmap & Deferred feature table (ARCHITECTURE.md Sections 8 & 15).

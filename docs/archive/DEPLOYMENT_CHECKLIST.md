@@ -1,0 +1,1 @@
+Superseded by ARCHITECTURE.md Section 7 & README Quick Start. See history for full checklist (pre 1786eee).

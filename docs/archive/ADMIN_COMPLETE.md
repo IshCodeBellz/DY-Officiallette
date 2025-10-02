@@ -1,0 +1,1 @@
+Admin coverage summarized in ARCHITECTURE.md Sections 2.2 & 9.

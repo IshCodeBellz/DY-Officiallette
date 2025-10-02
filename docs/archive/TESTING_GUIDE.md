@@ -1,0 +1,1 @@
+Testing instructions consolidated (ARCHITECTURE.md Section 6 + README Quick Start).

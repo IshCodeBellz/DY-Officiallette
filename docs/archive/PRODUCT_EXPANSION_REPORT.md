@@ -1,0 +1,1 @@
+Catalog expansion summarized in ARCHITECTURE.md Section 4. Original archived (git history).

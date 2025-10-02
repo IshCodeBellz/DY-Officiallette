@@ -1,0 +1,1 @@
+Project summary now in README + ARCHITECTURE.md Section 1.

@@ -1,0 +1,1 @@
+Trending component fix summarized in Algorithms & Scoring (ARCHITECTURE.md Section 5).

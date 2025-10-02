@@ -1,0 +1,1 @@
+Status snapshot replaced by EXECUTIVE SNAPSHOT (ARCHITECTURE.md Section 1).

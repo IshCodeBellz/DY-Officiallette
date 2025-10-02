@@ -1,0 +1,1 @@
+Phase 3 plan condensed into Roadmap & Deferred Feature Plan (ARCHITECTURE.md Sections 8 & 15).

@@ -1,0 +1,1 @@
+Real data integration folded into Feature Overview & Data Model highlights (ARCHITECTURE.md Sections 2–4).

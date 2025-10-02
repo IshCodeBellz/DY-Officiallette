@@ -1,0 +1,1 @@
+Auth verification details merged into Security Snapshot (ARCHITECTURE.md Section 9).

@@ -1,0 +1,1 @@
+Cart size fix merged with size enforcement notes (ARCHITECTURE.md Section 6/7).

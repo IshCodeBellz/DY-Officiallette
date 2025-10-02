@@ -1,0 +1,1 @@
+User journey findings merged into Testing & Matrix (ARCHITECTURE.md Sections 6 & 17).

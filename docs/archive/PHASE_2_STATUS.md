@@ -1,0 +1,1 @@
+Intermediate status replaced by consolidated snapshot (ARCHITECTURE.md Section 1).

@@ -1,0 +1,1 @@
+Discount logic notes summarized under pricing & checkout in ARCHITECTURE.md.

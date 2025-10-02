@@ -1,0 +1,1 @@
+Size selection fix documented under Testing & Quality improvements (ARCHITECTURE.md Section 6/7).
