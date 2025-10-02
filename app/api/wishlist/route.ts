@@ -11,7 +11,8 @@ export const GET = withRequest(async function GET(req: NextRequest) {
     where: { userId },
     include: {
       items: {
-        include: { product: { include: { images: true, sizes: true } } },
+        // Product relation: images + sizeVariants (SizeVariant model). There is no 'sizes' include in Product.
+        include: { product: { include: { images: true, sizeVariants: true } } },
       },
     },
   });
@@ -26,7 +27,9 @@ export const GET = withRequest(async function GET(req: NextRequest) {
         priceCents: i.product.priceCents,
         sku: i.product.sku,
         images: i.product.images,
-        sizes: i.product.sizes,
+        sizes: (i.product as any).sizeVariants
+          ? (i.product as any).sizeVariants.map((sv: any) => sv.label)
+          : [],
       },
     })),
   });
