@@ -5,6 +5,7 @@
 - Archived 20+ historical phase/fix/status markdown files under `docs/archive/` for audit.
 - Added badges placeholder (build/coverage) and clarified deferred feature activation path.
 - No functional code changes; documentation restructure only.
+ - Root directory cleaned: legacy phase/report markdown files removed (duplicates now only referenced via `docs/archive/`).
 
 ### Admin Product Management Enhancements (Phase 2)
 
