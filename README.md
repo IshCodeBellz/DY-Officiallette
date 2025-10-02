@@ -1,322 +1,73 @@
-# DYOFFICIAL (Next.js 14 + Tailwind CSS)
+<div align="center">
 
-Educational fashion e‑commerce demo (formerly "ASOS Clone") showcasing modern commerce patterns: App Router, server + client composition, search relevance, analytics events, and a full checkout → payment → webhook lifecycle.
+# DYOFFICIAL
 
-## Current Feature Set
+Modern fashion e‑commerce demo (Next.js 14 + Tailwind). Production‑style architecture: storefront, admin, checkout → payment simulation, analytics, and trending discovery.
 
-### Platform & UI
+<p>
+<a href="#"><img alt="Build" src="https://img.shields.io/badge/build-passing-brightgreen" /></a>
+<a href="#"><img alt="Coverage" src="https://img.shields.io/badge/coverage-~%20tests-green" /></a>
+<a href="./ARCHITECTURE.md"><img alt="Docs" src="https://img.shields.io/badge/docs-architecture-blue" /></a>
+</p>
 
-- Next.js 14 App Router (RSC + edge-friendly patterns where practical)
-- Tailwind CSS utility-first styling
-- Global layout (sticky header, navigation, footer, dark mode persistence)
-- Home landing sections: Hero, Trending Now, Category grid, New In
-- Category pages with client filtering (search within page, size, price range)
-- Product gallery with:
-  - Multi-image thumbnails + keyboard & swipe navigation
-  - Zoom modal, preload of adjacent images, image index overlays
-  - Structured data (JSON-LD Product + ItemList for categories)
-- Wishlist & Cart UI (local → server sync strategy)
-- Quick-add button with size enforcement popover (cannot add size-tracked item without picking a size)
+</div>
 
-### Data & Domain
+## ✨ Highlights
 
-- Prisma schema: Products, Brands, Categories, Images, SizeVariants, Users, Cart/CartLines, Wishlist, Orders, OrderItems, PaymentRecords, DiscountCodes, ProductMetrics
-- SQLite for development (easy file reset); compatible with Postgres in production
-- Admin endpoints + pages for Brands, Categories, Products (SKU uniqueness, soft-delete / restore for products)
-- Random seed script for catalog variety (`prisma/seed-random.ts`)
+- Next.js App Router (RSC) + Tailwind UI
+- 210 seeded products / 20 brands / size variants
+- Search relevance + time‑decay trending algorithm
+- Wishlist + cart (local → server sync) & discount engine
+- Admin suite (products, orders, categories, discounts, inventory overview)
+- Simulated Stripe-ready checkout (idempotent + webhook finalization)
 
-### Search & Discovery
-
-### Security & Data Integrity
-
-<!-- Consolidated README: All previous *.md documentation condensed here -->
-
-# DYOFFICIAL (Formerly "ASOS Clone")
-
-Modern, educational fashion e‑commerce platform demonstrating production-grade architecture: Next.js App Router, server + client composition, search & discovery, analytics events pipeline, resilient checkout → payment → webhook lifecycle, social commerce foundations, and an admin & analytics ecosystem.
-
----
-
-## 1. Executive Snapshot
-
-| Area | Status | Notes |
-|------|--------|-------|
-| Core Commerce (browse → checkout) | ✅ Production-ready | 210 products, variants, discounts, order flow verified |
-| Admin Suite | ✅ 100% coverage | Products, orders, brands, categories, discounts, inventory, social, analytics |
-| Search & Trending | ✅ Implemented | Weighted relevance + time-decay trending, synonyms, facets |
-| Events & Metrics | ✅ Active | VIEW / DETAIL / WISHLIST / ATC / PURCHASE instrumentation feeding ProductMetrics |
-| Payments | ✅ Simulated + Stripe-ready | Idempotent checkout, webhook finalization, future real keys drop-in |
-| Social Commerce | ✅ Foundation | Wishlist (public/private), review moderation scaffolding, analytics stubs |
-| Personalization | ✅ Baseline | Recently viewed, trending, relationships seed (future ML hooks) |
-| Observability | ✅ | Health, metrics, structured logging, Sentry (optional) |
-| Deployment Readiness | ✅ High | Dockerfile, CI, checklist compiled |
-| Deferred Advanced Features | 🚧 Stubbed | Variants mgmt enhancements, bundles, review create/vote/report, product relations, inventory alerts |
-
----
-
-## 2. Feature Overview
-
-### 2.1 User & Storefront
-- Responsive Next.js 14 (RSC) UI with Tailwind
-- Home: Hero, Trending Now (time-decay score), New In, Recently Viewed
-- Category & search pages: client filters (size, price), relevance sorting, plural & synonym expansion
-- Product Detail: multi-image gallery, structured data JSON-LD, size variant enforcement, wishlist toggle
-- Cart & Wishlist: local-first → sync strategy, optimistic updates, enforced size selection (fixed across pages)
-- Checkout: validation (stock, deleted, size), discount codes (fixed/percent, limits, windows), idempotent order creation
-- Payment: simulated flow + webhook mimic; Stripe endpoints ready for live keys
-
-### 2.2 Admin & Operations
-- Dashboard: overview KPIs
-- Products / Brands / Categories CRUD with soft-delete & SKU uniqueness
-- Orders: status transitions & event log (OrderEvent model)
-- Discount Codes: validation engine (thresholds, caps, temporal windows)
-- Inventory: low stock alerts, movement log, summary stats
-- Social: review moderation queue (stubbed methods), wishlist analytics
-- Users: behavior segmentation & engagement metrics
-- Security (framework groundwork): rate limiting & MFA infrastructure foundations
-
-### 2.3 Data & Intelligence
-- ProductMetrics counters (views, detailViews, wishlists, addToCart, purchases)
-- Trending score: weighted activities × time decay (72h half-life)
-- Search facets & analytics (term frequency, trending queries foundation)
-- UserBehavior events: future personalization expansion point
-- Review & Wishlist analytics (baseline; advanced aggregation deferred)
-
-### 2.4 Engineering Foundations
-- Strict TypeScript & Prisma schema (SQLite dev, Postgres-ready)
-- Event ingestion API batching
-- Health endpoint + metrics placeholders
-- Structured environment validation with grouped one-time logs
-- Integration + unit tests (search expansion, trending decay, full checkout flow)
-- CI pipeline (install → migrate → test → build)
-
----
-
-## 3. Data Model Highlights
-Key Prisma models: Product, ProductVariant, SizeVariant, ProductImage, ProductMetrics, Wishlist(+Items +Followers +Analytics), ProductReview, Order / OrderItem / PaymentRecord, DiscountCode, InventoryAlert, ProductRelation, UserBehavior, Recommendation, ReviewAnalytics.
-
-Advanced (Phase 3/4) models present but some service layers intentionally stubbed.
-
----
-
-## 4. Product Catalog & Content
-- 210 products across 7+ categories
-- 20 brands populated (fast-fashion → athletic → heritage)
-- Complete size matrices (Women, Men, Sportswear, Footwear) with per-size stock
-- SEO metadata fields (title, description, materials, care instructions, tags)
-- Product relationships seeded (foundation for "Customers also viewed")
-
-Expansion impact: ~5× initial assortment; supports realistic discovery & load testing.
-
----
-
-## 5. Algorithms & Scoring
-Trending score = Σ(weighted interactions) × decay(Δhours, halfLife=72). Weights: views 0.5, detail 1.0, wishlist 1.3, addToCart 2.2, purchases 4.0.
-Fallback strategy: If no meaningful score → newest products list (guaranteed visual continuity).
-
-Search relevance: field weighting + simple term normalization + plural & synonym expansion. Facets pre-aggregated with scoped counts.
-
----
-
-## 6. Social & Engagement (Current vs Deferred)
-Implemented: Public/private wishlists, wishlist sharing token, basic review moderation queries (pending/unhelpful heuristics), social stats (counts, ratios).
-Deferred (stubbed methods in `ReviewService` & `ProductManagementService`): review creation, helpfulness voting, reporting, product bundles, variant CRUD enhancements, product relations ranking, inventory alert automation.
-
----
-
-## 7. Testing & Quality
-Automated:
-- `__tests__/checkoutFlow.int.test.ts` end‑to‑end order pipeline
-- `__tests__/searchExpansion.test.ts` synonyms/plurals
-- `__tests__/trendingDecay.test.ts` time decay correctness
-
-Manual Journey (validated): anonymous browse → register/login → search/filter → size selection enforcement → cart → discount → checkout → order state → admin visibility.
-
-Key Fixes Incorporated:
-- Trending SSR fetch removed → direct DB access (faster & resilient)
-- Size selection enforced globally (New In parity with categories)
-- Corrupted service file replaced by hardened stubs (compile stability)
-
----
-
-## 8. Deployment & Operations Summary
-Essentials:
+## 🚀 Quick Start
 ```
-DATABASE_URL=postgresql://user:pass@host/db
-NEXTAUTH_SECRET=... (strong random)
-NEXTAUTH_URL=https://yourdomain
-STRIPE_SECRET_KEY=sk_live_... (when live)
-STRIPE_WEBHOOK_SECRET=whsec_...
-RESEND_API_KEY=... (optional emails)
-SENTRY_DSN=... (optional monitoring)
+cp .env.example .env
+npm install
+npx prisma migrate dev --name init
+npm run prisma:seed
+npm run dev
 ```
-Build: `npm run build` → start or deploy (Dockerfile multi-stage ready). Health endpoint for LB probes; optional Sentry for tracing. See prior Deployment Checklist (now superseded by this consolidated README) for advanced hardening.
+Visit: http://localhost:3000  |  Admin: /admin (see demo accounts below)
 
-Key Production Concerns:
-- Switch SQLite → Postgres before scale
-- Enable real Stripe + webhook signature validation
-- Add Redis / external cache for search & personalization (future)
-
----
-
-## 9. Admin Interface Map
-```
-/admin
-  products/  brands/  categories/  orders/  discount-codes/
-  inventory/ analytics/ personalization/ social/ users/analytics/
-  security/ settings/
-```
-Coverage: 13 sections, 60+ purposeful components, 100% feature visibility.
-
----
-
-## 10. Accounts (Demo)
+## 👤 Demo Accounts
 | Role | Email | Password |
 |------|-------|----------|
 | Admin | admin@dyofficial.com | admin123 |
 | User  | john@example.com | user123 |
 | User  | jane@example.com | user123 |
 
-Seeded wishlists, orders, and behaviors accelerate demo realism.
+## 🧱 Stack
+Next.js 14, TypeScript, Prisma, NextAuth, Tailwind, Stripe (simulated), Jest.
+
+## 📊 Core Features
+- Browse → filter → product detail (structured data + gallery)
+- Cart + wishlist with enforced size selection
+- Discount codes (fixed / percent / limits / windows)
+- Trending & recently viewed personalization slices
+- Order lifecycle + metrics instrumentation
+
+## 🔍 Search & Trending
+Weighted relevance (synonyms/plurals) + event-driven metrics feed a time‑decay trending list (72h half‑life). Falls back to “newest” when cold.
+
+## 🛠 Admin Overview
+Products, brands, categories, orders, discount codes, basic inventory + social moderation scaffolding.
+
+## 🧪 Tests
+Key coverage: checkout flow, search expansion, trending decay, money formatting, order transitions.
+
+## 🧬 Deferred (Stubbed) Features
+Reviews (create/vote/report), advanced variant management, bundles, product relations scoring, inventory alert automation. See `ARCHITECTURE.md` for activation plan.
+
+## 📄 Full Technical Documentation
+See `ARCHITECTURE.md` (deep data models, algorithms, roadmap, activation steps).
+
+## ⚖️ License / Attribution
+Educational project (not affiliated with ASOS). Validate security & compliance before production use.
 
 ---
-
-## 11. Development Workflow
-1. `cp .env.example .env` & adjust
-2. `npm install` (or pnpm/yarn)
-3. `npx prisma migrate dev --name init`
-4. `npm run prisma:seed` (randomized catalog)
-5. `npm run dev`
-6. Run tests: `npm test`
-
-Optional Postgres (docker-compose): `docker compose up --build` then `npx prisma migrate deploy`.
-
----
-
-## 12. Pricing & Money Handling
-All monetary values stored as integer minor units (`priceCents`). Display via shared formatter to avoid float drift. Never perform logic on formatted strings.
-
----
-
-## 13. Observability & Health
-- `/api/health` (lightweight probe)
-- Structured debug helper `debug(tag,event,payload)`
-- Optional Sentry DSN enables error + perf tracing
-- Rate limiting scaffold & security event logging foundation
-
----
-
-## 14. Deferred / Stubbed Features (Activation Plan)
-| Feature | Stub Location | Unlock Steps |
-|---------|---------------|--------------|
-| Review create/vote/report | `ReviewService` static stubs | Implement CRUD + per-user vote table + analytics update job |
-| Product variants mgmt 2.0 | `ProductManagementService` | Replace stubs, add admin UI for variant CRUD + price overrides |
-| Bundles & collections | `ProductManagementService` | Model linking + discount application logic + bundle PDP surfaces |
-| Inventory alerts engine | Same | Schedule cron / on-write checks + alert persistence + UI surfacing |
-| Product relations scoring | Same | Generate similarity graph (views, co-purchase) + caching layer |
-| Bulk product generation | Same | Replace seed reliance with CLI ingest + validations |
-
-Suggested Order: Reviews → Variants → Relations → Inventory Alerts → Bundles → Bulk Tools.
-
----
-
-## 15. Roadmap (Forward Looking)
-Short Term:
-- Enable real Stripe + webhooks signature
-- Migrate to Postgres + connection pooling
-- Activate review creation & moderation workflow
-
-Mid Term:
-- Fuzzy search & typo tolerance
-- Recommendation refinement (collaborative + content hybrid scoring)
-- PWA + offline & push notifications
-
-Long Term:
-- Multi-vendor marketplace & commission engine
-- ML-driven dynamic pricing & fraud signals
-- Internationalization (currencies, locale formatting)
-
----
-
-## 16. Security Snapshot
-- Idempotent checkout & payment flow
-- Planned MFA scaffolding (models present)
-- Environment validation gates risky misconfiguration
-- Future: CSP, CSRF tokens, advanced session hardening
-
----
-
-## 17. Testing Matrix (Condensed)
-| Layer | Representative Tests | Status |
-|-------|----------------------|--------|
-| Unit | price formatting, decay math | ✅ |
-| Integration | checkoutFlow.int.test | ✅ |
-| Search Logic | synonym & plural expansion | ✅ |
-| Manual UX | full user journey (report) | ✅ |
-| Pending | review flows, variant admin | 🚧 (deferred) |
-
----
-
-## 18. Known Gaps / Technical Debt (Intentional)
-- ReviewService business methods disabled (stubs return "Disabled")
-- ProductManagementService advanced operations deferred
-- No persistent cache layer (in-memory/DB only)
-- Stripe fully simulated unless keys provided
-
-All gaps documented; no silent failures.
-
----
-
-## 19. Contribution Guidelines (Lightweight)
-1. Add/modify Prisma model → run migration → document change rationale.
-2. For new service: include interface, error modes, minimal tests.
-3. Avoid reintroducing floating currency types.
-4. Keep stubs clearly marked until replaced; remove "Disabled" wording on activation.
-
----
-
-## 20. Quick Commands (Reference)
-```
-# Reset dev DB (DANGER)
-rm -f prisma/dev.db && npx prisma migrate dev --name init && npm run prisma:seed
-
-# Run targeted test
-npm test -- cartSubtotal
-
-# Open Prisma Studio
-npx prisma studio
-```
-
----
-
-## 21. Glossary
-| Term | Meaning |
-|------|---------|
-| RSC | React Server Components (App Router) |
-| ATC | Add To Cart event |
-| Decay | Time weighting reducing historic engagement influence |
-| Idempotency Key | Client-provided unique token preventing duplicate checkout side effects |
-
----
-
-## 22. Status
-Platform: ✅ Production-quality core
-Advanced Social / Bundles: 🚧 Planned
-Ready for: Real payment enablement, load & A/B experimentation.
-
----
-
-## 23. License / Attribution
-Educational demonstration project. Not affiliated with or endorsed by ASOS. Use commercially at your own risk; validate security & compliance layers before launch.
-
----
-
-**Build Something Great.**
-
----
-_This consolidated README supersedes individual historical *.md reports (kept for audit/history)._ 
-
-<!-- End Consolidated README -->
+`ARCHITECTURE.md` contains the previous in‑depth consolidated documentation. Historical phase / fix reports now live under `docs/archive/`.
 
 4. Start the dev server:
 

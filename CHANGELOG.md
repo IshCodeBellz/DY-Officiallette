@@ -1,5 +1,11 @@
 ## Unreleased
 
+### Documentation Consolidation
+- Split monolithic README into concise public `README.md` + deep-dive `ARCHITECTURE.md`.
+- Archived 20+ historical phase/fix/status markdown files under `docs/archive/` for audit.
+- Added badges placeholder (build/coverage) and clarified deferred feature activation path.
+- No functional code changes; documentation restructure only.
+
 ### Admin Product Management Enhancements (Phase 2)
 
 - Added soft delete (products now have `deletedAt`); admin list can optionally show deleted items with a toggle and visual badge.
