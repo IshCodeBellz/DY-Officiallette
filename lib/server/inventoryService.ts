@@ -201,7 +201,7 @@ export class InventoryService {
         order.items.map((item) => ({
           createdAt: order.createdAt,
           productName: item.nameSnapshot,
-            variant: item.size ? `Size: ${item.size}` : "Standard",
+          variant: item.size ? `Size: ${item.size}` : "Standard",
           type: "outgoing" as const,
           quantity: item.qty,
           reference: `Order #${order.id.slice(-6)}`,
@@ -211,7 +211,9 @@ export class InventoryService {
 
       // Simulated incoming purchase orders (restocks)
       const simulatedIncoming = Array.from({ length: 4 }).map(() => ({
-        createdAt: new Date(Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24)),
+        createdAt: new Date(
+          Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24)
+        ),
         productName: "Restock Batch",
         variant: "Standard",
         type: "incoming" as const,
@@ -222,12 +224,17 @@ export class InventoryService {
 
       // Simulated adjustment events (stock counts / corrections)
       const simulatedAdjustments = Array.from({ length: 3 }).map(() => ({
-        createdAt: new Date(Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 48)),
+        createdAt: new Date(
+          Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 48)
+        ),
         productName: "Inventory Audit",
         variant: "Standard",
         type: "adjustment" as const,
         quantity: Math.floor(Math.random() * 5) + 1,
-        reference: `ADJ-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
+        reference: `ADJ-${Math.random()
+          .toString(36)
+          .slice(2, 6)
+          .toUpperCase()}`,
         newStock: Math.floor(Math.random() * 80) + 10,
       }));
 

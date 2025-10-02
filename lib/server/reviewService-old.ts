@@ -1,14 +1,4 @@
-import { prisma } from "./prisma";
-
-export interface CreateReviewData {
-  productId: string;
-  userId: string;
-  rating: number; // 1-5
-  title?: string;
-  content: string;
-  images?: string[];
-  videos?: string[];
-  isVerified?: boolean;
+DELETE_FILE
 }
 
 export interface ReviewWithUser {
