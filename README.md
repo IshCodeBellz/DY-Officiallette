@@ -122,6 +122,44 @@ npm test
 - Automated Lighthouse & a11y test pipeline
 - Graph-based recommendation ("Customers also viewed")
 
+## Deferred Phase 3 / 4 Feature Stubs
+
+The codebase contains intentional stubs (no-op services) to keep compilation green while larger domain features are deferred. These are safe placeholders and clearly marked with comments / disabled return values. Implement incrementally as schema + product direction solidify.
+
+| Area | File / Symbol | Status | Next Steps |
+| ---- | ------------- | ------ | ---------- |
+| Product Variants / Bundles | `lib/server/productManagement.ts` `ProductManagementService` | Stubbed | Add Prisma models (Variant relations already present), implement create/update flows, inventory alerts, bundles linkage |
+| Inventory Alerts (advanced) | `ProductManagementService` methods | Stubbed | Implement stock threshold evaluation & background checks |
+| Product Relations / Recommendations | `relateProducts`, `getRelatedProducts` | Stubbed | Create scoring job (views, co-purchase), store in `ProductRelation` |
+| Advanced Reviews (creation, voting, reporting) | `ReviewService` static methods | Stubbed | Implement persistence, per-user vote tracking, moderation queue, analytics rollups |
+| Review Moderation Queue | `ReviewService.getModerationQueue` | Stubbed | Filter unpublished / flagged reviews, add admin workflow |
+| Social Wishlist Analytics (extended) | Planned | Partial | Extend `WishlistAnalytics` with conversion attribution |
+| Bulk Product Generation | `generateBulkProducts` | Disabled | Use existing seed scripts or build CLI utility |
+
+### Implementation Guidelines
+
+1. Replace each stub method body; remove the "Disabled" / "Stub" error messages.
+2. Add unit tests before expanding side effects (start with pure transforms where possible).
+3. Update README table row Status from `Stubbed` to `Active` when shipped; add brief description.
+4. Ensure new Prisma models or fields include indexes aligned with query patterns (reads >> writes).
+5. Run `npx prisma migrate dev` and record migration rationale in a short comment block at top of the migration SQL.
+
+### Suggested Order of Activation
+
+1. Review creation + helpful voting (high user value, low coupling)
+2. Product variant management (unlocks richer PDP + size/color UX)
+3. Product relations (cross-sell / similar suggestions)
+4. Inventory alerts (operational safeguards)
+5. Bundles (marketing / merchandising flexibility)
+
+Each step should ship with:
+- Prisma migration (if schema changes)
+- Service implementation + tests
+- Admin UI affordances (where applicable)
+- Observability (log or metric counters for key flows)
+
+---
+
 ---
 
 ## Getting Started

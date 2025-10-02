@@ -178,4 +178,42 @@ export class ReviewService {
       };
     }
   }
+
+  // TODO: Phase 3/4 - Implement fully featured review retrieval with pagination, sorting, filtering
+  static async getProductReviews(productId: string, opts: { page: number; limit: number; sortBy: string; verified?: boolean; minRating?: number }) {
+    return {
+      page: opts.page,
+      limit: opts.limit,
+      totalCount: 0,
+      reviews: [],
+      analytics: {
+        averageRating: 0,
+        totalReviews: 0,
+        ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        verifiedReviewsPercentage: 0,
+        reviewsWithMedia: 0,
+        recentReviewsTrend: "stable" as const,
+      },
+    };
+  }
+
+  // TODO: Implement create review logic with validation, duplication checks, analytics update
+  static async createReview(data: { productId: string; userId: string; rating: number; title?: string; content: string; images: string[]; videos: string[]; isVerified: boolean }) {
+    return { success: false, error: "Review creation disabled (stub)", review: null };
+  }
+
+  // TODO: Implement helpful vote logic with idempotency per user
+  static async voteReviewHelpful(reviewId: string, userId: string) {
+    return { success: false, error: "Helpfulness voting disabled (stub)", newVoteCount: 0 };
+  }
+
+  // TODO: Implement report review with moderation queue integration
+  static async reportReview(reviewId: string, userId: string, reason: string) {
+    return { success: false, error: "Reporting disabled (stub)" };
+  }
+
+  // TODO: Implement moderation queue retrieval
+  static async getModerationQueue(limit: number) {
+    return [] as any[];
+  }
 }
