@@ -9,7 +9,7 @@ export async function GET(
     where: { id: params.id },
     include: {
       images: { orderBy: { position: "asc" } },
-      sizes: true,
+      sizeVariants: true,
       brand: true,
       category: true,
     },
@@ -23,7 +23,10 @@ export async function GET(
     priceCents: product.priceCents,
     price: product.priceCents / 100, // legacy
     images: product.images.map((im: any) => ({ url: im.url, alt: im.alt })),
-    sizes: product.sizes.map((s: any) => ({ label: s.label, stock: s.stock })),
+    sizes: product.sizeVariants.map((s: any) => ({
+      label: s.label,
+      stock: s.stock,
+    })),
     brand: product.brand?.name,
     category: product.category?.slug,
   });

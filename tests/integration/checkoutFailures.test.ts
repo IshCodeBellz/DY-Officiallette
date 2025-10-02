@@ -12,7 +12,7 @@ beforeEach(async () => {
   await resetDb();
 });
 
-const hdr = { "x-test-user": "test-user" };
+const hdr = { "x-test-user": "test-user", "x-test-bypass-rate-limit": "1" };
 
 function baseAddress() {
   return {
@@ -98,6 +98,14 @@ describe("checkout failure scenarios", () => {
       email: "a@b.com",
       idempotencyKey: "fail-disc-2",
       discountCode: "BIGSAVE",
+      // Provide lines fallback to prevent any possibility of cart missed in rare rebuild case
+      lines: [
+        {
+          productId: p.id,
+          size: undefined,
+          qty: 1,
+        },
+      ],
     };
     const res: any = await invokePOST(
       checkoutRoute,

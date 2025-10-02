@@ -1,9 +1,12 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/server/prisma";
+import { prismaX } from "@/lib/server/prismaEx";
+
+const TEST_BASE = process.env.TEST_BASE_URL || "http://localhost:3000";
 
 // Lightweight invocation helpers for route handlers without spinning up full Next server
 export async function invokeGET(mod: any, url: string) {
-  const req = new NextRequest(new URL(url, "http://localhost:3000"));
+  const req = new NextRequest(new URL(url, TEST_BASE));
   return mod.GET(req);
 }
 export async function invokePOST(
@@ -12,7 +15,7 @@ export async function invokePOST(
   body: any,
   headers: Record<string, string> = {}
 ) {
-  const req = new NextRequest(new URL(url, "http://localhost:3000"), {
+  const req = new NextRequest(new URL(url, TEST_BASE), {
     method: "POST",
     body: JSON.stringify(body),
     headers: { "content-type": "application/json", ...headers },
@@ -21,27 +24,95 @@ export async function invokePOST(
 }
 
 export async function resetDb() {
-  // Order of deletion respecting FKs
-  await prisma.paymentRecord.deleteMany();
-  await prisma.orderItem.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.cartLine.deleteMany();
-  await prisma.cart.deleteMany();
-  await prisma.wishlistItem.deleteMany();
-  await prisma.wishlist.deleteMany();
-  await prisma.sizeVariant.deleteMany();
-  await prisma.productImage.deleteMany();
-  // Remove aggregated metrics and webhook records which reference products/orders
-  await prisma.productMetrics.deleteMany();
-  await prisma.processedWebhookEvent.deleteMany();
-  // Addresses reference users; remove before users
-  await prisma.address.deleteMany();
-  await prisma.product.deleteMany();
-  await prisma.brand.deleteMany();
-  await prisma.category.deleteMany();
-  await prisma.discountCode.deleteMany();
-  await prisma.passwordResetToken.deleteMany();
-  await prisma.user.deleteMany();
+  let isSqlite = false;
+  const dbUrl = process.env.DATABASE_URL || "";
+  if (dbUrl.includes("sqlite")) isSqlite = true;
+  else {
+    // Probe with PRAGMA to detect sqlite when env var missing in process (but present in generated client).
+    try {
+      await prisma.$executeRawUnsafe("PRAGMA foreign_keys");
+      isSqlite = true;
+    } catch {}
+  }
+
+  const orderedTables = [
+    "PaymentRecord",
+    "OrderEvent",
+    "OrderItem",
+    "Order",
+    "CartLine",
+    "Cart",
+    "WishlistItem",
+    "Wishlist",
+    "ProductImage",
+    "SizeVariant",
+    "ProductMetrics",
+    "ProcessedWebhookEvent",
+    "Address",
+    "Product",
+    "Brand",
+    "Category",
+    "DiscountCode",
+    "PasswordResetToken",
+    "User",
+  ];
+
+  if (isSqlite) {
+    // Quick short‑circuit: if no orders and no products present assume DB already clean.
+    const anyExisting = await prisma.product.findFirst({
+      select: { id: true },
+    });
+    if (!anyExisting) {
+      const hasUser = await prisma.user.findFirst({ select: { id: true } });
+      if (!hasUser) return; // already empty
+    }
+    try {
+      await prisma.$executeRawUnsafe("PRAGMA foreign_keys = OFF");
+      const timings: Array<{ table: string; ms: number }> = [];
+      for (const t of orderedTables) {
+        const start = Date.now();
+        await prisma.$executeRawUnsafe(`DELETE FROM "${t}"`);
+        timings.push({ table: t, ms: Date.now() - start });
+      }
+      if (process.env.TEST_DB_TIMING === "1") {
+        console.log(
+          "resetDb(sqlite) timings=" +
+            timings.map((r) => `${r.table}:${r.ms}ms`).join(",")
+        );
+      }
+    } finally {
+      await prisma.$executeRawUnsafe("PRAGMA foreign_keys = ON");
+    }
+    return;
+  }
+
+  // Non-sqlite path (e.g., Postgres soon). Use a transaction + two passes for safety.
+  await prisma.$transaction(async (tx) => {
+    const del = async () => {
+      const time = (label: string, fn: () => Promise<any>) => fn();
+      await tx.paymentRecord.deleteMany();
+      await (prismaX.orderEvent as any).deleteMany();
+      await tx.orderItem.deleteMany();
+      await tx.order.deleteMany();
+      await tx.cartLine.deleteMany();
+      await tx.cart.deleteMany();
+      await tx.wishlistItem.deleteMany();
+      await tx.wishlist.deleteMany();
+      await tx.productImage.deleteMany();
+      await tx.sizeVariant.deleteMany();
+      await tx.productMetrics.deleteMany();
+      await tx.processedWebhookEvent.deleteMany();
+      await tx.address.deleteMany();
+      await tx.product.deleteMany();
+      await tx.brand.deleteMany();
+      await tx.category.deleteMany();
+      await tx.discountCode.deleteMany();
+      await (prismaX.passwordResetToken as any).deleteMany();
+      await tx.user.deleteMany();
+    };
+    await del();
+    await del(); // second pass (idempotent) cleans up any rows inserted mid-reset (rare)
+  });
 }
 
 export async function createBasicProduct(
@@ -53,30 +124,89 @@ export async function createBasicProduct(
       name: "Test Product",
       description: "Desc",
       priceCents: opts.priceCents ?? 5000,
-      sizes: {
+      sizeVariants: {
         create: (opts.sizes || ["M"]).map((label) => ({ label, stock: 10 })),
       },
     },
-    include: { sizes: true },
+    include: { sizeVariants: true },
   });
   return product;
 }
 
-export async function ensureTestUserAndCart() {
-  let user = await prisma.user.findUnique({ where: { id: "test-user" } });
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        id: "test-user",
-        email: "test@example.com",
-        passwordHash: "x",
-        isAdmin: true,
-      },
-    });
-  }
-  let cart = await prisma.cart.findUnique({ where: { userId: user.id } });
-  if (!cart) cart = await prisma.cart.create({ data: { userId: user.id } });
+export async function ensureTestUserAndCart(id: string = "test-user") {
+  // Use upsert to be race-safe across parallel test files.
+  const user = await prisma.user.upsert({
+    where: { id },
+    update: {},
+    create: {
+      id,
+      email: id + "@example.test", // differentiate parallel ids if ever expanded
+      passwordHash: "x",
+      isAdmin: true,
+    },
+  });
+  const cart = await prisma.cart.upsert({
+    where: { userId: user.id },
+    update: {},
+    create: { userId: user.id },
+  });
   return { user, cart };
+}
+
+export async function ensurePaymentRecord(orderId: string) {
+  // Helper with a tiny retry loop in case future async separation is introduced.
+  for (let i = 0; i < 3; i++) {
+    const rec = await prisma.paymentRecord.findFirst({ where: { orderId } });
+    if (rec) return rec;
+    await new Promise((r) => setTimeout(r, 5));
+  }
+  return null;
+}
+
+export async function createOrderForTest(opts: {
+  priceCents?: number;
+  qty?: number;
+  size?: string;
+  idempotencyKey?: string;
+  userId?: string;
+}) {
+  const {
+    priceCents = 2500,
+    qty = 1,
+    size,
+    idempotencyKey,
+    userId = "test-user",
+  } = opts || {};
+  const product = await createBasicProduct({
+    priceCents,
+    sizes: size ? [size] : undefined,
+  });
+  await addLineToCart(product.id, product.priceCents, size, qty);
+  const body = {
+    shippingAddress: {
+      fullName: "Order T",
+      line1: "1",
+      city: "C",
+      postalCode: "1",
+      country: "US",
+    },
+    email: `${userId}@example.test`,
+    idempotencyKey:
+      idempotencyKey || "idem-" + Math.random().toString(36).slice(2, 8),
+  };
+  const res: any = await invokePOST(
+    require("@/app/api/checkout/route"),
+    "/api/checkout",
+    body,
+    { "x-test-user": userId, "x-test-bypass-rate-limit": "1" }
+  );
+  const json = await res.json();
+  return { ...json, product } as {
+    orderId: string;
+    subtotalCents: number;
+    totalCents: number;
+    product: any;
+  };
 }
 
 export async function addLineToCart(

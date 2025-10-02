@@ -2,6 +2,7 @@ import Link from "next/link";
 import { formatPriceCents } from "@/lib/money";
 import FiltersClient from "./_client/FiltersClient";
 import SortClient from "./_client/SortClient";
+import SearchFilters from "@/components/search/SearchFilters";
 import { headers } from "next/headers";
 
 interface PageSearchParams {

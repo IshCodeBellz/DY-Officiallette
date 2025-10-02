@@ -6,7 +6,7 @@ import {
   replaceCart,
   mergeCart,
   clearCart,
-} from "./cartRepository";
+} from "@/lib/server/cartRepository";
 import { prisma } from "./prisma";
 
 let memoryFallback = false;

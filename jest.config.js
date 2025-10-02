@@ -1,5 +1,7 @@
 /** @type {import('jest').Config} */
-module.exports = {
+const isSerial = process.env.JEST_SERIAL || process.env.JEST_SILENT_LOG;
+/** @type {import('jest').Config} */
+const base = {
   testEnvironment: "node",
   roots: ["<rootDir>/tests"],
   moduleFileExtensions: ["ts", "tsx", "js"],
@@ -25,3 +27,5 @@ module.exports = {
     },
   },
 };
+
+module.exports = isSerial ? { ...base, maxWorkers: 1 } : base;

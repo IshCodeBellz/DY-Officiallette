@@ -22,7 +22,13 @@ export default async function OrderDetailPage({
       payments: true,
     },
   });
-  const events: Array<{ id: string; kind: string; message: string | null; createdAt: Date; meta: string | null }> = order
+  const events: Array<{
+    id: string;
+    kind: string;
+    message: string | null;
+    createdAt: Date;
+    meta: string | null;
+  }> = order
     ? await (prisma as any).orderEvent.findMany({
         where: { orderId: order.id },
         orderBy: { createdAt: "asc" },
@@ -67,7 +73,12 @@ export default async function OrderDetailPage({
             <ul className="mt-2 border rounded divide-y text-xs">
               {events.map((e) => (
                 <li key={e.id} className="p-2 space-y-1">
-                  <div className="flex justify-between"><span className="font-mono text-[10px] opacity-60">{e.createdAt.toISOString().slice(11,19)}</span><span className="font-semibold">{e.kind}</span></div>
+                  <div className="flex justify-between">
+                    <span className="font-mono text-[10px] opacity-60">
+                      {e.createdAt.toISOString().slice(11, 19)}
+                    </span>
+                    <span className="font-semibold">{e.kind}</span>
+                  </div>
                   {e.message && <div>{e.message}</div>}
                 </li>
               ))}

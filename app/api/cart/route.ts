@@ -64,13 +64,13 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     parsed.data.lines.map(async (l) => {
       const product = await prisma.product.findUnique({
         where: { id: l.productId },
-        include: { sizes: true },
+        include: { sizeVariants: true },
       });
       if (!product) return null;
       if (product.deletedAt) return null;
       let finalQty = l.qty;
       if (l.size) {
-        const sv = product.sizes.find((s) => s.label === l.size);
+        const sv = product.sizeVariants.find((s) => s.label === l.size);
         if (!sv) return null;
         finalQty = Math.min(finalQty, sv.stock, 99);
         if (finalQty <= 0) return null;
@@ -105,7 +105,7 @@ export const PATCH = withRequest(async function PATCH(req: NextRequest) {
   for (const l of parsed.data.lines) {
     const product = await prisma.product.findUnique({
       where: { id: l.productId },
-      include: { sizes: true },
+      include: { sizeVariants: true },
     });
     if (!product) continue;
     if (product.deletedAt) continue;
@@ -114,7 +114,7 @@ export const PATCH = withRequest(async function PATCH(req: NextRequest) {
     });
     let finalQty = l.qty;
     if (l.size) {
-      const sv = product.sizes.find((s) => s.label === l.size);
+      const sv = product.sizeVariants.find((s) => s.label === l.size);
       if (!sv) continue;
       const base = existing ? existing.qty + l.qty : l.qty;
       finalQty = Math.min(base, sv.stock, 99);

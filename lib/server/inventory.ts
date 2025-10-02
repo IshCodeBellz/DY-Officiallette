@@ -11,7 +11,8 @@ export async function decrementSizeStock(
 ): Promise<boolean> {
   if (qty <= 0) return true; // nothing to decrement
   const dbUrl = process.env.DATABASE_URL || "";
-  const isPostgres = dbUrl.startsWith("postgres://") || dbUrl.startsWith("postgresql://");
+  const isPostgres =
+    dbUrl.startsWith("postgres://") || dbUrl.startsWith("postgresql://");
   if (isPostgres) {
     // Postgres dialect (RETURNING) — use $executeRawUnsafe, which returns number of rows affected.
     const affected = await (tx as any).$executeRawUnsafe(

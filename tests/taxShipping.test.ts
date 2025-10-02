@@ -12,12 +12,16 @@ describe("tax & shipping framework", () => {
     expect(res.taxCents).toBeGreaterThan(0); // 8000 * 7.25% => 580
     expect(res.taxCents).toBe(580);
     expect(res.shippingCents).toBe(0); // free shipping threshold
-    expect(res.breakdown.adjustments?.some(a => a.reason === "FREE_SHIPPING_THRESHOLD")).toBe(true);
+    expect(
+      res.breakdown.adjustments?.some(
+        (a) => a.reason === "FREE_SHIPPING_THRESHOLD"
+      )
+    ).toBe(true);
   });
 
   it("applies base US shipping below threshold", async () => {
     const draft = buildDraftFromCart({
-      lines: [ { priceCentsSnapshot: 2000, qty: 1, productId: "p1" } ], // subtotal 2000
+      lines: [{ priceCentsSnapshot: 2000, qty: 1, productId: "p1" }], // subtotal 2000
       destination: { country: "US", region: "CA", postalCode: "90001" },
     });
     const res = await calculateRates(draft);

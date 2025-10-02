@@ -56,7 +56,7 @@ export async function GET(
     where: { id: params.id },
     include: {
       images: { orderBy: { position: "asc" } },
-      sizes: true,
+      sizeVariants: true,
       brand: true,
       category: true,
     },
@@ -142,7 +142,7 @@ export async function PUT(
             position: im.position ?? idx,
           })),
         },
-        sizes:
+        sizeVariants:
           sizes && sizes.length > 0
             ? {
                 create: sizes.map((s) => ({
@@ -158,7 +158,7 @@ export async function PUT(
     where: { id: params.id },
     include: {
       images: { orderBy: { position: "asc" } },
-      sizes: true,
+      sizeVariants: true,
       brand: true,
       category: true,
     },

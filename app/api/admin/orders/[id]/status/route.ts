@@ -3,28 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
-
-const ALLOWED = [
-  "PENDING",
-  "AWAITING_PAYMENT",
-  "PAID",
-  "FULFILLING",
-  "SHIPPED",
-  "DELIVERED",
-  "CANCELLED",
-  "REFUNDED",
-];
-
-const transitions: Record<string, string[]> = {
-  PENDING: ["AWAITING_PAYMENT", "CANCELLED"],
-  AWAITING_PAYMENT: ["PAID", "CANCELLED"],
-  PAID: ["FULFILLING", "CANCELLED", "REFUNDED"],
-  FULFILLING: ["SHIPPED", "CANCELLED", "REFUNDED"],
-  SHIPPED: ["DELIVERED", "REFUNDED"],
-  DELIVERED: ["REFUNDED"],
-  CANCELLED: [],
-  REFUNDED: [],
-};
+import {
+  OrderStatus,
+  OrderTransitions,
+  canTransition,
+  isOrderStatus,
+} from "@/lib/status";
 
 export const POST = withRequest(async function POST(
   req: NextRequest,
@@ -54,12 +38,13 @@ export const POST = withRequest(async function POST(
     if (typeof raw === "string") status = raw;
   }
 
-  if (typeof status !== "string" || !ALLOWED.includes(status)) {
+  if (typeof status !== "string" || !isOrderStatus(status)) {
     return NextResponse.json({ error: "invalid_status" }, { status: 400 });
   }
   const order = await prisma.order.findUnique({ where: { id: params.id } });
   if (!order) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const allowedNext = transitions[order.status] || [];
+  const current = order.status as keyof typeof OrderTransitions;
+  const allowedNext = OrderTransitions[current] || [];
   if (!allowedNext.includes(status) && order.status !== status) {
     return NextResponse.json(
       { error: "invalid_transition", from: order.status, to: status },

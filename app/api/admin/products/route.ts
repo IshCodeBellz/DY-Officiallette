@@ -53,13 +53,20 @@ export const POST = withRequest(async function POST(req: NextRequest) {
   }
   const created = await prisma.product.create({
     data: {
-      ...rest,
+      sku: rest.sku,
+      name: rest.name,
+      description: rest.description,
+      priceCents: rest.priceCents,
+      brand: rest.brandId ? { connect: { id: rest.brandId } } : undefined,
+      category: rest.categoryId
+        ? { connect: { id: rest.categoryId } }
+        : undefined,
       images: {
         create: images.map((i, idx) => ({ ...i, position: i.position ?? idx })),
       },
-      sizes: sizes ? { create: sizes } : undefined,
+      sizeVariants: sizes ? { create: sizes } : undefined,
     },
-    include: { images: true, sizes: true },
+    include: { images: true, sizeVariants: true },
   });
   return NextResponse.json({ product: created }, { status: 201 });
 });
@@ -75,7 +82,7 @@ export const GET = withRequest(async function GET() {
       name: true,
       priceCents: true,
       createdAt: true,
-      _count: { select: { images: true, sizes: true } },
+      _count: { select: { images: true, sizeVariants: true } },
     },
   });
   return NextResponse.json({ products });

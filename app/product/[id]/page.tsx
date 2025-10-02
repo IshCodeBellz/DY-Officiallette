@@ -4,7 +4,10 @@ import { prisma } from "@/lib/server/prisma";
 import { Suspense } from "react";
 import Link from "next/link";
 import ProductClient from "./ProductClient";
+import ProductReviews from "@/components/product/ProductReviews";
 import { formatPriceCents } from "@/lib/money";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/server/authOptions";
 
 export default async function ProductPage({
   params,
@@ -13,15 +16,24 @@ export default async function ProductPage({
   params: { id: string };
   searchParams?: Record<string, string | string[] | undefined>;
 }) {
-  const product = await prisma.product.findUnique({
+  const session = await getServerSession(authOptions);
+
+  const product = (await prisma.product.findUnique({
     where: { id: params.id },
     include: {
       images: { orderBy: { position: "asc" } },
-      sizes: true,
+      sizeVariants: true,
       category: true,
     },
-  });
+  })) as any; // Temporary type assertion while Prisma client is being regenerated
+
   if (!product) return notFound();
+
+  // Mock data for reviews - we'll implement the real queries later
+  const averageRating = 4.2;
+  const totalReviews = 156;
+  const canReview = !!session;
+
   const fromParam =
     typeof searchParams?.from === "string" ? searchParams?.from : undefined;
   const backCategorySlug = fromParam || product.category?.slug;
@@ -32,7 +44,7 @@ export default async function ProductPage({
     priceCents: product.priceCents,
     image: product.images[0]?.url || "",
     description: product.description,
-    sizes: product.sizes.map((s: any) => s.label),
+    sizes: product.sizeVariants.map((s: any) => s.label),
     images: product.images.map((i: any) => i.url),
   };
 
@@ -336,6 +348,16 @@ export default async function ProductPage({
           <p>Free delivery and returns (Ts&Cs apply).</p>
           <p>100 day returns.</p>
         </div>
+      </div>
+
+      {/* Product Reviews Section */}
+      <div className="lg:col-span-2 mt-16 pt-16 border-t">
+        <ProductReviews
+          productId={product.id}
+          averageRating={averageRating}
+          totalReviews={totalReviews}
+          canReview={canReview}
+        />
       </div>
     </div>
   );

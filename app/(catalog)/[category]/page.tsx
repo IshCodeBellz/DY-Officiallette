@@ -8,13 +8,14 @@ import { formatPriceCents } from "@/lib/money";
 import { useToast } from "@/components/providers/ToastProvider";
 
 const validCategories = [
-  "women",
-  "men",
-  "clothing",
-  "shoes",
+  "womens-clothing",
+  "mens-clothing",
+  "denim",
+  "footwear",
   "accessories",
   "sportswear",
-  "face-body",
+  "dresses",
+  "outerwear",
   "brands",
 ];
 

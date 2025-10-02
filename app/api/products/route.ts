@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     ];
   }
   if (size) {
-    where.sizes = { some: { label: size } };
+    where.sizeVariants = { some: { label: size } };
   }
 
   // If ids param provided -> fetch a specific set, preserve ordering
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
         images: { orderBy: { position: "asc" }, take: 1 },
         brand: true,
         category: true,
-        sizes: { select: { label: true }, take: 20 },
+        sizeVariants: { select: { label: true }, take: 20 },
       },
     });
     const map = new Map(products.map((p: any) => [p.id, p]));
@@ -70,8 +70,8 @@ export async function GET(req: NextRequest) {
           image: p.images[0]?.url,
           brand: p.brand?.name,
           category: p.category?.slug,
-          sizes: Array.isArray(p.sizes)
-            ? p.sizes.map((s: any) => s.label)
+          sizes: Array.isArray(p.sizeVariants)
+            ? p.sizeVariants.map((s: any) => s.label)
             : undefined,
         })),
     });
@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
         brand: true,
         category: true,
         // Always include size labels (capped) so UI can enforce selection.
-        sizes: { select: { label: true }, take: 20 },
+        sizeVariants: { select: { label: true }, take: 20 },
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -106,8 +106,8 @@ export async function GET(req: NextRequest) {
       image: p.images[0]?.url,
       brand: p.brand?.name,
       category: p.category?.slug,
-      sizes: Array.isArray(p.sizes)
-        ? p.sizes.map((s: any) => s.label)
+      sizes: Array.isArray(p.sizeVariants)
+        ? p.sizeVariants.map((s: any) => s.label)
         : undefined,
     })),
   });

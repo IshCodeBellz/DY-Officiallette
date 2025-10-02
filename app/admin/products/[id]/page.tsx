@@ -18,7 +18,7 @@ export default async function AdminEditProductPage({
   if (!user?.isAdmin) redirect("/");
   const product = await prisma.product.findUnique({
     where: { id: params.id },
-    include: { images: { orderBy: { position: "asc" } }, sizes: true },
+    include: { images: { orderBy: { position: "asc" } }, sizeVariants: true },
   });
   if (!product) redirect("/admin/products");
   return (

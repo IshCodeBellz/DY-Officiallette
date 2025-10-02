@@ -1,16 +1,16 @@
 import Link from "next/link";
 
 const primary = [
-  { href: "/women", label: "Women" },
-  { href: "/men", label: "Men" },
+  { href: "/womens-clothing", label: "Women" },
+  { href: "/mens-clothing", label: "Men" },
   { href: "/sportswear", label: "Sportswear" },
   { href: "/new-in", label: "New In" },
   { href: "/brands", label: "Brands" },
-  { href: "/clothing", label: "Clothing" },
-  { href: "/shoes", label: "Shoes" },
+  { href: "/denim", label: "Denim" },
+  { href: "/footwear", label: "Shoes" },
   { href: "/accessories", label: "Accessories" },
-  { href: "/marketplace", label: "Marketplace" },
-  { href: "/outlet", label: "Outlet" },
+  { href: "/dresses", label: "Dresses" },
+  { href: "/outerwear", label: "Outerwear" },
 ];
 
 export function SiteNav() {

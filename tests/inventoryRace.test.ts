@@ -18,20 +18,26 @@ describe("inventory race hardening", () => {
         name: "Race Product",
         description: "Race test",
         priceCents: 1000,
-        sizes: { create: [{ label: "M", stock: 10 }] },
+        sizeVariants: { create: [{ label: "M", stock: 10 }] },
       },
-      include: { sizes: true },
+      include: { sizeVariants: true },
     });
-    const sv = product.sizes[0];
+    const sv = product.sizeVariants[0];
 
-    // Attempt 15 sequential decrements of qty 1 (should only succeed 10 times)
+    // Attempt 15 sequential decrements of qty 1 (should only succeed exactly 10 times)
     let successes = 0;
+    let failures = 0;
     for (let i = 0; i < 15; i++) {
       const ok = await decrementSizeStock(prisma as any, sv.id, 1);
       if (ok) successes++;
+      else failures++;
     }
-    const refreshed = await prisma.sizeVariant.findUnique({ where: { id: sv.id } });
+    const refreshed = await prisma.sizeVariant.findUnique({
+      where: { id: sv.id },
+    });
+    const finalStock = refreshed?.stock ?? -1;
+    expect(finalStock).toBe(0);
     expect(successes).toBe(10);
-    expect(refreshed?.stock).toBe(0);
+    expect(failures).toBe(5);
   });
 });

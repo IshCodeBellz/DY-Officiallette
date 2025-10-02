@@ -34,10 +34,10 @@ export default function HomePage() {
             over 850 brands.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
-            <Link href="/women" className="btn-primary">
+            <Link href="/womens-clothing" className="btn-primary">
               Shop Women
             </Link>
-            <Link href="/men" className="btn-outline">
+            <Link href="/mens-clothing" className="btn-outline">
               Shop Men
             </Link>
           </div>
@@ -56,13 +56,13 @@ export default function HomePage() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 auto-rows-[140px] md:auto-rows-[160px]">
           {[
             {
-              label: "Clothing",
-              slug: "clothing",
-              img: "https://picsum.photos/seed/clothing/800/1000",
+              label: "Denim",
+              slug: "denim",
+              img: "https://picsum.photos/seed/denim/800/1000",
             },
             {
               label: "Shoes",
-              slug: "shoes",
+              slug: "footwear",
               img: "https://picsum.photos/seed/shoes/800/1000",
             },
             {
@@ -76,9 +76,9 @@ export default function HomePage() {
               img: "https://picsum.photos/seed/sportswear/800/1000",
             },
             {
-              label: "Face + Body",
-              slug: "face-body",
-              img: "https://picsum.photos/seed/face-body/800/1000",
+              label: "Dresses",
+              slug: "dresses",
+              img: "https://picsum.photos/seed/dresses/800/1000",
             },
             {
               label: "Brands",

@@ -1,7 +1,8 @@
 import crypto from "crypto";
 import { prisma } from "@/lib/server/prisma";
+import { prismaX } from "@/lib/server/prismaEx";
 import { hashPassword } from "@/lib/server/auth";
-import { getMailer } from "@/lib/server/mailer";
+import { getMailer, buildPasswordResetHtml } from "@/lib/server/mailer";
 
 function ttlMinutes() {
   const raw = process.env.PASSWORD_RESET_TOKEN_TTL_MINUTES;
@@ -19,7 +20,7 @@ export async function createPasswordResetToken(email: string) {
   if (!user) return null; // do not leak existence in caller response
   const token = generateTokenString();
   const expiresAt = new Date(Date.now() + ttlMinutes() * 60_000);
-  await prisma.passwordResetToken.create({
+  await prismaX.passwordResetToken.create({
     data: { userId: user.id, token, expiresAt },
   });
   return { user, token, expiresAt };
@@ -33,13 +34,18 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     to: email,
     subject: "Password reset instructions",
     text: `Reset your password: ${url}\nThis link expires shortly. If you did not request this, ignore this email.`,
-    html: `<!doctype html><html><body style=\"font-family:Arial,sans-serif;\"><p>Reset your password:</p><p><a href=\"${url}\">Reset Password</a></p><p style=\"font-size:12px;color:#666\">If you did not request this you can ignore this email.</p></body></html>`
+    html: buildPasswordResetHtml(url),
   });
 }
 
-export async function consumePasswordResetToken(token: string, newPassword: string) {
+export async function consumePasswordResetToken(
+  token: string,
+  newPassword: string
+) {
   const now = new Date();
-  const record = await prisma.passwordResetToken.findUnique({ where: { token } });
+  const record = await prismaX.passwordResetToken.findUnique({
+    where: { token },
+  });
   if (!record) return { ok: false as const, reason: "invalid" };
   if (record.usedAt) return { ok: false as const, reason: "used" };
   if (record.expiresAt < now) return { ok: false as const, reason: "expired" };
@@ -48,9 +54,14 @@ export async function consumePasswordResetToken(token: string, newPassword: stri
   const passwordHash = await hashPassword(newPassword);
   await prisma.$transaction([
     prisma.user.update({ where: { id: user.id }, data: { passwordHash } }),
-    prisma.passwordResetToken.update({ where: { token }, data: { usedAt: now } }),
+    prismaX.passwordResetToken.update({
+      where: { token },
+      data: { usedAt: now },
+    }),
     // Optional pruning: delete all expired tokens for this user to keep table tidy
-    prisma.passwordResetToken.deleteMany({ where: { userId: user.id, expiresAt: { lt: now } } })
+    prismaX.passwordResetToken.deleteMany({
+      where: { userId: user.id, expiresAt: { lt: now } },
+    }),
   ]);
   return { ok: true as const };
 }

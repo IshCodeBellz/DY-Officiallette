@@ -20,13 +20,17 @@ function base(fields: LogFields) {
   return JSON.stringify({ ts: new Date().toISOString(), ...fields });
 }
 
+const silent = () => process.env.JEST_SILENT_LOG === "1";
 export function log(msg: string, fields: LogFields = {}) {
+  if (silent()) return;
   console.log(base({ level: "info", msg, ...fields }));
 }
 export function warn(msg: string, fields: LogFields = {}) {
+  if (silent()) return;
   console.warn(base({ level: "warn", msg, ...fields }));
 }
 export function error(msg: string, fields: LogFields = {}) {
+  if (silent()) return;
   console.error(base({ level: "error", msg, ...fields }));
 }
 

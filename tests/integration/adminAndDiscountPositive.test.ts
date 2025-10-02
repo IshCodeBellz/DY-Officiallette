@@ -4,7 +4,10 @@ import * as productsRoute from "@/app/api/admin/products/route";
 import * as discountCodesRoute from "@/app/api/discount-codes/route";
 import { NextRequest } from "next/server";
 
-beforeEach(async () => {
+// Allow more time because resetDb + multiple creations can exceed default 5s in CI
+jest.setTimeout(15000);
+
+beforeAll(async () => {
   await resetDb();
 });
 

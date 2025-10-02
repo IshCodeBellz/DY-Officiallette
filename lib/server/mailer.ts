@@ -1,6 +1,50 @@
 // Simple email abstraction placeholder. Replace with real provider (e.g., Resend, SendGrid, SES)
 import type { Order, User } from "@prisma/client";
 
+// Production provider integration (Resend) with graceful fallback.
+interface ProviderDriver {
+  send(opts: {
+    to: string;
+    subject: string;
+    text: string;
+    html: string;
+  }): Promise<void>;
+}
+
+class ResendDriver implements ProviderDriver {
+  #apiKey: string;
+  constructor(apiKey: string) {
+    this.#apiKey = apiKey;
+  }
+  async send(opts: {
+    to: string;
+    subject: string;
+    text: string;
+    html: string;
+  }) {
+    // Minimal direct REST call to avoid adding dependency; could swap to official SDK later.
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.#apiKey}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        from: process.env.EMAIL_FROM || "noreply@example.com",
+        to: opts.to,
+        subject: opts.subject,
+        html: opts.html,
+        text: opts.text,
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      console.error("[MAIL:resend_error]", res.status, body);
+      throw new Error(`Resend send failed ${res.status}`);
+    }
+  }
+}
+
 export interface Mailer {
   send(opts: {
     to: string;
@@ -23,7 +67,18 @@ class ConsoleMailer implements Mailer {
 
 let _mailer: Mailer | null = null;
 export function getMailer(): Mailer {
-  if (!_mailer) _mailer = new ConsoleMailer();
+  if (_mailer) return _mailer;
+  if (process.env.RESEND_API_KEY) {
+    const driver = new ResendDriver(process.env.RESEND_API_KEY);
+    _mailer = {
+      async send(o) {
+        const html = o.html || `<pre>${o.text}</pre>`;
+        await driver.send({ to: o.to, subject: o.subject, text: o.text, html });
+      },
+    };
+  } else {
+    _mailer = new ConsoleMailer();
+  }
   return _mailer;
 }
 
@@ -32,30 +87,54 @@ function currency(amountCents: number) {
   return "$" + (amountCents / 100).toFixed(2);
 }
 
-export function buildOrderConfirmationHtml(order: Order) {
-  return `<!doctype html><html><body style="font-family:Arial,sans-serif;line-height:1.4;color:#222;">
-  <h1 style="font-size:20px;margin:0 0 12px;">Thanks for your order!</h1>
-  <p style="margin:0 0 12px;">Order <strong>#${
-    order.id
-  }</strong> has been received.</p>
-  <p style="margin:0 0 12px;">Total: <strong>${currency(
-    order.totalCents
-  )}</strong></p>
-  <p style="font-size:12px;color:#666;">You will receive another email when payment is confirmed.</p>
+function baseLayout(title: string, bodyHtml: string) {
+  return `<!doctype html><html><body style="font-family:Arial,sans-serif;line-height:1.45;color:#222;margin:0;padding:24px;background:#fafafa;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;margin:0 auto;background:#fff;border:1px solid #e5e5e5;border-radius:6px;overflow:hidden;">
+    <tr><td style="background:#111;color:#fff;padding:16px 20px;font-size:18px;font-weight:600;">${title}</td></tr>
+    <tr><td style="padding:20px;font-size:14px;">${bodyHtml}</td></tr>
+    <tr><td style="padding:16px 20px;font-size:11px;color:#666;background:#f5f5f5;">This email was sent automatically. If you have questions reply to this address.</td></tr>
+  </table>
   </body></html>`;
 }
 
+export function buildOrderConfirmationHtml(order: Order) {
+  return baseLayout(
+    `Order #${order.id} received`,
+    `<p>Thanks for your order. We've received it and it's now awaiting payment.</p>
+     <p style="margin:12px 0 4px;font-weight:600;">Total: ${currency(
+       order.totalCents
+     )}</p>
+     <p style="color:#666;font-size:12px;margin-top:16px;">You will receive another email when payment is confirmed.</p>`
+  );
+}
+
 export function buildPaymentReceiptHtml(order: Order) {
-  return `<!doctype html><html><body style="font-family:Arial,sans-serif;line-height:1.4;color:#222;">
-  <h1 style="font-size:20px;margin:0 0 12px;">Payment received</h1>
-  <p style="margin:0 0 12px;">We've captured payment for order <strong>#${
-    order.id
-  }</strong>.</p>
-  <p style="margin:0 0 12px;">Amount: <strong>${currency(
-    order.totalCents
-  )}</strong></p>
-  <p style="font-size:12px;color:#666;">We'll start fulfilling your order shortly.</p>
-  </body></html>`;
+  return baseLayout(
+    `Payment received for #${order.id}`,
+    `<p>We've captured payment for your order.</p>
+     <p style="margin:12px 0 4px;font-weight:600;">Amount: ${currency(
+       order.totalCents
+     )}</p>
+     <p style="color:#666;font-size:12px;margin-top:16px;">We'll start fulfilling it shortly.</p>`
+  );
+}
+
+export function buildPasswordResetHtml(url: string) {
+  return baseLayout(
+    `Password reset instructions`,
+    `<p>Click the link below to reset your password:</p>
+     <p style="margin:16px 0;"><a style="background:#111;color:#fff;text-decoration:none;padding:10px 16px;border-radius:4px;display:inline-block;font-size:14px;" href="${url}">Reset Password</a></p>
+     <p style="color:#666;font-size:12px;">If you did not request this you can ignore this email.</p>`
+  );
+}
+
+export function buildEmailVerificationHtml(url: string) {
+  return baseLayout(
+    `Verify your email address`,
+    `<p>Please verify your email address to complete your account setup:</p>
+     <p style="margin:16px 0;"><a style="background:#007bff;color:#fff;text-decoration:none;padding:10px 16px;border-radius:4px;display:inline-block;font-size:14px;" href="${url}">Verify Email Address</a></p>
+     <p style="color:#666;font-size:12px;">This link will expire in 24 hours. If you did not create an account, you can ignore this email.</p>`
+  );
 }
 
 export async function sendOrderConfirmation(user: User, order: Order) {
@@ -80,6 +159,32 @@ export async function sendPaymentReceipt(user: User, order: Order) {
     text: `Your payment for ${(order.totalCents / 100).toFixed(
       2
     )} has been captured. We'll start processing your order.`,
+    html,
+  });
+}
+
+export async function sendPasswordReset(user: { email: string }, url: string) {
+  const mailer = getMailer();
+  const html = buildPasswordResetHtml(url);
+  await mailer.send({
+    to: user.email,
+    subject: `Reset your password`,
+    text: `Reset your password: ${url}`,
+    html,
+  });
+}
+
+export async function sendEmailVerification(
+  email: string,
+  userId: string,
+  verificationUrl: string
+) {
+  const mailer = getMailer();
+  const html = buildEmailVerificationHtml(verificationUrl);
+  await mailer.send({
+    to: email,
+    subject: `Verify your email address`,
+    text: `Please verify your email address by visiting: ${verificationUrl}`,
     html,
   });
 }

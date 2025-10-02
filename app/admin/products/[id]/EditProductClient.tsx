@@ -36,7 +36,7 @@ export function EditProductClient({ product }: { product: any }) {
   const [images, setImages] = useState<ImageInput[]>(
     [...product.images].sort((a, b) => a.position - b.position)
   );
-  const [sizes, setSizes] = useState<SizeInput[]>(product.sizes || []);
+  const [sizes, setSizes] = useState<SizeInput[]>(product.sizeVariants || []);
   const [metaBrands, setMetaBrands] = useState<MetaBrand[]>([]);
   const [metaCategories, setMetaCategories] = useState<MetaCategory[]>([]);
   const [saving, setSaving] = useState(false);

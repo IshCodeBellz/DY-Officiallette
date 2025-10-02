@@ -124,6 +124,39 @@ export default async function AdminHomePage() {
           >
             Manage Categories
           </Link>
+          <Link
+            href="/admin/analytics"
+            className="underline hover:no-underline"
+          >
+            Search Analytics
+          </Link>
+          <Link
+            href="/admin/personalization"
+            className="underline hover:no-underline"
+          >
+            Personalization
+          </Link>
+          <Link
+            href="/admin/inventory"
+            className="underline hover:no-underline"
+          >
+            Inventory Management
+          </Link>
+          <Link href="/admin/social" className="underline hover:no-underline">
+            Social Commerce
+          </Link>
+          <Link
+            href="/admin/users/analytics"
+            className="underline hover:no-underline"
+          >
+            User Analytics
+          </Link>
+          <Link href="/admin/security" className="underline hover:no-underline">
+            Security Management
+          </Link>
+          <Link href="/admin/settings" className="underline hover:no-underline">
+            System Settings
+          </Link>
         </div>
       </section>
       <section>

@@ -81,7 +81,9 @@ export const POST = withRequest(async function POST(req: NextRequest) {
   // Load cart with product & size info
   let cart = await prisma.cart.findUnique({
     where: { userId: uid },
-    include: { lines: { include: { product: { include: { sizes: true } } } } },
+    include: {
+      lines: { include: { product: { include: { sizeVariants: true } } } },
+    },
   });
   debug("CHECKOUT", "loaded_cart", {
     user: uid,
@@ -100,7 +102,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
         update: {},
         create: { userId: uid },
         include: {
-          lines: { include: { product: { include: { sizes: true } } } },
+          lines: { include: { product: { include: { sizeVariants: true } } } },
         },
       });
       // Clear any existing (should be zero) then recreate
@@ -108,12 +110,12 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       for (const l of parsed.data.lines) {
         const product = await prisma.product.findUnique({
           where: { id: l.productId },
-          include: { sizes: true },
+          include: { sizeVariants: true },
         });
         if (!product || product.deletedAt) continue;
         let finalQty = l.qty;
         if (l.size) {
-          const sv = product.sizes.find((s) => s.label === l.size);
+          const sv = product.sizeVariants.find((s) => s.label === l.size);
           if (!sv) continue;
           finalQty = Math.min(finalQty, sv.stock, 99);
           if (finalQty <= 0) continue;
@@ -133,7 +135,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       cart = await prisma.cart.findUnique({
         where: { userId: uid },
         include: {
-          lines: { include: { product: { include: { sizes: true } } } },
+          lines: { include: { product: { include: { sizeVariants: true } } } },
         },
       });
       debug("CHECKOUT", "rebuild_cart_result", { lines: cart?.lines.length });
@@ -162,7 +164,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       continue;
     }
     const sizeVariant = line.size
-      ? product.sizes.find((s) => s.label === line.size)
+      ? product.sizeVariants.find((s) => s.label === line.size)
       : undefined;
     const available = sizeVariant ? sizeVariant.stock : 999999; // if no size tracked assume plentiful
     if (line.qty > available) {
@@ -199,11 +201,14 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       } as any, // cast due to incremental type mismatch after recent migration
     });
     if (existing) {
+      // Mirror shape of normal response (use stored discountCents snapshot)
       return NextResponse.json({
         orderId: existing.id,
         status: existing.status,
         subtotalCents: existing.subtotalCents,
         discountCents: existing.discountCents,
+        taxCents: existing.taxCents,
+        shippingCents: existing.shippingCents,
         totalCents: existing.totalCents,
         currency: existing.currency,
         idempotent: true,
@@ -335,6 +340,22 @@ export const POST = withRequest(async function POST(req: NextRequest) {
         },
       });
 
+      if (discountMeta.id) {
+        await (tx as any).orderEvent.create({
+          data: {
+            orderId: order.id,
+            kind: "DISCOUNT_APPLIED",
+            message: `Discount code ${discountMeta.code} applied`,
+            meta: JSON.stringify({
+              code: discountMeta.code,
+              valueCents: discountMeta.valueCents,
+              percent: discountMeta.percent,
+              discountCents,
+            }),
+          },
+        });
+      }
+
       for (const line of cart.lines) {
         await tx.orderItem.create({
           data: {
@@ -349,9 +370,15 @@ export const POST = withRequest(async function POST(req: NextRequest) {
           },
         });
         if (line.size) {
-          const sizeVariant = line.product.sizes.find((s) => s.label === line.size);
+          const sizeVariant = line.product.sizeVariants.find(
+            (s) => s.label === line.size
+          );
           if (sizeVariant) {
-            const ok = await decrementSizeStock(tx as any, sizeVariant.id, line.qty);
+            const ok = await decrementSizeStock(
+              tx as any,
+              sizeVariant.id,
+              line.qty
+            );
             if (!ok) throw new Error("STOCK_RACE_CONFLICT");
           }
         }

@@ -41,7 +41,7 @@ export default function CheckoutClient() {
     | { state: "invalid"; reason: string }
     | {
         state: "valid";
-        kind: "FIXED" | "PERCENT";
+        kind: "fixed" | "percent";
         valueCents: number | null;
         percent: number | null;
         minSubtotalCents: number | null;
@@ -383,7 +383,7 @@ export default function CheckoutClient() {
           )}
           {discountStatus.state === "valid" && (
             <p className="text-xs text-green-600">
-              {discountStatus.kind === "FIXED"
+              {discountStatus.kind === "fixed"
                 ? `Valid: saves $${(
                     (discountStatus.valueCents || 0) / 100
                   ).toFixed(2)}`
@@ -407,7 +407,7 @@ export default function CheckoutClient() {
             <div className="flex justify-between text-green-700">
               <span>Discount</span>
               <span>
-                {discountStatus.kind === "FIXED"
+                {discountStatus.kind === "fixed"
                   ? "-" + formatPriceCents(discountStatus.valueCents || 0)
                   : `-${discountStatus.percent}%`}
               </span>
@@ -420,7 +420,7 @@ export default function CheckoutClient() {
                 const base = Math.round(subtotal * 100);
                 if (discountStatus.state !== "valid")
                   return formatPriceCents(base);
-                if (discountStatus.kind === "FIXED") {
+                if (discountStatus.kind === "fixed") {
                   const v = Math.min(base, discountStatus.valueCents || 0);
                   return formatPriceCents(base - v);
                 }

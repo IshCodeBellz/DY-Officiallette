@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
+import { withRequest } from "@/lib/server/logger";
 import { sendPaymentReceipt } from "@/lib/server/mailer";
+import { OrderStatus, PaymentStatus, OrderEventKind } from "@/lib/status";
 import { getStripe } from "@/lib/server/stripe";
 import Stripe from "stripe";
 
@@ -99,24 +101,30 @@ export async function POST(req: NextRequest) {
 
   if (status === "succeeded") {
     // Skip if already captured / paid
-    if (payment.status === "CAPTURED" || order.status === "PAID") {
+    if (
+      payment.status === PaymentStatus.CAPTURED ||
+      order.status === OrderStatus.PAID
+    ) {
       return NextResponse.json({ ok: true, idempotent: true });
     }
     await prisma.$transaction(async (tx) => {
       await tx.paymentRecord.update({
         where: { id: payment.id },
-        data: { status: "CAPTURED" },
+        data: { status: PaymentStatus.CAPTURED },
       });
       await tx.order.update({
         where: { id: order.id },
-        data: { status: "PAID", paidAt: new Date() },
+        data: { status: OrderStatus.PAID, paidAt: new Date() },
       });
       await (tx as any).orderEvent.create({
         data: {
           orderId: order.id,
-          kind: "PAYMENT_UPDATE",
+          kind: OrderEventKind.PAYMENT_SUCCEEDED,
           message: "Payment captured",
-          meta: JSON.stringify({ paymentId: payment.id, providerRef: payment.providerRef }),
+          meta: JSON.stringify({
+            paymentId: payment.id,
+            providerRef: payment.providerRef,
+          }),
         },
       });
       if (order.userId) {
@@ -139,18 +147,21 @@ export async function POST(req: NextRequest) {
       console.error("payment receipt email failed", e);
     }
   } else if (status === "failed") {
-    if (payment.status !== "FAILED") {
+    if (payment.status !== PaymentStatus.FAILED) {
       await prisma.$transaction(async (tx) => {
         await tx.paymentRecord.update({
           where: { id: payment.id },
-          data: { status: "FAILED" },
+          data: { status: PaymentStatus.FAILED },
         });
         await (tx as any).orderEvent.create({
           data: {
             orderId: order.id,
-            kind: "PAYMENT_UPDATE",
+            kind: OrderEventKind.PAYMENT_FAILED,
             message: "Payment failed",
-            meta: JSON.stringify({ paymentId: payment.id, providerRef: payment.providerRef }),
+            meta: JSON.stringify({
+              paymentId: payment.id,
+              providerRef: payment.providerRef,
+            }),
           },
         });
       });

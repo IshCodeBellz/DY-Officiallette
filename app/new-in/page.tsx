@@ -97,6 +97,7 @@ export default function NewInPage() {
         {items.map((p) => {
           const id = lineIdFor(p.id);
           const inWish = has(id);
+          const hasSizes = Array.isArray(p.sizes) && p.sizes.length > 0;
           return (
             <div
               key={p.id}
@@ -131,23 +132,88 @@ export default function NewInPage() {
                 >
                   {inWish ? "♥" : "♡"}
                 </button>
-                <button
-                  onClick={() => {
-                    addItem(
-                      {
-                        productId: p.id,
-                        name: p.name,
-                        priceCents: p.priceCents,
-                        image: p.image,
-                      },
-                      1
-                    );
-                    push({ type: "success", message: "Added to bag" });
-                  }}
-                  className="rounded-full h-8 w-8 text-[11px] font-semibold flex items-center justify-center backdrop-blur bg-white/80 border border-transparent"
-                >
-                  +
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={(e) => {
+                      if (hasSizes) {
+                        // Open size chooser popover (toggle) instead of immediate add
+                        const host = (e.currentTarget
+                          .parentElement as HTMLElement)!.querySelector<HTMLElement>(
+                          "[data-size-popover]"
+                        );
+                        if (host) host.toggleAttribute("data-open");
+                        return;
+                      }
+                      addItem(
+                        {
+                          productId: p.id,
+                          name: p.name,
+                          priceCents: p.priceCents,
+                          image: p.image,
+                        },
+                        1
+                      );
+                      push({ type: "success", message: "Added to bag" });
+                    }}
+                    className="rounded-full h-8 w-8 text-[15px] leading-none font-semibold flex items-center justify-center backdrop-blur bg-white/80 border border-transparent"
+                    aria-label={hasSizes ? "Choose size" : "Add to bag"}
+                  >
+                    +
+                  </button>
+                  {hasSizes && (
+                    <div
+                      data-size-popover
+                      className="absolute top-9 right-0 z-20 hidden data-[open]:flex flex-col gap-1 bg-white shadow-lg border border-neutral-200 rounded p-2 min-w-[120px]"
+                    >
+                      <div className="text-[10px] uppercase tracking-wide font-semibold text-neutral-500 pb-1 border-b mb-1">
+                        Select size
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {p.sizes.map((s: string) => (
+                          <button
+                            key={s}
+                            onClick={() => {
+                              addItem(
+                                {
+                                  productId: p.id,
+                                  name: p.name,
+                                  priceCents: p.priceCents,
+                                  image: p.image,
+                                  size: s,
+                                },
+                                1
+                              );
+                              push({
+                                type: "success",
+                                message: `Added ${s}`,
+                              });
+                              const host =
+                                (document.querySelector(
+                                  `[data-size-popover][data-open]`
+                                ) as HTMLElement) || null;
+                              host?.removeAttribute("data-open");
+                            }}
+                            className="px-2 py-1 text-[11px] rounded border border-neutral-300 hover:bg-neutral-100 active:bg-neutral-200"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => {
+                          const host =
+                            (document.querySelector(
+                              `[data-size-popover][data-open]`
+                            ) as HTMLElement) || null;
+                          host?.removeAttribute("data-open");
+                        }}
+                        className="mt-2 text-[10px] text-neutral-500 hover:text-neutral-700"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs">
                 <div className="font-semibold truncate" title={p.name}>

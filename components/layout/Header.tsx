@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { SearchBar } from "./SearchBar";
+import EnhancedSearchBar from "../search/EnhancedSearchBar";
 import { SiteNav } from "./SiteNav";
 import { useCart, useWishlist } from "../providers/CartProvider";
 import { useSession, signOut } from "next-auth/react";
@@ -58,7 +59,7 @@ export function Header() {
               >
                 DY<span className="text-brand-accent">OFFICIAL</span>
               </Link>
-              <SearchBar className="hidden md:flex flex-1" />
+              <EnhancedSearchBar />
             </div>
             <nav className="hidden md:flex items-center gap-4 ml-auto">
               <DarkModeToggle />
@@ -113,6 +114,12 @@ export function Header() {
                 >
                   {wishItems.length}
                 </span>
+              </Link>
+              <Link
+                href="/social/wishlists"
+                className="text-sm hover:underline"
+              >
+                Social
               </Link>
               <Link href="/bag" className="relative text-sm hover:underline">
                 Bag
@@ -270,13 +277,14 @@ export function Header() {
                 </p>
                 <div className="grid grid-cols-2 gap-1.5 text-[13px]">
                   {[
-                    "women",
-                    "men",
-                    "clothing",
-                    "shoes",
+                    "womens-clothing",
+                    "mens-clothing",
+                    "denim",
+                    "footwear",
                     "accessories",
                     "sportswear",
-                    "face-body",
+                    "dresses",
+                    "outerwear",
                     "new-in",
                     "brands",
                   ].map((c) => (
@@ -287,6 +295,9 @@ export function Header() {
                       className="px-2 py-1 rounded hover:bg-neutral-100 capitalize border border-transparent focus:outline-none focus:ring-2 focus:ring-neutral-300"
                     >
                       {c
+                        .replace("womens-clothing", "Women")
+                        .replace("mens-clothing", "Men")
+                        .replace("footwear", "Shoes")
                         .replace("face-body", "Face + Body")
                         .replace("new-in", "New In")}
                     </Link>
@@ -303,6 +314,13 @@ export function Header() {
                   <span className="text-xs bg-neutral-900 text-white rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center">
                     {wishItems.length}
                   </span>
+                </Link>
+                <Link
+                  href="/social/wishlists"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block hover:text-brand-accent"
+                >
+                  Social Wishlists
                 </Link>
                 <Link
                   href="/bag"

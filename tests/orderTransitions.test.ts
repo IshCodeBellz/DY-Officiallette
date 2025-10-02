@@ -1,20 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
-
-const transitions: Record<string, string[]> = {
-  PENDING: ["AWAITING_PAYMENT", "CANCELLED"],
-  AWAITING_PAYMENT: ["PAID", "CANCELLED"],
-  PAID: ["FULFILLING", "CANCELLED", "REFUNDED"],
-  FULFILLING: ["SHIPPED", "CANCELLED", "REFUNDED"],
-  SHIPPED: ["DELIVERED", "REFUNDED"],
-  DELIVERED: ["REFUNDED"],
-  CANCELLED: [],
-  REFUNDED: [],
-};
-
-function canTransition(from: string, to: string) {
-  if (from === to) return true; // idempotent update
-  return (transitions[from] || []).includes(to);
-}
+import { OrderTransitions, canTransition } from "@/lib/status";
 
 describe("order status transitions", () => {
   it("allows valid path", () => {
@@ -25,5 +10,15 @@ describe("order status transitions", () => {
   });
   it("is idempotent", () => {
     expect(canTransition("PAID", "PAID")).toBe(true);
+  });
+  it("transition map integrity", () => {
+    // Simple invariant: every listed destination must itself be a key
+    for (const [from, tos] of Object.entries(OrderTransitions)) {
+      for (const t of tos) {
+        expect(Object.prototype.hasOwnProperty.call(OrderTransitions, t)).toBe(
+          true
+        );
+      }
+    }
   });
 });

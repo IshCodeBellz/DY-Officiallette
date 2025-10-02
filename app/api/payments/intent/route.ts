@@ -71,6 +71,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
         rawPayload: JSON.stringify({ simulated: true }),
       },
     });
+    // Move order to AWAITING_PAYMENT if still pending
     if (order.status === "PENDING") {
       await prisma.order.update({
         where: { id: order.id },
@@ -108,15 +109,32 @@ export const POST = withRequest(async function POST(req: NextRequest) {
         metadata: { orderId: order.id },
         automatic_payment_methods: { enabled: true },
       });
-      await prisma.paymentRecord.update({
+      const stillExists = await prisma.paymentRecord.findUnique({
         where: { id: existingPayment.id },
-        data: {
-          providerRef: intent.id,
-          rawPayload: JSON.stringify({
-            upgradedFrom: existingPayment.providerRef,
-          }),
-        },
       });
+      if (stillExists) {
+        await prisma.paymentRecord.update({
+          where: { id: existingPayment.id },
+          data: {
+            providerRef: intent.id,
+            rawPayload: JSON.stringify({
+              upgradedFrom: existingPayment.providerRef,
+            }),
+          },
+        });
+      } else {
+        await prisma.paymentRecord.create({
+          data: {
+            orderId: order.id,
+            provider: "STRIPE",
+            providerRef: intent.id,
+            amountCents: order.totalCents,
+            currency: order.currency,
+            status: "PAYMENT_PENDING",
+            rawPayload: JSON.stringify({ createdAfterMissing: true }),
+          },
+        });
+      }
       if (order.status === "PENDING") {
         await prisma.order.update({
           where: { id: order.id },

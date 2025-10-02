@@ -55,6 +55,7 @@ Educational fashion e‑commerce demo (formerly "ASOS Clone") showcasing modern 
 - Success page + basic order status handling
 
 ### Discounts
+
 - Centralized env validation (`lib/server/env.ts`) logging grouped WARN/ERROR only once
 - Debug logging helper `debug(tag, event, payload)` sprinkled through checkout & search layers
 - Purchase/order flow integration test + unit tests for search expansion & trending decay
@@ -62,7 +63,6 @@ Educational fashion e‑commerce demo (formerly "ASOS Clone") showcasing modern 
 - Health probe: `GET /api/health` returns `{ ok: boolean, db: 'up'|'down', ms }` (200 when healthy, 503 if DB unavailable).
 - GitHub Actions workflow (`.github/workflows/ci.yml`) runs install → migrate → tests → build on pushes & PRs to `main`.
 - Added a production-oriented multi-stage `Dockerfile` (Node 20 alpine). Usage:
-
 
 For Postgres in production, override `DATABASE_URL` at runtime; mount a volume or use an external DB instead of the bundled SQLite file.
 
@@ -354,3 +354,41 @@ Grid “+” now opens a size popover if the product has size variants. This ens
 - Update env and restart dev server to ensure Next.js picks changes.
 
 ---
+
+## New Additions (Phase 1 Enhancements)
+
+### Email Provider & Templates
+
+- Unified HTML template with base layout (header, footer, consistent typography).
+- Auto-selects Resend when `RESEND_API_KEY` is present; otherwise logs email payloads to console.
+- Templates: Order Confirmation, Payment Receipt, Password Reset.
+
+### Order Timeline / Audit
+
+- `OrderEvent` model captures: CREATED, STATUS_CHANGE, PAYMENT_UPDATE (extensible for DISCOUNT_APPLIED, NOTE, REFUND).
+- Timeline visible on order detail page.
+- API: `GET /api/orders/:id/events`.
+
+### Payment Retry Endpoint
+
+- `POST /api/payments/retry { orderId }` creates a new simulated payment attempt (pending) and logs an event.
+
+### Legal Pages
+
+- Static routes: `/privacy`, `/terms`, `/returns` as placeholders for production content.
+
+### Backup Script
+
+- `scripts/backup-db.ts`: copies SQLite DB or prints a `pg_dump` template for Postgres.
+
+### Dynamic Tax & Shipping
+
+- Rule-based engine with region rates + free shipping threshold; easy future swap to external API.
+
+### Inventory Race Hardening
+
+- Centralized `decrementSizeStock` abstraction; conditional UPDATE guard ready for Postgres semantics.
+
+### Password Reset
+
+- Token model with TTL + unified email template + consumption endpoint.

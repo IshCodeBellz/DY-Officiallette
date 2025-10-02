@@ -52,9 +52,19 @@ const TAX_RULES: Array<{
   rate: number; // decimal e.g. 0.07 => 7%
   label: string;
 }> = [
-  { match: (d) => d.destination.country === "US" && d.destination.region === "CA", rate: 0.0725, label: "US-CA" },
-  { match: (d) => d.destination.country === "US" && d.destination.region === "NY", rate: 0.08875, label: "US-NY" },
-  { match: (d) => d.destination.country === "GB", rate: 0.20, label: "UK-VAT" },
+  {
+    match: (d) =>
+      d.destination.country === "US" && d.destination.region === "CA",
+    rate: 0.0725,
+    label: "US-CA",
+  },
+  {
+    match: (d) =>
+      d.destination.country === "US" && d.destination.region === "NY",
+    rate: 0.08875,
+    label: "US-NY",
+  },
+  { match: (d) => d.destination.country === "GB", rate: 0.2, label: "UK-VAT" },
 ];
 
 const SHIPPING_RULES: Array<{
@@ -63,8 +73,18 @@ const SHIPPING_RULES: Array<{
   perItemCents?: number;
   label: string;
 }> = [
-  { match: (d) => d.destination.country === "US", baseCents: 599, perItemCents: 100, label: "US_STANDARD" },
-  { match: (d) => d.destination.country === "GB", baseCents: 499, perItemCents: 75, label: "UK_STANDARD" },
+  {
+    match: (d) => d.destination.country === "US",
+    baseCents: 599,
+    perItemCents: 100,
+    label: "US_STANDARD",
+  },
+  {
+    match: (d) => d.destination.country === "GB",
+    baseCents: 499,
+    perItemCents: 75,
+    label: "UK_STANDARD",
+  },
 ];
 
 export class RuleBasedRateStrategy implements RateStrategy {
@@ -94,10 +114,14 @@ export class RuleBasedRateStrategy implements RateStrategy {
       }
     }
     // Free shipping promotion example: subtotal >= $75 (7500 cents)
-    let shippingCents = shippingBase + perItem * draft.items.reduce((s, i) => s + i.qty, 0);
+    let shippingCents =
+      shippingBase + perItem * draft.items.reduce((s, i) => s + i.qty, 0);
     const adjustments: RateResultBreakdown["adjustments"] = [];
     if (draft.subtotalCents >= 7500 && shippingCents > 0) {
-      adjustments.push({ reason: "FREE_SHIPPING_THRESHOLD", amountCents: -shippingCents });
+      adjustments.push({
+        reason: "FREE_SHIPPING_THRESHOLD",
+        amountCents: -shippingCents,
+      });
       shippingCents = 0;
     }
 
@@ -121,14 +145,20 @@ export function getRateStrategy(): RateStrategy {
   return _strategy;
 }
 
-export async function calculateRates(draft: OrderDraftForRates): Promise<RateResult> {
+export async function calculateRates(
+  draft: OrderDraftForRates
+): Promise<RateResult> {
   return getRateStrategy().calculate(draft);
 }
 
 // Helper to build draft from raw cart/order construction input
 export function buildDraftFromCart(params: {
   lines: Array<{ priceCentsSnapshot: number; qty: number; productId: string }>;
-  destination: { country: string; region?: string | null; postalCode?: string | null };
+  destination: {
+    country: string;
+    region?: string | null;
+    postalCode?: string | null;
+  };
 }): OrderDraftForRates {
   const subtotalCents = params.lines.reduce(
     (s, l) => s + l.priceCentsSnapshot * l.qty,

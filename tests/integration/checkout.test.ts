@@ -74,7 +74,10 @@ describe("checkout flow", () => {
     expect(json.discountCents).toBe(500);
     // total = subtotal - discount + tax + shipping
     expect(json.totalCents).toBe(
-      json.subtotalCents - 500 + (json.taxCents || 0) + (json.shippingCents || 0)
+      json.subtotalCents -
+        500 +
+        (json.taxCents || 0) +
+        (json.shippingCents || 0)
     );
   });
 
