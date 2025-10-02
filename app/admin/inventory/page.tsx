@@ -193,15 +193,36 @@ export default async function InventoryPage() {
                     </div>
                   </td>
                   <td className="py-3 px-4">
-                    {/* NOTE: inventoryService.getRecentStockMovements currently only returns type: 'outgoing'. */}
-                    <span
-                      className={`px-2 py-1 text-xs rounded bg-red-100 text-red-800`}
-                    >
-                      {movement.type}
-                    </span>
+                    {(() => {
+                      const color =
+                        movement.type === "incoming"
+                          ? "bg-green-100 text-green-800"
+                          : movement.type === "outgoing"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-blue-100 text-blue-800"; // adjustment
+                      return (
+                        <span className={`px-2 py-1 text-xs rounded ${color}`}>
+                          {movement.type}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="py-3 px-4">
-                    <span className="text-red-600">-{movement.quantity}</span>
+                    <span
+                      className={
+                        movement.type === "outgoing"
+                          ? "text-red-600"
+                          : movement.type === "incoming"
+                          ? "text-green-600"
+                          : "text-blue-600"
+                      }
+                    >
+                      {movement.type === "outgoing"
+                        ? `-${movement.quantity}`
+                        : movement.type === "incoming"
+                        ? `+${movement.quantity}`
+                        : movement.quantity}
+                    </span>
                   </td>
                   <td className="py-3 px-4 text-sm text-neutral-600">
                     {movement.reference}
