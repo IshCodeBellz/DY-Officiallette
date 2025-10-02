@@ -7,7 +7,9 @@
 - Added badges placeholder (build/coverage) and clarified deferred feature activation path.
 - No functional code changes; documentation restructure only.
 - Root directory cleaned: legacy phase/report markdown files removed (duplicates now only referenced via `docs/archive/`).
+
 ### Added
+
 - Rich order confirmation email (line items, pricing breakdown, shipping & billing addresses, estimated delivery) sent on checkout creation instead of minimal summary.
 
 ### Admin Product Management Enhancements (Phase 2)

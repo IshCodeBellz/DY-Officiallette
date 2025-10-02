@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { ReactNode } from "react";
 import { Header } from "../components/layout/Header";
+import { VerifyEmailBanner } from "../components/layout/VerifyEmailBanner";
 import { Footer } from "../components/layout/Footer";
 import Providers from "../components/providers/Providers";
 import { CartSync } from "../components/providers/CartSync";
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <AuthProvider>
           <Providers>
             <Header />
+            <VerifyEmailBanner />
             <LiveRegion />
             <CartSync />
             <main className="flex-1">{children}</main>

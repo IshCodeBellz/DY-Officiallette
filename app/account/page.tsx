@@ -4,6 +4,7 @@ import { prisma } from "@/lib/server/prisma";
 import { redirect } from "next/navigation";
 import AccountSettingsClient from "./settingsClient";
 import Link from "next/link";
+import clsx from "clsx";
 
 export const dynamic = "force-dynamic";
 
@@ -11,64 +12,203 @@ export default async function AccountPage() {
   const session = await getServerSession(authOptions);
   const uid = (session?.user as any)?.id as string | undefined;
   if (!uid) redirect("/login?callbackUrl=/account");
-  const user = await prisma.user.findUnique({
-    where: { id: uid },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      isAdmin: true,
-      createdAt: true,
-    },
-  });
+
+  const [user, primaryAddress, lastOrder] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: uid },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        isAdmin: true,
+        createdAt: true,
+      },
+    }),
+    prisma.address.findFirst({
+      where: { userId: uid },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.order.findFirst({
+      where: { userId: uid },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, createdAt: true, status: true, totalCents: true, currency: true },
+    }),
+  ]);
+
   if (!user) redirect("/login?callbackUrl=/account");
 
+  function formatDate(d: Date) {
+    return new Date(d).toLocaleDateString(undefined, {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+  }
+
+  const sections = [
+    {
+      label: "My Account",
+      items: [
+        { href: "#account-details", text: "Account details" },
+        { href: "#contact-preferences", text: "Contact preferences", disabled: true },
+        { href: "#delivery-address", text: "Addresses" },
+        { href: "#payment-details", text: "Payment details", disabled: true },
+      ],
+    },
+    {
+      label: "Order Information",
+      items: [
+        { href: "#order-history", text: "Order History" },
+        { href: "#returns", text: "Returns", disabled: true },
+        { href: "#start-return", text: "Start a Return", disabled: true },
+      ],
+    },
+    {
+      label: "Track My Order",
+      items: [{ href: "#tracking", text: "Tracking", disabled: true }],
+    },
+    {
+      label: "Wish List",
+      items: [{ href: "/saved", text: "My Wish List", external: false }],
+    },
+    {
+      label: "Shop Confidently",
+      items: [
+        { href: "/privacy", text: "Privacy Policy", disabled: true },
+        { href: "/returns", text: "Returns Information", disabled: true },
+      ],
+    },
+  ];
+
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10 space-y-10">
-      <header className="space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight">My Account</h1>
-        <p className="text-sm text-neutral-500">
-          Manage your profile and view activity.
-        </p>
-      </header>
-      <section className="space-y-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">
-          Profile
-        </h2>
-        <AccountSettingsClient
-          initialName={user.name || ""}
-          email={user.email}
-        />
-      </section>
-      <section className="space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">
-          Quick Links
-        </h2>
-        <div className="flex flex-wrap gap-4 text-sm">
-          <Link className="underline" href="/saved">
-            Wishlist
-          </Link>
-          <Link className="underline" href="/bag">
-            Bag
-          </Link>
-          <Link className="underline" href="/">
-            Home
-          </Link>
-          {user.isAdmin && (
-            <Link className="underline" href="/admin">
-              Admin Dashboard
-            </Link>
-          )}
+    <div className="max-w-6xl mx-auto px-4 py-10">
+      <h1 className="text-3xl font-semibold tracking-tight mb-8">My Account</h1>
+      <div className="md:grid md:grid-cols-[230px_1fr] md:gap-10 lg:gap-16">
+        {/* Left Navigation */}
+        <aside className="mb-10 md:mb-0 space-y-10 text-sm" aria-label="Account navigation">
+          {sections.map((group) => (
+            <div key={group.label} className="space-y-4">
+              <div className="px-2 py-3 bg-neutral-50 uppercase tracking-wider text-xs font-semibold text-neutral-600 border border-neutral-200">
+                {group.label}
+              </div>
+              <ul className="space-y-4 pl-2">
+                {group.items.map((item) => {
+                  const disabled = (item as any).disabled;
+                  const className = clsx(
+                    "block text-neutral-800 hover:underline", 
+                    disabled && "opacity-40 cursor-not-allowed hover:underline-none"
+                  );
+                  return disabled ? (
+                    <li key={item.href} className={className} aria-disabled="true">
+                      {item.text}
+                    </li>
+                  ) : (
+                    <li key={item.href}>
+                      <Link href={item.href} className={className}>{item.text}</Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </aside>
+
+        {/* Main Content */}
+        <div className="space-y-12">
+          {/* Summary Cards */}
+          <div className="space-y-12" id="overview">
+            <section id="account-details" className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="uppercase tracking-wide text-xs font-semibold text-neutral-600">Account Details</h2>
+                <a href="#profile-settings" className="text-xs underline font-medium">View details &gt;</a>
+              </div>
+              <div className="border rounded p-5 flex gap-5 bg-white">
+                <div className="w-16 h-16 rounded flex items-center justify-center bg-neutral-50 border text-neutral-500">
+                  {/* User Icon */}
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
+                    <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5Zm0 2c-4 0-8 2-8 5v3h16v-3c0-3-4-5-8-5Z" />
+                  </svg>
+                </div>
+                <div className="text-sm leading-relaxed">
+                  <p className="font-semibold">{user.name || "Unnamed User"}</p>
+                  <p className="text-neutral-600">{formatDate(user.createdAt)}</p>
+                  <p className="text-neutral-600 break-all">{user.email}</p>
+                </div>
+              </div>
+            </section>
+            <section id="delivery-address" className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="uppercase tracking-wide text-xs font-semibold text-neutral-600">Delivery Address</h2>
+                <a href="#delivery-address" className="text-xs underline font-medium">All Addresses &gt;</a>
+              </div>
+              <div className="border rounded p-5 flex gap-5 bg-white">
+                <div className="w-16 h-16 rounded flex items-center justify-center bg-neutral-50 border text-neutral-500">
+                  {/* Address Icon */}
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
+                    <path d="M12 22s8-4.5 8-11a8 8 0 1 0-16 0c0 6.5 8 11 8 11Z" />
+                    <circle cx="12" cy="11" r="3" />
+                  </svg>
+                </div>
+                <div className="text-sm leading-relaxed">
+                  {primaryAddress ? (
+                    <>
+                      <p className="font-semibold">{primaryAddress.fullName}</p>
+                      <p className="text-neutral-600 whitespace-pre-line">
+                        {primaryAddress.line1}
+                        {primaryAddress.line2 ? `\n${primaryAddress.line2}` : ""}
+                        {"\n"}
+                        {primaryAddress.city}
+                        {primaryAddress.region ? `, ${primaryAddress.region}` : ""}
+                        {", "}
+                        {primaryAddress.postalCode}
+                        {"\n"}
+                        {primaryAddress.country}
+                        {primaryAddress.phone ? `\nPhone Number ${primaryAddress.phone}` : ""}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-neutral-500">No address saved yet.</p>
+                  )}
+                </div>
+              </div>
+            </section>
+            <section id="order-history" className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="uppercase tracking-wide text-xs font-semibold text-neutral-600">Order History</h2>
+                <Link href="/account/orders" className="text-xs underline font-medium">View All Orders &gt;</Link>
+              </div>
+              <div className="border rounded p-5 flex gap-5 bg-white">
+                <div className="w-16 h-16 rounded flex items-center justify-center bg-neutral-50 border text-neutral-500">
+                  {/* Order Icon */}
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
+                    <path d="M8 2v4M16 2v4M4 10h16M3 22h18V6H3v16Z" />
+                  </svg>
+                </div>
+                <div className="text-sm leading-relaxed">
+                  {lastOrder ? (
+                    <>
+                      <p><span className="font-semibold">Order Number:</span> {lastOrder.id.slice(0, 12).toUpperCase()}</p>
+                      <p><span className="font-semibold">Date Ordered:</span> {formatDate(lastOrder.createdAt)}</p>
+                      <p><span className="font-semibold">Order Status:</span> {lastOrder.status}</p>
+                      <p className="mt-1 text-neutral-600">Total {(lastOrder.totalCents / 100).toFixed(2)} {lastOrder.currency}</p>
+                    </>
+                  ) : (
+                    <p className="text-neutral-500">No orders yet.</p>
+                  )}
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {/* Editable Profile Form */}
+          <section id="profile-settings" className="space-y-6 pt-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">Profile Settings</h2>
+            <AccountSettingsClient initialName={user.name || ""} email={user.email} />
+            <div className="text-xs text-neutral-500">Need to manage your wishlist? <Link href="/saved" className="underline">Go to Wishlist</Link></div>
+          </section>
         </div>
-      </section>
-      <section className="space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">
-          Order History
-        </h2>
-        <div className="rounded border p-6 text-sm text-neutral-500">
-          No orders yet.
-        </div>
-      </section>
+      </div>
     </div>
   );
 }

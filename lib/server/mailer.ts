@@ -103,7 +103,9 @@ export function buildOrderConfirmationHtml(order: Order) {
   return baseLayout(
     `Order #${order.id} received`,
     `<p>Thanks for your order. We've received it and it's now awaiting payment.</p>
-     <p style="margin:12px 0 4px;font-weight:600;">Total: ${currency(order.totalCents)}</p>
+     <p style="margin:12px 0 4px;font-weight:600;">Total: ${currency(
+       order.totalCents
+     )}</p>
      <p style="color:#666;font-size:12px;margin-top:16px;">You will receive another email when payment is confirmed.</p>`
   );
 }
@@ -118,7 +120,14 @@ export interface OrderEmailLine {
   lineTotalCents: number;
 }
 export interface OrderEmailAddress {
-  fullName: string; line1: string; line2?: string | null; city: string; region?: string | null; postalCode: string; country: string; phone?: string | null;
+  fullName: string;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  region?: string | null;
+  postalCode: string;
+  country: string;
+  phone?: string | null;
 }
 export interface RichOrderEmailPayload {
   orderId: string;
@@ -136,29 +145,62 @@ export interface RichOrderEmailPayload {
 
 function addressBlock(label: string, a?: OrderEmailAddress) {
   if (!a) return "";
-  const parts = [a.line1, a.line2, `${a.city}${a.region ? ", " + a.region : ""} ${a.postalCode}`, a.country];
-  return `<div style=\"margin-top:12px;\"><div style=\"font-weight:600;margin-bottom:4px;\">${label}</div><div style=\"font-size:12px;line-height:1.4;color:#333;\">${parts.filter(Boolean).join("<br/>")}${a.phone ? `<br/>Tel: ${a.phone}` : ""}</div></div>`;
+  const parts = [
+    a.line1,
+    a.line2,
+    `${a.city}${a.region ? ", " + a.region : ""} ${a.postalCode}`,
+    a.country,
+  ];
+  return `<div style=\"margin-top:12px;\"><div style=\"font-weight:600;margin-bottom:4px;\">${label}</div><div style=\"font-size:12px;line-height:1.4;color:#333;\">${parts
+    .filter(Boolean)
+    .join("<br/>")}${a.phone ? `<br/>Tel: ${a.phone}` : ""}</div></div>`;
 }
 
 export function buildRichOrderConfirmationHtml(d: RichOrderEmailPayload) {
   const linesHtml = d.lines
     .map(
       (l) => `<tr>
-        <td style=\"padding:6px 8px;border-bottom:1px solid #eee;\">${l.name}${l.size ? `<div style=\"color:#666;font-size:11px;\">Size: ${l.size}</div>` : ""}<div style=\"color:#999;font-size:10px;\">SKU: ${l.sku}</div></td>
-        <td style=\"padding:6px 8px;text-align:center;border-bottom:1px solid #eee;\">${l.qty}</td>
-        <td style=\"padding:6px 8px;text-align:right;border-bottom:1px solid #eee;\">${formatPriceCents(l.unitPriceCents, { currency: d.currency })}</td>
-        <td style=\"padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;\">${formatPriceCents(l.lineTotalCents, { currency: d.currency })}</td>
+        <td style=\"padding:6px 8px;border-bottom:1px solid #eee;\">${l.name}${
+        l.size
+          ? `<div style=\"color:#666;font-size:11px;\">Size: ${l.size}</div>`
+          : ""
+      }<div style=\"color:#999;font-size:10px;\">SKU: ${l.sku}</div></td>
+        <td style=\"padding:6px 8px;text-align:center;border-bottom:1px solid #eee;\">${
+          l.qty
+        }</td>
+        <td style=\"padding:6px 8px;text-align:right;border-bottom:1px solid #eee;\">${formatPriceCents(
+          l.unitPriceCents,
+          { currency: d.currency }
+        )}</td>
+        <td style=\"padding:6px 8px;text-align:right;border-bottom:1px solid #eee;font-weight:600;\">${formatPriceCents(
+          l.lineTotalCents,
+          { currency: d.currency }
+        )}</td>
       </tr>`
     )
     .join("");
 
   const money = (c: number) => formatPriceCents(c, { currency: d.currency });
   const summary = `<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"margin-top:16px;font-size:13px;\">
-    <tr><td style=\"padding:4px 0;color:#555;\">Subtotal</td><td style=\"padding:4px 0;text-align:right;\">${money(d.subtotalCents)}</td></tr>
-    ${d.discountCents ? `<tr><td style=\"padding:4px 0;color:#c00;\">Discount</td><td style=\"padding:4px 0;text-align:right;color:#c00;\">- ${money(d.discountCents)}</td></tr>` : ""}
-    <tr><td style=\"padding:4px 0;color:#555;\">Tax</td><td style=\"padding:4px 0;text-align:right;\">${money(d.taxCents)}</td></tr>
-    <tr><td style=\"padding:4px 0;color:#555;\">Shipping</td><td style=\"padding:4px 0;text-align:right;\">${money(d.shippingCents)}</td></tr>
-    <tr><td style=\"padding:6px 0;font-weight:600;border-top:1px solid #ddd;\">Total</td><td style=\"padding:6px 0;text-align:right;font-weight:600;border-top:1px solid #ddd;\">${money(d.totalCents)}</td></tr>
+    <tr><td style=\"padding:4px 0;color:#555;\">Subtotal</td><td style=\"padding:4px 0;text-align:right;\">${money(
+      d.subtotalCents
+    )}</td></tr>
+    ${
+      d.discountCents
+        ? `<tr><td style=\"padding:4px 0;color:#c00;\">Discount</td><td style=\"padding:4px 0;text-align:right;color:#c00;\">- ${money(
+            d.discountCents
+          )}</td></tr>`
+        : ""
+    }
+    <tr><td style=\"padding:4px 0;color:#555;\">Tax</td><td style=\"padding:4px 0;text-align:right;\">${money(
+      d.taxCents
+    )}</td></tr>
+    <tr><td style=\"padding:4px 0;color:#555;\">Shipping</td><td style=\"padding:4px 0;text-align:right;\">${money(
+      d.shippingCents
+    )}</td></tr>
+    <tr><td style=\"padding:6px 0;font-weight:600;border-top:1px solid #ddd;\">Total</td><td style=\"padding:6px 0;text-align:right;font-weight:600;border-top:1px solid #ddd;\">${money(
+      d.totalCents
+    )}</td></tr>
   </table>`;
 
   const est = d.estimatedDelivery
@@ -174,7 +216,11 @@ export function buildRichOrderConfirmationHtml(d: RichOrderEmailPayload) {
      </table>
      ${summary}
      ${addressBlock("Shipping Address", d.shipping)}
-     ${d.billing && JSON.stringify(d.billing) !== JSON.stringify(d.shipping) ? addressBlock("Billing Address", d.billing) : ""}
+     ${
+       d.billing && JSON.stringify(d.billing) !== JSON.stringify(d.shipping)
+         ? addressBlock("Billing Address", d.billing)
+         : ""
+     }
      ${est}
      <p style=\"margin-top:18px;font-size:11px;color:#777;\">You will receive another email once payment is captured.</p>`
   );
@@ -183,15 +229,38 @@ export function buildRichOrderConfirmationHtml(d: RichOrderEmailPayload) {
 export function buildRichOrderConfirmationText(d: RichOrderEmailPayload) {
   const lines = d.lines
     .map(
-      (l) => `${l.name}${l.size ? ` (Size: ${l.size})` : ""} x${l.qty} @ ${formatPriceCents(l.unitPriceCents, { currency: d.currency })} = ${formatPriceCents(l.lineTotalCents, { currency: d.currency })}`
+      (l) =>
+        `${l.name}${l.size ? ` (Size: ${l.size})` : ""} x${
+          l.qty
+        } @ ${formatPriceCents(l.unitPriceCents, {
+          currency: d.currency,
+        })} = ${formatPriceCents(l.lineTotalCents, { currency: d.currency })}`
     )
     .join("\n");
   const money = (c: number) => formatPriceCents(c, { currency: d.currency });
   const addr = (a: OrderEmailAddress) =>
-    [a.fullName, a.line1, a.line2, `${a.city}${a.region ? ", " + a.region : ""} ${a.postalCode}`, a.country]
+    [
+      a.fullName,
+      a.line1,
+      a.line2,
+      `${a.city}${a.region ? ", " + a.region : ""} ${a.postalCode}`,
+      a.country,
+    ]
       .filter(Boolean)
       .join(" | ");
-  return `Order #${d.orderId}\n\nItems:\n${lines}\n\nSubtotal: ${money(d.subtotalCents)}\n${d.discountCents ? `Discount: -${money(d.discountCents)}\n` : ""}Tax: ${money(d.taxCents)}\nShipping: ${money(d.shippingCents)}\nTotal: ${money(d.totalCents)}\n\nShip To: ${addr(d.shipping)}${d.billing && JSON.stringify(d.billing) !== JSON.stringify(d.shipping) ? `\nBill To: ${addr(d.billing)}` : ""}\n${d.estimatedDelivery ? `Estimated Delivery: ${d.estimatedDelivery}\n` : ""}\nStatus: Awaiting Payment`;
+  return `Order #${d.orderId}\n\nItems:\n${lines}\n\nSubtotal: ${money(
+    d.subtotalCents
+  )}\n${
+    d.discountCents ? `Discount: -${money(d.discountCents)}\n` : ""
+  }Tax: ${money(d.taxCents)}\nShipping: ${money(
+    d.shippingCents
+  )}\nTotal: ${money(d.totalCents)}\n\nShip To: ${addr(d.shipping)}${
+    d.billing && JSON.stringify(d.billing) !== JSON.stringify(d.shipping)
+      ? `\nBill To: ${addr(d.billing)}`
+      : ""
+  }\n${
+    d.estimatedDelivery ? `Estimated Delivery: ${d.estimatedDelivery}\n` : ""
+  }\nStatus: Awaiting Payment`;
 }
 
 export async function sendRichOrderConfirmation(
@@ -203,7 +272,7 @@ export async function sendRichOrderConfirmation(
   const text = buildRichOrderConfirmationText(payload);
   await mailer.send({
     to: user.email,
-    subject: `Order #${payload.orderId} confirmation` ,
+    subject: `Order #${payload.orderId} confirmation`,
     text,
     html,
   });

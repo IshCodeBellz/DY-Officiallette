@@ -21,6 +21,10 @@ export const authOptions: NextAuthOptions = {
         const { email, password } = parsed.data;
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) return null;
+        if (!user.emailVerified) {
+          // Reject login until email verified
+            return null;
+        }
         const valid = await verifyPassword(password, user.passwordHash);
         if (!valid) return null;
         return {
@@ -28,6 +32,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name || null,
           email: user.email,
           isAdmin: user.isAdmin,
+          emailVerified: user.emailVerified,
         } as any;
       },
     }),
@@ -46,12 +51,16 @@ export const authOptions: NextAuthOptions = {
       if (user?.id) {
         (token as any).uid = (user as any).id;
         (token as any).isAdmin = (user as any).isAdmin || false;
+        (token as any).emailVerified = (user as any).emailVerified ?? true;
       } else if ((token as any).uid && (token as any).isAdmin === undefined) {
         // lazy load isAdmin if missing (e.g., from OAuth or legacy session)
         const dbUser = await prisma.user.findUnique({
           where: { id: (token as any).uid },
         });
-        if (dbUser) (token as any).isAdmin = dbUser.isAdmin;
+        if (dbUser) {
+          (token as any).isAdmin = dbUser.isAdmin;
+          (token as any).emailVerified = dbUser.emailVerified;
+        }
       }
       return token;
     },
@@ -59,6 +68,8 @@ export const authOptions: NextAuthOptions = {
       if ((token as any)?.uid) (session.user as any).id = (token as any).uid;
       if ((token as any)?.isAdmin !== undefined)
         (session.user as any).isAdmin = (token as any).isAdmin;
+      if ((token as any)?.emailVerified !== undefined)
+        (session.user as any).emailVerified = (token as any).emailVerified;
       return session;
     },
   },

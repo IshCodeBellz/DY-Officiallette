@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+// No auto sign-in; require email verification first.
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -12,6 +12,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [pendingVerify, setPendingVerify] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -38,14 +39,12 @@ export default function RegisterPage() {
           setError("Email already registered");
         else setError("Registration failed");
       } else {
-        setSuccess(true);
-        // Automatically sign in
-        await signIn("credentials", {
-          email,
-          password,
-          redirect: true,
-          callbackUrl: "/", // will be overridden by middleware if admin
-        });
+        if (data.status === "pending_verification") {
+          setSuccess(true);
+          setPendingVerify(true);
+        } else {
+          setSuccess(true);
+        }
       }
     } catch (e) {
       setError("Network error");
@@ -98,15 +97,20 @@ export default function RegisterPage() {
           />
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
-        {success && (
-          <p className="text-sm text-green-600">Registered! Redirecting...</p>
+        {success && pendingVerify && (
+          <div className="p-3 rounded bg-blue-50 border border-blue-200 text-blue-700 text-sm">
+            Registration received. Check your email for a verification link to activate your account.
+          </div>
+        )}
+        {success && !pendingVerify && (
+          <p className="text-sm text-green-600">Registered.</p>
         )}
         <button
           type="submit"
           disabled={loading}
           className="w-full rounded bg-neutral-900 text-white py-2 text-sm font-medium hover:bg-neutral-800 disabled:opacity-50"
         >
-          {loading ? "Registering..." : "Register"}
+          {loading ? "Submitting..." : "Create account"}
         </button>
       </form>
       <p className="text-sm text-neutral-600 mt-6">

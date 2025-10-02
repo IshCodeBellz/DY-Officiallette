@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
-import { sendOrderConfirmation, sendRichOrderConfirmation } from "@/lib/server/mailer";
+import {
+  sendOrderConfirmation,
+  sendRichOrderConfirmation,
+} from "@/lib/server/mailer";
 import { z } from "zod";
 import { rateLimit } from "@/lib/server/rateLimit";
 import { buildDraftFromCart, calculateRates } from "@/lib/server/taxShipping";
@@ -439,7 +442,11 @@ export const POST = withRequest(async function POST(req: NextRequest) {
           prisma.user.findUnique({ where: { id: userId } }),
           prisma.order.findUnique({
             where: { id: result.id },
-            include: { items: true, shippingAddress: true, billingAddress: true },
+            include: {
+              items: true,
+              shippingAddress: true,
+              billingAddress: true,
+            },
           }),
         ]);
         if (user && full) {
@@ -485,7 +492,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
           });
         } else if (user) {
           // Fallback to legacy minimal email if relation load failed
-            await sendOrderConfirmation(user, result);
+          await sendOrderConfirmation(user, result);
         }
       }
     } catch (e) {
