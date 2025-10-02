@@ -23,7 +23,8 @@ export function VerifyEmailBanner() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: userEmail }),
       });
-      if (res.ok) setSent(true); else setError("Failed to send");
+      if (res.ok) setSent(true);
+      else setError("Failed to send");
     } catch {
       setError("Network error");
     } finally {
@@ -36,7 +37,9 @@ export function VerifyEmailBanner() {
       <div className="max-w-6xl mx-auto px-4 py-2 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
         <p>
           <strong className="mr-1">Verify your email.</strong>
-          We sent a verification link to <span className="font-medium">{userEmail}</span>. Please verify to unlock all features.
+          We sent a verification link to{" "}
+          <span className="font-medium">{userEmail}</span>. Please verify to
+          unlock all features.
         </p>
         <div className="flex gap-3 items-center">
           {sent ? (

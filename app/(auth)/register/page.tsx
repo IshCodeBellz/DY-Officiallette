@@ -99,7 +99,8 @@ export default function RegisterPage() {
         {error && <p className="text-sm text-red-600">{error}</p>}
         {success && pendingVerify && (
           <div className="p-3 rounded bg-blue-50 border border-blue-200 text-blue-700 text-sm">
-            Registration received. Check your email for a verification link to activate your account.
+            Registration received. Check your email for a verification link to
+            activate your account.
           </div>
         )}
         {success && !pendingVerify && (

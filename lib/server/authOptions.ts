@@ -23,7 +23,7 @@ export const authOptions: NextAuthOptions = {
         if (!user) return null;
         if (!user.emailVerified) {
           // Reject login until email verified
-            return null;
+          return null;
         }
         const valid = await verifyPassword(password, user.passwordHash);
         if (!valid) return null;

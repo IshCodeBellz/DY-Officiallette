@@ -194,7 +194,9 @@ export default async function InventoryPage() {
                   </td>
                   <td className="py-3 px-4">
                     {/* NOTE: inventoryService.getRecentStockMovements currently only returns type: 'outgoing'. */}
-                    <span className={`px-2 py-1 text-xs rounded bg-red-100 text-red-800`}>
+                    <span
+                      className={`px-2 py-1 text-xs rounded bg-red-100 text-red-800`}
+                    >
                       {movement.type}
                     </span>
                   </td>
