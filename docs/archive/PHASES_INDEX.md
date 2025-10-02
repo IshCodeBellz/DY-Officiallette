@@ -3,6 +3,7 @@
 Individual phase documents (Phase 2–4 plans, status, completion, transitions) were removed to reduce noise.
 
 Authoritative timeline & roadmap now live in:
+
 - `ARCHITECTURE.md` → Sections 1 (Executive Snapshot) & 15 (Roadmap)
 - `CHANGELOG.md` for incremental changes
 

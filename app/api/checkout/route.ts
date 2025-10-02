@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
-import { sendOrderConfirmation } from "@/lib/server/mailer";
+import { sendOrderConfirmation, sendRichOrderConfirmation } from "@/lib/server/mailer";
 import { z } from "zod";
 import { rateLimit } from "@/lib/server/rateLimit";
 import { buildDraftFromCart, calculateRates } from "@/lib/server/taxShipping";
@@ -430,13 +430,63 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     throw e;
   }
 
-  // Fire and forget (no await needed) but we purposely await to surface errors in development
+  // Send rich order confirmation email (includes line items & addresses)
   if (session && session.user?.email && !testUser) {
     try {
       const userId = (session.user as any).id as string | undefined;
       if (userId) {
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-        if (user) await sendOrderConfirmation(user, result);
+        const [user, full] = await Promise.all([
+          prisma.user.findUnique({ where: { id: userId } }),
+          prisma.order.findUnique({
+            where: { id: result.id },
+            include: { items: true, shippingAddress: true, billingAddress: true },
+          }),
+        ]);
+        if (user && full) {
+          await sendRichOrderConfirmation(user, {
+            orderId: full.id,
+            currency: full.currency,
+            lines: full.items.map((i) => ({
+              name: i.nameSnapshot,
+              sku: i.sku,
+              size: i.size,
+              qty: i.qty,
+              unitPriceCents: i.unitPriceCents,
+              lineTotalCents: i.lineTotalCents,
+            })),
+            subtotalCents: full.subtotalCents,
+            discountCents: full.discountCents,
+            taxCents: full.taxCents,
+            shippingCents: full.shippingCents,
+            totalCents: full.totalCents,
+            shipping: {
+              fullName: full.shippingAddress!.fullName,
+              line1: full.shippingAddress!.line1,
+              line2: full.shippingAddress!.line2 || undefined,
+              city: full.shippingAddress!.city,
+              region: full.shippingAddress!.region || undefined,
+              postalCode: full.shippingAddress!.postalCode,
+              country: full.shippingAddress!.country,
+              phone: full.shippingAddress!.phone || undefined,
+            },
+            billing: full.billingAddress
+              ? {
+                  fullName: full.billingAddress.fullName,
+                  line1: full.billingAddress.line1,
+                  line2: full.billingAddress.line2 || undefined,
+                  city: full.billingAddress.city,
+                  region: full.billingAddress.region || undefined,
+                  postalCode: full.billingAddress.postalCode,
+                  country: full.billingAddress.country,
+                  phone: full.billingAddress.phone || undefined,
+                }
+              : undefined,
+            estimatedDelivery: "3–5 business days",
+          });
+        } else if (user) {
+          // Fallback to legacy minimal email if relation load failed
+            await sendOrderConfirmation(user, result);
+        }
       }
     } catch (e) {
       console.error("order confirmation email failed", e);

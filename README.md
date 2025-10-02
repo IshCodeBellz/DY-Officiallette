@@ -22,6 +22,7 @@ Modern fashion e‑commerce demo (Next.js 14 + Tailwind). Production‑style arc
 - Simulated Stripe-ready checkout (idempotent + webhook finalization)
 
 ## 🚀 Quick Start
+
 ```
 cp .env.example .env
 npm install
@@ -29,19 +30,23 @@ npx prisma migrate dev --name init
 npm run prisma:seed
 npm run dev
 ```
-Visit: http://localhost:3000  |  Admin: /admin (see demo accounts below)
+
+Visit: http://localhost:3000 | Admin: /admin (see demo accounts below)
 
 ## 👤 Demo Accounts
-| Role | Email | Password |
-|------|-------|----------|
+
+| Role  | Email                | Password |
+| ----- | -------------------- | -------- |
 | Admin | admin@dyofficial.com | admin123 |
-| User  | john@example.com | user123 |
-| User  | jane@example.com | user123 |
+| User  | john@example.com     | user123  |
+| User  | jane@example.com     | user123  |
 
 ## 🧱 Stack
+
 Next.js 14, TypeScript, Prisma, NextAuth, Tailwind, Stripe (simulated), Jest.
 
 ## 📊 Core Features
+
 - Browse → filter → product detail (structured data + gallery)
 - Cart + wishlist with enforced size selection
 - Discount codes (fixed / percent / limits / windows)
@@ -49,24 +54,31 @@ Next.js 14, TypeScript, Prisma, NextAuth, Tailwind, Stripe (simulated), Jest.
 - Order lifecycle + metrics instrumentation
 
 ## 🔍 Search & Trending
+
 Weighted relevance (synonyms/plurals) + event-driven metrics feed a time‑decay trending list (72h half‑life). Falls back to “newest” when cold.
 
 ## 🛠 Admin Overview
+
 Products, brands, categories, orders, discount codes, basic inventory + social moderation scaffolding.
 
 ## 🧪 Tests
+
 Key coverage: checkout flow, search expansion, trending decay, money formatting, order transitions.
 
 ## 🧬 Deferred (Stubbed) Features
+
 Reviews (create/vote/report), advanced variant management, bundles, product relations scoring, inventory alert automation. See `ARCHITECTURE.md` for activation plan.
 
 ## 📄 Full Technical Documentation
+
 See `ARCHITECTURE.md` (deep data models, algorithms, roadmap, activation steps).
 
 ## ⚖️ License / Attribution
+
 Educational project (not affiliated with ASOS). Validate security & compliance before production use.
 
 ---
+
 `ARCHITECTURE.md` contains the previous in‑depth consolidated documentation. Historical phase / fix reports now live under `docs/archive/`.
 
 4. Start the dev server:
