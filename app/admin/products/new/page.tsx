@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface ImageInput {
   url: string;
@@ -35,6 +36,7 @@ export default function NewProductPage() {
   const [categoryId, setCategoryId] = useState<string>("");
   const [brands, setBrands] = useState<MetaBrand[]>([]);
   const [categories, setCategories] = useState<MetaCategory[]>([]);
+
   useEffect(() => {
     fetch("/api/admin/meta")
       .then((r) => (r.ok ? r.json() : Promise.reject()))
@@ -44,6 +46,7 @@ export default function NewProductPage() {
       })
       .catch(() => {});
   }, []);
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -116,197 +119,305 @@ export default function NewProductPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          type="button"
-          onClick={() => router.push("/admin")}
-          className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded border border-neutral-300 hover:bg-neutral-50"
-        >
-          ← Back
-        </button>
-        <h1 className="text-2xl font-semibold">New Product</h1>
-      </div>
-      <form onSubmit={onSubmit} className="space-y-8">
-        <section className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-sm font-medium">SKU</label>
-              <input
-                value={sku}
-                onChange={(e) => setSku(e.target.value)}
-                required
-                className="w-full border rounded px-3 py-2 text-sm"
-              />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto p-6 space-y-8">
+        {/* Header Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Create New Product
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Add a new product to your catalog
+              </p>
             </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Name</label>
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full border rounded px-3 py-2 text-sm"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Brand</label>
-              <select
-                value={brandId}
-                onChange={(e) => setBrandId(e.target.value)}
-                className="w-full border rounded px-3 py-2 text-sm"
-              >
-                <option value="">(None)</option>
-                {brands.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Category</label>
-              <select
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full border rounded px-3 py-2 text-sm"
-              >
-                <option value="">(None)</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Link
+              href="/admin"
+              className="text-sm rounded bg-neutral-200 text-neutral-900 px-3 py-2 hover:bg-neutral-300"
+            >
+              Back to Dashboard
+            </Link>
           </div>
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              rows={4}
-              className="w-full border rounded px-3 py-2 text-sm"
-            />
-          </div>
-          <div className="space-y-1 max-w-xs">
-            <label className="text-sm font-medium">Price (USD)</label>
-            <input
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              required
-              type="number"
-              step="0.01"
-              min="0"
-              className="w-full border rounded px-3 py-2 text-sm"
-            />
-          </div>
-        </section>
+        </div>
 
-        <section className="space-y-3">
-          <h2 className="font-medium text-sm uppercase tracking-wide">
-            Images
-          </h2>
-          <div className="space-y-4">
-            {images.map((img, i) => (
-              <div key={i} className="grid md:grid-cols-2 gap-3 items-start">
-                <input
-                  placeholder="Image URL"
-                  value={img.url}
-                  onChange={(e) => updateImage(i, { url: e.target.value })}
-                  required={i === 0}
-                  className="border rounded px-3 py-2 text-sm"
-                />
-                <div className="flex gap-2">
+        {/* Main Form */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Product Information
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Fill in the details for your new product
+            </p>
+          </div>
+
+          <form onSubmit={onSubmit} className="p-6 space-y-8">
+            {/* Basic Information */}
+            <div className="space-y-6">
+              <h3 className="text-md font-medium text-gray-900 border-b border-gray-200 pb-2">
+                Basic Information
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    SKU *
+                  </label>
                   <input
-                    placeholder="Alt text"
-                    value={img.alt}
-                    onChange={(e) => updateImage(i, { alt: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm flex-1"
+                    value={sku}
+                    onChange={(e) => setSku(e.target.value)}
+                    required
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter product SKU"
                   />
-                  {images.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeImage(i)}
-                      className="text-xs text-red-600 underline"
-                    >
-                      Remove
-                    </button>
-                  )}
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Product Name *
+                  </label>
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter product name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Brand
+                  </label>
+                  <select
+                    value={brandId}
+                    onChange={(e) => setBrandId(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select a brand (optional)</option>
+                    {brands.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Category
+                  </label>
+                  <select
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select a category (optional)</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
-            ))}
-            <button
-              type="button"
-              onClick={addImage}
-              className="text-xs underline"
-            >
-              + Add Image
-            </button>
-          </div>
-        </section>
-
-        <section className="space-y-3">
-          <h2 className="font-medium text-sm uppercase tracking-wide">Sizes</h2>
-          <div className="space-y-3">
-            {sizes.map((s, i) => (
-              <div key={i} className="flex gap-3 items-center">
-                <input
-                  placeholder="Label"
-                  value={s.label}
-                  onChange={(e) => updateSize(i, { label: e.target.value })}
-                  className="border rounded px-3 py-2 text-sm w-32"
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Description *
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  required
+                  rows={4}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter product description"
                 />
-                <input
-                  placeholder="Stock"
-                  type="number"
-                  min={0}
-                  value={s.stock}
-                  onChange={(e) =>
-                    updateSize(i, { stock: parseInt(e.target.value || "0") })
-                  }
-                  className="border rounded px-3 py-2 text-sm w-32"
-                />
-                {sizes.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeSize(i)}
-                    className="text-xs text-red-600 underline"
-                  >
-                    Remove
-                  </button>
-                )}
               </div>
-            ))}
-            <button
-              type="button"
-              onClick={addSize}
-              className="text-xs underline"
-            >
-              + Add Size
-            </button>
-          </div>
-        </section>
+              <div className="space-y-2 max-w-xs">
+                <label className="block text-sm font-medium text-gray-700">
+                  Price (USD) *
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 sm:text-sm">$</span>
+                  </div>
+                  <input
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    required
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className="w-full border border-gray-300 rounded-md pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+            </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+            {/* Images Section */}
+            <div className="space-y-6">
+              <h3 className="text-md font-medium text-gray-900 border-b border-gray-200 pb-2">
+                Product Images
+              </h3>
+              <div className="space-y-4">
+                {images.map((img, i) => (
+                  <div
+                    key={i}
+                    className="bg-gray-50 p-4 rounded-lg border border-gray-200"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-medium text-gray-700">
+                        Image {i + 1}{" "}
+                        {i === 0 && <span className="text-red-500">*</span>}
+                      </h4>
+                      {images.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeImage(i)}
+                          className="text-sm text-red-600 hover:text-red-800 font-medium"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="block text-xs font-medium text-gray-600">
+                          Image URL
+                        </label>
+                        <input
+                          placeholder="https://example.com/image.jpg"
+                          value={img.url}
+                          onChange={(e) =>
+                            updateImage(i, { url: e.target.value })
+                          }
+                          required={i === 0}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-xs font-medium text-gray-600">
+                          Alt Text
+                        </label>
+                        <input
+                          placeholder="Describe the image"
+                          value={img.alt}
+                          onChange={(e) =>
+                            updateImage(i, { alt: e.target.value })
+                          }
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addImage}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                >
+                  + Add Another Image
+                </button>
+              </div>
+            </div>
 
-        <div className="flex gap-3">
-          <button
-            disabled={submitting}
-            type="submit"
-            className="rounded bg-neutral-900 text-white px-4 py-2 text-sm font-medium hover:bg-neutral-800 disabled:opacity-50"
-          >
-            {submitting ? "Creating..." : "Create Product"}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/admin/products")}
-            className="text-sm underline"
-          >
-            Cancel
-          </button>
+            {/* Sizes Section */}
+            <div className="space-y-6">
+              <h3 className="text-md font-medium text-gray-900 border-b border-gray-200 pb-2">
+                Available Sizes
+              </h3>
+              <div className="space-y-4">
+                {sizes.map((s, i) => (
+                  <div
+                    key={i}
+                    className="bg-gray-50 p-4 rounded-lg border border-gray-200"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-medium text-gray-700">
+                        Size {i + 1}
+                      </h4>
+                      {sizes.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeSize(i)}
+                          className="text-sm text-red-600 hover:text-red-800 font-medium"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="block text-xs font-medium text-gray-600">
+                          Size Label
+                        </label>
+                        <input
+                          placeholder="e.g. S, M, L, XL"
+                          value={s.label}
+                          onChange={(e) =>
+                            updateSize(i, { label: e.target.value })
+                          }
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-xs font-medium text-gray-600">
+                          Stock Quantity
+                        </label>
+                        <input
+                          placeholder="0"
+                          type="number"
+                          min={0}
+                          value={s.stock}
+                          onChange={(e) =>
+                            updateSize(i, {
+                              stock: parseInt(e.target.value || "0"),
+                            })
+                          }
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addSize}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                >
+                  + Add Another Size
+                </button>
+              </div>
+            </div>
+
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <div className="flex">
+                  <div className="text-sm text-red-700">{error}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 pt-6 border-t border-gray-200">
+              <button
+                disabled={submitting}
+                type="submit"
+                className="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {submitting ? "Creating Product..." : "Create Product"}
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/admin/products")}
+                className="px-6 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 }
