@@ -27,23 +27,25 @@ export default function CategoryPage({
   const { toggle, has } = useWishlist();
   const { addItem } = useCart();
   const { push } = useToast();
-  
+
   // Initialize all hooks before any conditional returns
   const [size, setSize] = useState<string>("");
   const [price, setPrice] = useState<[number, number]>([0, 200]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [items, setItems] = useState<Array<{
-    id: string;
-    name: string;
-    priceCents: number;
-    price?: number;
-    imageUrl?: string;
-    image?: string;
-    sizes?: string[];
-    brand?: { name: string };
-    category?: { name: string };
-  }>>([]);
+  const [items, setItems] = useState<
+    Array<{
+      id: string;
+      name: string;
+      priceCents: number;
+      price?: number;
+      imageUrl?: string;
+      image?: string;
+      sizes?: string[];
+      brand?: { name: string };
+      category?: { name: string };
+    }>
+  >([]);
   const viewedRef = useRef<Set<string>>(new Set());
 
   const category = params.category.toLowerCase();

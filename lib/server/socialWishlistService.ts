@@ -386,7 +386,7 @@ export class SocialWishlistService {
       // For now, just log the follow action
       // In a full implementation, you'd create a followers table
       console.log("User following wishlist:", { userId, wishlistId });
-      
+
       // Track the follow event
       await this.trackWishlistEvent(userId, wishlistId, "follow");
 
@@ -405,11 +405,11 @@ export class SocialWishlistService {
   ): Promise<SocialWishlist[]> {
     try {
       const wishlists = await prisma.wishlist.findMany({
-        where: { 
+        where: {
           isPublic: true,
           items: {
-            some: {} // Only wishlists with items
-          }
+            some: {}, // Only wishlists with items
+          },
         },
         include: {
           items: {
@@ -453,18 +453,20 @@ export class SocialWishlistService {
       const totalItems = await prisma.wishlistItem.count();
 
       // Calculate average items per wishlist
-      const averageItemsPerWishlist = totalWishlists > 0 ? 
-        Number((totalItems / totalWishlists).toFixed(1)) : 0;
+      const averageItemsPerWishlist =
+        totalWishlists > 0
+          ? Number((totalItems / totalWishlists).toFixed(1))
+          : 0;
 
       // Get most wishlisted products
       const wishlistCounts = await prisma.wishlistItem.groupBy({
-        by: ['productId'],
+        by: ["productId"],
         _count: {
           productId: true,
         },
         orderBy: {
           _count: {
-            productId: 'desc',
+            productId: "desc",
           },
         },
         take: 3,
@@ -487,8 +489,10 @@ export class SocialWishlistService {
       // Calculate conversion rate (simplified - items that have been in orders)
       // This is a basic implementation - in production you'd track actual conversions
       const orderItems = await prisma.orderItem.count();
-      const conversionRate = totalItems > 0 ? 
-        Number(((orderItems / totalItems) * 100).toFixed(1)) : 0;
+      const conversionRate =
+        totalItems > 0
+          ? Number(((orderItems / totalItems) * 100).toFixed(1))
+          : 0;
 
       return {
         totalWishlists,
@@ -541,8 +545,16 @@ export class SocialWishlistService {
         if (wishlistItem && wishlistItem.product) {
           // In a full implementation, you'd add to cart here
           // For now, we'll just track the event
-          await this.trackWishlistEvent(userId, wishlistItem.productId, "move_to_cart");
-          console.log("Item moved to cart:", { userId, itemId, productId: wishlistItem.productId });
+          await this.trackWishlistEvent(
+            userId,
+            wishlistItem.productId,
+            "move_to_cart"
+          );
+          console.log("Item moved to cart:", {
+            userId,
+            itemId,
+            productId: wishlistItem.productId,
+          });
           movedCount++;
         } else {
           failedItems.push(itemId);
@@ -586,7 +598,7 @@ export class SocialWishlistService {
           }),
         },
       });
-      
+
       console.log("Wishlist event tracked:", {
         userId,
         productId,
@@ -608,7 +620,7 @@ export class SocialWishlistService {
       const recentWishlistEvents = await prisma.userBehavior.findMany({
         where: {
           eventType: {
-            startsWith: 'wishlist_',
+            startsWith: "wishlist_",
           },
         },
         include: {
@@ -619,7 +631,7 @@ export class SocialWishlistService {
           },
         },
         orderBy: {
-          timestamp: 'desc',
+          timestamp: "desc",
         },
         take: 10,
       });
@@ -627,21 +639,21 @@ export class SocialWishlistService {
       // Get recent reviews
       const recentReviews = await prisma.productReview.findMany({
         orderBy: {
-          createdAt: 'desc',
+          createdAt: "desc",
         },
         take: 10,
       });
 
       return {
-        wishlists: recentWishlistEvents.map(event => ({
-          userName: event.user?.name || 'Anonymous',
-          action: event.eventType.replace('wishlist_', ''),
-          wishlistName: 'N/A', // Would need additional data structure to track this
+        wishlists: recentWishlistEvents.map((event) => ({
+          userName: event.user?.name || "Anonymous",
+          action: event.eventType.replace("wishlist_", ""),
+          wishlistName: "N/A", // Would need additional data structure to track this
           timestamp: event.timestamp,
         })),
-        reviews: recentReviews.map(review => ({
-          userName: review.authorName || 'Anonymous',
-          action: 'reviewed',
+        reviews: recentReviews.map((review) => ({
+          userName: review.authorName || "Anonymous",
+          action: "reviewed",
           rating: review.rating,
           timestamp: review.createdAt,
         })),
