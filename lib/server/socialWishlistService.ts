@@ -139,9 +139,30 @@ export class SocialWishlistService {
 
   /**
    * Transform Prisma wishlist to SocialWishlist interface
-   * TODO: Replace with proper Prisma-generated types
    */
-  private static transformWishlist(wishlist: any): SocialWishlist {
+  private static transformWishlist(wishlist: {
+    id: string;
+    userId: string | null;
+    name: string | null;
+    description?: string | null;
+    isPublic: boolean;
+    shareToken?: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    user?: { name?: string | null; email?: string | null } | null;
+    items: Array<{
+      id: string;
+      productId: string;
+      createdAt: Date;
+      notes?: string | null;
+      product: {
+        name: string;
+        priceCents: number;
+        isActive?: boolean;
+        images: Array<{ url: string }>;
+      };
+    }>;
+  }): SocialWishlist {
     return {
       id: wishlist.id,
       userId: wishlist.userId || "",
@@ -151,19 +172,19 @@ export class SocialWishlistService {
       description: wishlist.description || undefined,
       isPublic: wishlist.isPublic,
       shareToken: wishlist.shareToken || undefined,
-      items: wishlist.items.map((item: any) => ({
+      items: wishlist.items.map((item) => ({
         id: item.id,
         productId: item.productId,
         productName: item.product.name,
         productImage: item.product.images[0]?.url || "/placeholder.svg",
         priceCents: item.product.priceCents,
         addedAt: item.createdAt,
-        isAvailable: (item.product as any).isActive ?? true,
-        notes: (item as any).notes || undefined,
+        isAvailable: item.product.isActive ?? true,
+        notes: item.notes || undefined,
       })),
       followerCount: 0, // Will be implemented when followers table exists
       totalValue: wishlist.items.reduce(
-        (sum: number, item: any) => sum + item.product.priceCents,
+        (sum: number, item) => sum + item.product.priceCents,
         0
       ),
       createdAt: wishlist.createdAt,
@@ -258,8 +279,8 @@ export class SocialWishlistService {
         productImage: product.images[0]?.url || "/placeholder.svg",
         priceCents: product.priceCents,
         addedAt: wishlistItem.createdAt,
-        isAvailable: (product as any).isActive ?? true,
-        notes: (wishlistItem as any).notes || undefined,
+        isAvailable: product.isActive ?? true,
+        notes: (wishlistItem as { notes?: string | null }).notes || undefined,
       };
 
       return { success: true, item: transformedItem };

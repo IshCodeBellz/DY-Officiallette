@@ -1,4 +1,3 @@
-import { prisma } from "./prisma";
 import {
   SecurityEventType,
   SecurityEvent,
