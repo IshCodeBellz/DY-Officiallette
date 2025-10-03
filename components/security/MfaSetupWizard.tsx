@@ -14,6 +14,7 @@ import {
 
 interface MfaSetupResult {
   qrCodeUrl: string;
+  secret: string;
   backupCodes: string[];
   message: string;
 }
@@ -49,6 +50,7 @@ export function MfaSetupWizard({
       }
 
       const result = await response.json();
+      console.log("MFA Setup Result:", result); // Debug log
       setSetupData(result.data);
       setStep("setup");
     } catch (error) {
@@ -77,10 +79,13 @@ export function MfaSetupWizard({
       });
 
       const result = await response.json();
+      console.log("MFA verification result:", result);
 
       if (!result.success) {
+        const errorMessage = result.error || "Invalid verification code";
+        console.error("MFA verification failed:", errorMessage, result);
         push({
-          message: result.error || "Invalid verification code",
+          message: `Verification failed: ${errorMessage}`,
           type: "error",
         });
         return;
@@ -88,9 +93,16 @@ export function MfaSetupWizard({
 
       push({ message: "MFA setup completed successfully!", type: "success" });
       setStep("backup-codes");
+      // Notify parent component that setup is complete
+      onSetupComplete();
     } catch (error) {
-      push({ message: "Verification failed", type: "error" });
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       console.error("MFA verification error:", error);
+      push({
+        message: `Verification failed: ${errorMessage}`,
+        type: "error",
+      });
     } finally {
       setVerifying(false);
     }
@@ -232,17 +244,21 @@ export function MfaSetupWizard({
       {step === "setup" && setupData && (
         <div className="space-y-6">
           <div className="text-center">
-            <div className="bg-white dark:bg-neutral-900 p-4 rounded-lg border dark:border-neutral-600 inline-block">
+            <div className="bg-white p-6 rounded-lg border-2 border-neutral-200 dark:border-neutral-600 inline-block shadow-sm">
               <QRCodeSVG
                 value={setupData.qrCodeUrl}
                 size={200}
-                bgColor="transparent"
-                fgColor="currentColor"
-                className="text-neutral-900 dark:text-white"
+                bgColor="#ffffff"
+                fgColor="#000000"
+                level="M"
+                includeMargin={true}
               />
             </div>
             <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-3">
               Scan this QR code with your authenticator app
+            </p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-500 mt-1">
+              Apps: Google Authenticator, Authy, 1Password, etc.
             </p>
           </div>
 
@@ -256,10 +272,24 @@ export function MfaSetupWizard({
                 <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
                   Manually enter this secret key in your authenticator app:
                 </p>
-                <code className="text-xs bg-yellow-100 dark:bg-yellow-900 px-2 py-1 rounded mt-2 block font-mono">
-                  {setupData.qrCodeUrl.split("secret=")[1]?.split("&")[0] ||
-                    "Unable to extract secret"}
-                </code>
+                <div className="flex items-center gap-2 mt-2">
+                  <code className="text-xs bg-yellow-100 dark:bg-yellow-900 px-2 py-1 rounded block font-mono flex-1">
+                    {setupData.secret || "Unable to extract secret"}
+                  </code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(setupData.secret);
+                      push({
+                        message: "Secret copied to clipboard",
+                        type: "success",
+                      });
+                    }}
+                    className="p-1 text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-200"
+                    title="Copy secret"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -1,5 +1,4 @@
 import * as speakeasy from "speakeasy";
-import * as QRCode from "qrcode";
 import { randomBytes } from "crypto";
 import { prisma } from "./prisma";
 import {
@@ -33,8 +32,8 @@ export class MFAService {
       issuer: appName,
     });
 
-    // Generate QR code URL
-    const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url!);
+    // Store the TOTP URL for QRCodeSVG component
+    const totpUrl = secret.otpauth_url!;
 
     // Generate backup codes
     const backupCodes = generateBackupCodes();
@@ -64,7 +63,7 @@ export class MFAService {
 
     return {
       secret: secret.base32!,
-      qrCodeUrl,
+      qrCodeUrl: totpUrl,
       backupCodes,
     };
   }
@@ -76,6 +75,8 @@ export class MFAService {
     userId: string,
     token: string
   ): Promise<MFAVerificationResult> {
+    console.log("MFA Service - Looking for pending setup for user:", userId);
+
     const mfaDevice = await prisma.mfaDevice.findFirst({
       where: {
         userId,
@@ -83,6 +84,8 @@ export class MFAService {
         status: MFAStatus.PENDING_SETUP,
       },
     });
+
+    console.log("MFA Device found:", mfaDevice);
 
     if (!mfaDevice || !mfaDevice.secret) {
       return {
@@ -98,6 +101,8 @@ export class MFAService {
       token,
       window: 2, // Allow 2 steps before/after current time
     });
+
+    console.log("Token verification result:", verified);
 
     if (!verified) {
       // Increment failed attempts

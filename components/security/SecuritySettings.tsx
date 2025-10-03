@@ -14,6 +14,7 @@ import {
   MapPin,
   RefreshCw,
   ArrowLeft,
+  Monitor,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -21,6 +22,8 @@ import { MfaSetupWizard } from "./MfaSetupWizard";
 import { BackupCodesDisplay } from "./BackupCodesDisplay";
 import { DeviceManager } from "./DeviceManager";
 import { TotpGenerator } from "./TotpGenerator";
+import { SessionManager } from "./SessionManager";
+import { SessionSecurity } from "./SessionSecurity";
 
 interface SecurityEvent {
   id: string;
@@ -57,7 +60,7 @@ interface Device {
 
 export function SecuritySettings() {
   const [activeTab, setActiveTab] = useState<
-    "overview" | "mfa" | "devices" | "activity"
+    "overview" | "mfa" | "devices" | "sessions" | "activity"
   >("overview");
   const [mfaStatus, setMfaStatus] = useState<MfaStatus | null>(null);
   const [devices, setDevices] = useState<Device[]>([]);
@@ -79,7 +82,8 @@ export function SecuritySettings() {
       const mfaResponse = await fetch("/api/auth/mfa/setup");
       if (mfaResponse.ok) {
         const mfaData = await mfaResponse.json();
-        setMfaStatus(mfaData.status);
+        console.log("MFA response data:", mfaData);
+        setMfaStatus(mfaData.data); // Changed from mfaData.status to mfaData.data
       }
 
       // Mock data for demonstration
@@ -142,6 +146,7 @@ export function SecuritySettings() {
 
   const handleMfaSetupComplete = () => {
     setShowMfaSetup(false);
+    setActiveTab("mfa"); // Switch to MFA tab to show the setup result
     loadSecurityData();
     push({
       message: "Two-factor authentication has been enabled!",
@@ -237,6 +242,7 @@ export function SecuritySettings() {
     { id: "overview", label: "Overview", icon: Shield },
     { id: "mfa", label: "Two-Factor Auth", icon: Smartphone },
     { id: "devices", label: "Devices", icon: Settings },
+    { id: "sessions", label: "Sessions", icon: Monitor },
     { id: "activity", label: "Activity", icon: History },
   ];
 
@@ -409,78 +415,69 @@ export function SecuritySettings() {
         {/* MFA Tab */}
         {activeTab === "mfa" && (
           <div className="space-y-6">
-            {showMfaSetup ? (
-              <MfaSetupWizard
-                onSetupComplete={handleMfaSetupComplete}
-                onCancel={() => setShowMfaSetup(false)}
-              />
-            ) : (
-              <>
-                {mfaStatus?.enabled ? (
-                  <div className="space-y-6">
-                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                      <div className="flex items-start gap-3">
-                        <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
-                        <div>
-                          <h3 className="font-medium text-green-900 dark:text-green-100">
-                            Two-Factor Authentication Enabled
-                          </h3>
-                          <p className="text-sm text-green-800 dark:text-green-200 mt-1">
-                            Your account is protected with two-factor
-                            authentication.
-                            {mfaStatus.lastUsed &&
-                              ` Last used: ${new Date(
-                                mfaStatus.lastUsed
-                              ).toLocaleDateString()}`}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <TotpGenerator />
-
-                    {backupCodes.length > 0 && (
-                      <BackupCodesDisplay
-                        codes={backupCodes}
-                        usedCodes={usedBackupCodes}
-                        onRegenerateRequest={handleRegenerateBackupCodes}
-                      />
-                    )}
-
-                    <div className="flex gap-3">
-                      <button
-                        onClick={handleRegenerateBackupCodes}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        View Backup Codes
-                      </button>
-                      <button
-                        onClick={handleDisableMfa}
-                        className="px-4 py-2 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                      >
-                        Disable 2FA
-                      </button>
+            {mfaStatus?.enabled ? (
+              <div className="space-y-6">
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium text-green-900 dark:text-green-100">
+                        Two-Factor Authentication Enabled
+                      </h3>
+                      <p className="text-sm text-green-800 dark:text-green-200 mt-1">
+                        Your account is protected with two-factor
+                        authentication.
+                        {mfaStatus.lastUsed &&
+                          ` Last used: ${new Date(
+                            mfaStatus.lastUsed
+                          ).toLocaleDateString()}`}
+                      </p>
                     </div>
                   </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Smartphone className="w-16 h-16 text-neutral-400 dark:text-neutral-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
-                      Two-Factor Authentication Disabled
-                    </h3>
-                    <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-                      Add an extra layer of security to your account with
-                      two-factor authentication.
-                    </p>
-                    <button
-                      onClick={() => setShowMfaSetup(true)}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      Enable Two-Factor Authentication
-                    </button>
-                  </div>
+                </div>
+
+                <TotpGenerator />
+
+                {backupCodes.length > 0 && (
+                  <BackupCodesDisplay
+                    codes={backupCodes}
+                    usedCodes={usedBackupCodes}
+                    onRegenerateRequest={handleRegenerateBackupCodes}
+                  />
                 )}
-              </>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleRegenerateBackupCodes}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    View Backup Codes
+                  </button>
+                  <button
+                    onClick={handleDisableMfa}
+                    className="px-4 py-2 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    Disable 2FA
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Smartphone className="w-16 h-16 text-neutral-400 dark:text-neutral-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
+                  Two-Factor Authentication Disabled
+                </h3>
+                <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+                  Add an extra layer of security to your account with two-factor
+                  authentication.
+                </p>
+                <button
+                  onClick={() => setShowMfaSetup(true)}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Enable Two-Factor Authentication
+                </button>
+              </div>
             )}
           </div>
         )}
@@ -503,6 +500,14 @@ export function SecuritySettings() {
               setDevices(devices.filter((d) => d.isCurrent));
             }}
           />
+        )}
+
+        {/* Sessions Tab */}
+        {activeTab === "sessions" && (
+          <div className="space-y-6">
+            <SessionManager />
+            <SessionSecurity />
+          </div>
         )}
 
         {/* Activity Tab */}
@@ -553,6 +558,25 @@ export function SecuritySettings() {
           </div>
         )}
       </div>
+
+      {/* MFA Setup Modal - Available from any tab */}
+      {showMfaSetup && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowMfaSetup(false);
+            }
+          }}
+        >
+          <div className="bg-white dark:bg-neutral-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <MfaSetupWizard
+              onSetupComplete={handleMfaSetupComplete}
+              onCancel={() => setShowMfaSetup(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
