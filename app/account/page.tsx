@@ -67,6 +67,17 @@ export default async function AccountPage() {
       ],
     },
     {
+      label: "Security",
+      items: [
+        {
+          href: "/account/security",
+          text: "Security Settings",
+          external: false,
+        },
+        { href: "#password", text: "Change Password", disabled: true },
+      ],
+    },
+    {
       label: "Order Information",
       items: [
         { href: "#order-history", text: "Order History" },
@@ -150,8 +161,8 @@ export default async function AccountPage() {
                   View details &gt;
                 </a>
               </div>
-              <div className="border rounded p-5 flex gap-5 bg-white">
-                <div className="w-16 h-16 rounded flex items-center justify-center bg-neutral-50 border text-neutral-500">
+              <div className="border rounded p-5 flex gap-5 bg-white dark:bg-neutral-800 dark:border-neutral-700">
+                <div className="w-16 h-16 rounded flex items-center justify-center bg-neutral-50 dark:bg-neutral-700 border dark:border-neutral-600 text-neutral-500 dark:text-neutral-400">
                   {/* User Icon */}
                   <svg
                     width="34"
@@ -168,11 +179,58 @@ export default async function AccountPage() {
                   </svg>
                 </div>
                 <div className="text-sm leading-relaxed">
-                  <p className="font-semibold">{user.name || "Unnamed User"}</p>
-                  <p className="text-neutral-600">
+                  <p className="font-semibold dark:text-white">
+                    {user.name || "Unnamed User"}
+                  </p>
+                  <p className="text-neutral-600 dark:text-neutral-400">
                     {formatDate(user.createdAt)}
                   </p>
-                  <p className="text-neutral-600 break-all">{user.email}</p>
+                  <p className="text-neutral-600 dark:text-neutral-400 break-all">
+                    {user.email}
+                  </p>
+                </div>
+              </div>
+            </section>
+            <section id="security-overview" className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="uppercase tracking-wide text-xs font-semibold text-neutral-600">
+                  Account Security
+                </h2>
+                <Link
+                  href="/account/security"
+                  className="text-xs underline font-medium"
+                >
+                  Manage Security &gt;
+                </Link>
+              </div>
+              <div className="border rounded p-5 flex gap-5 bg-white dark:bg-neutral-800 dark:border-neutral-700">
+                <div className="w-16 h-16 rounded flex items-center justify-center bg-neutral-50 dark:bg-neutral-700 border dark:border-neutral-600 text-neutral-500 dark:text-neutral-400">
+                  {/* Security Shield Icon */}
+                  <svg
+                    width="34"
+                    height="34"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="opacity-70"
+                  >
+                    <path d="M12 22s8-4.5 8-11a8 8 0 1 0-16 0c0 6.5 8 11 8 11Z" />
+                    <path d="m9 12 2 2 4-4" />
+                  </svg>
+                </div>
+                <div className="text-sm leading-relaxed">
+                  <p className="font-semibold dark:text-white">
+                    Security Settings
+                  </p>
+                  <p className="text-neutral-600 dark:text-neutral-400">
+                    Two-factor authentication, trusted devices, and more
+                  </p>
+                  <p className="text-neutral-600 dark:text-neutral-400 mt-1">
+                    Keep your account secure with advanced security features
+                  </p>
                 </div>
               </div>
             </section>
@@ -188,8 +246,8 @@ export default async function AccountPage() {
                   All Addresses &gt;
                 </a>
               </div>
-              <div className="border rounded p-5 flex gap-5 bg-white">
-                <div className="w-16 h-16 rounded flex items-center justify-center bg-neutral-50 border text-neutral-500">
+              <div className="border rounded p-5 flex gap-5 bg-white dark:bg-neutral-800 dark:border-neutral-700">
+                <div className="w-16 h-16 rounded flex items-center justify-center bg-neutral-50 dark:bg-neutral-700 border dark:border-neutral-600 text-neutral-500 dark:text-neutral-400">
                   {/* Address Icon */}
                   <svg
                     width="34"
@@ -209,8 +267,10 @@ export default async function AccountPage() {
                 <div className="text-sm leading-relaxed">
                   {primaryAddress ? (
                     <>
-                      <p className="font-semibold">{primaryAddress.fullName}</p>
-                      <p className="text-neutral-600 whitespace-pre-line">
+                      <p className="font-semibold dark:text-white">
+                        {primaryAddress.fullName}
+                      </p>
+                      <p className="text-neutral-600 dark:text-neutral-400 whitespace-pre-line">
                         {primaryAddress.line1}
                         {primaryAddress.line2
                           ? `\n${primaryAddress.line2}`
@@ -230,25 +290,27 @@ export default async function AccountPage() {
                       </p>
                     </>
                   ) : (
-                    <p className="text-neutral-500">No address saved yet.</p>
+                    <p className="text-neutral-500 dark:text-neutral-400">
+                      No address saved yet.
+                    </p>
                   )}
                 </div>
               </div>
             </section>
             <section id="order-history" className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="uppercase tracking-wide text-xs font-semibold text-neutral-600">
+                <h2 className="uppercase tracking-wide text-xs font-semibold text-neutral-600 dark:text-neutral-400">
                   Order History
                 </h2>
                 <Link
                   href="/account/orders"
-                  className="text-xs underline font-medium"
+                  className="text-xs underline font-medium dark:text-neutral-300"
                 >
                   View All Orders &gt;
                 </Link>
               </div>
-              <div className="border rounded p-5 flex gap-5 bg-white">
-                <div className="w-16 h-16 rounded flex items-center justify-center bg-neutral-50 border text-neutral-500">
+              <div className="border rounded p-5 flex gap-5 bg-white dark:bg-neutral-800 dark:border-neutral-700">
+                <div className="w-16 h-16 rounded flex items-center justify-center bg-neutral-50 dark:bg-neutral-700 border dark:border-neutral-600 text-neutral-500 dark:text-neutral-400">
                   {/* Order Icon */}
                   <svg
                     width="34"
@@ -267,25 +329,27 @@ export default async function AccountPage() {
                 <div className="text-sm leading-relaxed">
                   {lastOrder ? (
                     <>
-                      <p>
+                      <p className="dark:text-neutral-200">
                         <span className="font-semibold">Order Number:</span>{" "}
                         {lastOrder.id.slice(0, 12).toUpperCase()}
                       </p>
-                      <p>
+                      <p className="dark:text-neutral-200">
                         <span className="font-semibold">Date Ordered:</span>{" "}
                         {formatDate(lastOrder.createdAt)}
                       </p>
-                      <p>
+                      <p className="dark:text-neutral-200">
                         <span className="font-semibold">Order Status:</span>{" "}
                         {lastOrder.status}
                       </p>
-                      <p className="mt-1 text-neutral-600">
+                      <p className="mt-1 text-neutral-600 dark:text-neutral-400">
                         Total {(lastOrder.totalCents / 100).toFixed(2)}{" "}
                         {lastOrder.currency}
                       </p>
                     </>
                   ) : (
-                    <p className="text-neutral-500">No orders yet.</p>
+                    <p className="text-neutral-500 dark:text-neutral-400">
+                      No orders yet.
+                    </p>
                   )}
                 </div>
               </div>

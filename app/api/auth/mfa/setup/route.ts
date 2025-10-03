@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         qrCodeUrl: setupResult.qrCodeUrl,
+        secret: setupResult.secret, // Return the secret directly
         backupCodes: setupResult.backupCodes,
-        // Don't return the secret to the client
         message:
           "Scan the QR code with your authenticator app, then verify with a code to complete setup",
       },

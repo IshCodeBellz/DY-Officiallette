@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
@@ -28,15 +28,26 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { token, action } = verifySchema.parse(body);
 
+    console.log(
+      "MFA Verify - User ID:",
+      session.user.id,
+      "Token:",
+      token,
+      "Action:",
+      action
+    );
+
     let result;
 
     if (action === "setup") {
       // Complete MFA setup
-      result = await MFAService.verifyAndEnableTOTP(session.user.email, token);
+      result = await MFAService.verifyAndEnableTOTP(session.user.id, token);
     } else {
       // Verify during login
-      result = await MFAService.verifyMFA(session.user.email, token);
+      result = await MFAService.verifyMFA(session.user.id, token);
     }
+
+    console.log("MFA Verify Result:", result);
 
     if (!result.success) {
       return NextResponse.json(
