@@ -56,87 +56,186 @@ export default async function AdminProductsPage({
     select: { id: true, name: true },
   });
 
+  // Calculate stats
+  const totalValue = products.reduce((sum, p: any) => sum + p.priceCents, 0);
+  const averagePrice = products.length > 0 ? totalValue / products.length : 0;
+  const deletedCount = products.filter((p: any) => p.deletedAt).length;
+  const activeCount = products.length - deletedCount;
+
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10">
-      <div className="flex flex-col gap-4 mb-8">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/admin"
-              className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded border border-neutral-300 hover:bg-neutral-50"
-            >
-              ← Back
-            </Link>
-            <h1 className="text-2xl font-semibold">
-              Products ({products.length})
-            </h1>
-          </div>
+    <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Product Management
+          </h1>
+          <p className="text-neutral-600 mt-2">
+            Manage your product catalog, inventory, and pricing
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin"
+            className="text-sm rounded bg-neutral-200 text-neutral-900 px-3 py-2 hover:bg-neutral-300"
+          >
+            Back to Dashboard
+          </Link>
           <Link
             href="/admin/products/new"
-            className="text-sm rounded bg-neutral-900 text-white px-3 py-2 hover:bg-neutral-800"
+            className="text-sm rounded bg-neutral-900 text-white px-4 py-2 hover:bg-neutral-800"
           >
             New Product
           </Link>
         </div>
-        <FiltersClient
-          brands={brands}
-          categories={categories}
-          initialBrand={brand}
-          initialCategory={category}
-          initialIncludeDeleted={includeDeleted}
+      </div>
+
+      {/* Key Metrics */}
+      <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="Total Products"
+          value={products.length.toLocaleString()}
+          trend={`${activeCount} active, ${deletedCount} deleted`}
+          color="blue"
         />
-      </div>
-      <div className="overflow-x-auto border rounded">
-        <table className="w-full text-sm">
-          <thead className="bg-neutral-50 text-left">
-            <tr>
-              <th className="py-2 px-3 font-medium">Name</th>
-              <th className="py-2 px-3 font-medium">SKU</th>
-              <th className="py-2 px-3 font-medium">Brand</th>
-              <th className="py-2 px-3 font-medium">Category</th>
-              <th className="py-2 px-3 font-medium">Price</th>
-              <th className="py-2 px-3 font-medium">Created</th>
-              <th className="py-2 px-3 font-medium" />
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p: any) => (
-              <tr
-                key={p.id}
-                className={`border-t last:border-b hover:bg-neutral-50/70 ${
-                  p.deletedAt ? "opacity-60" : ""
-                }`}
-              >
-                <td className="py-2 px-3">
-                  {p.name}{" "}
-                  {p.deletedAt && (
-                    <span className="ml-1 inline-block text-[10px] px-1 py-0.5 rounded bg-yellow-100 text-yellow-700 border border-yellow-300">
-                      Deleted
-                    </span>
-                  )}
-                </td>
-                <td className="py-2 px-3 font-mono text-xs">{p.sku}</td>
-                <td className="py-2 px-3 text-xs">{p.brand?.name || "-"}</td>
-                <td className="py-2 px-3 text-xs">{p.category?.name || "-"}</td>
-                <td className="py-2 px-3">
-                  ${(p.priceCents / 100).toFixed(2)}
-                </td>
-                <td className="py-2 px-3 text-xs text-neutral-500">
-                  {p.createdAt.toISOString().split("T")[0]}
-                </td>
-                <td className="py-2 px-3 text-right">
-                  <Link
-                    href={`/admin/products/${p.id}`}
-                    className="text-xs underline"
-                  >
-                    View
-                  </Link>
-                </td>
+        <MetricCard
+          title="Average Price"
+          value={`$${(averagePrice / 100).toFixed(2)}`}
+          trend="Across all products"
+          color="green"
+        />
+        <MetricCard
+          title="Total Catalog Value"
+          value={`$${(totalValue / 100).toLocaleString()}`}
+          trend="Sum of all product prices"
+          color="purple"
+        />
+        <MetricCard
+          title="Unique Brands"
+          value={brands.length.toString()}
+          trend={`${categories.length} categories`}
+          color="yellow"
+        />
+      </section>
+
+      {/* Filters */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold">Filter Products</h2>
+        <div className="bg-white rounded-lg border p-4">
+          <FiltersClient
+            brands={brands}
+            categories={categories}
+            initialBrand={brand}
+            initialCategory={category}
+            initialIncludeDeleted={includeDeleted}
+          />
+        </div>
+      </section>
+
+      {/* Products Table */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold">Products ({products.length})</h2>
+        <div className="bg-white rounded-lg border overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-neutral-50">
+              <tr>
+                <th className="text-left py-3 px-4 font-medium">Product</th>
+                <th className="text-left py-3 px-4 font-medium">SKU</th>
+                <th className="text-left py-3 px-4 font-medium">Brand</th>
+                <th className="text-left py-3 px-4 font-medium">Category</th>
+                <th className="text-left py-3 px-4 font-medium">Price</th>
+                <th className="text-left py-3 px-4 font-medium">Status</th>
+                <th className="text-left py-3 px-4 font-medium">Created</th>
+                <th className="text-left py-3 px-4 font-medium">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {products.map((p: any) => (
+                <tr key={p.id} className="border-t hover:bg-neutral-50">
+                  <td className="py-3 px-4">
+                    <div className="font-medium">{p.name}</div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <code className="text-xs bg-neutral-100 px-2 py-1 rounded">
+                      {p.sku}
+                    </code>
+                  </td>
+                  <td className="py-3 px-4 text-sm">{p.brand?.name || "-"}</td>
+                  <td className="py-3 px-4 text-sm">
+                    {p.category?.name || "-"}
+                  </td>
+                  <td className="py-3 px-4 font-medium">
+                    ${(p.priceCents / 100).toFixed(2)}
+                  </td>
+                  <td className="py-3 px-4">
+                    <span
+                      className={`text-xs px-2 py-1 rounded ${
+                        p.deletedAt
+                          ? "bg-red-100 text-red-800"
+                          : "bg-green-100 text-green-800"
+                      }`}
+                    >
+                      {p.deletedAt ? "Deleted" : "Active"}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-sm text-neutral-500">
+                    {p.createdAt.toISOString().split("T")[0]}
+                  </td>
+                  <td className="py-3 px-4">
+                    <Link
+                      href={`/admin/products/${p.id}`}
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      Edit
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+              {products.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="py-8 px-4 text-center text-neutral-500"
+                  >
+                    <div className="space-y-2">
+                      <div className="text-lg">No products found</div>
+                      <div className="text-sm">
+                        Try adjusting your filters or create a new product
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function MetricCard({
+  title,
+  value,
+  trend,
+  color,
+}: {
+  title: string;
+  value: string;
+  trend: string;
+  color: "blue" | "green" | "yellow" | "purple";
+}) {
+  const colorClasses = {
+    blue: "bg-blue-50 border-blue-200",
+    green: "bg-green-50 border-green-200",
+    yellow: "bg-yellow-50 border-yellow-200",
+    purple: "bg-purple-50 border-purple-200",
+  };
+
+  return (
+    <div className={`rounded-lg border p-4 ${colorClasses[color]}`}>
+      <h3 className="text-sm font-medium text-neutral-600">{title}</h3>
+      <p className="text-2xl font-semibold mt-1">{value}</p>
+      <p className="text-xs text-neutral-500 mt-1">{trend}</p>
     </div>
   );
 }

@@ -5,7 +5,9 @@ interface Category {
   id: string;
   name: string;
   slug: string;
+  productCount?: number;
 }
+
 export default function CategoriesClient({ initial }: { initial: Category[] }) {
   const [categories, setCategories] = useState<Category[]>(initial);
   const [name, setName] = useState("");
@@ -36,7 +38,9 @@ export default function CategoriesClient({ initial }: { initial: Category[] }) {
     } else {
       const data = await res.json();
       setCategories((prev) =>
-        [...prev, data.category].sort((a, b) => a.name.localeCompare(b.name))
+        [...prev, { ...data.category, productCount: 0 }].sort((a, b) =>
+          a.name.localeCompare(b.name)
+        )
       );
       setName("");
       setSlug("");
@@ -74,91 +78,146 @@ export default function CategoriesClient({ initial }: { initial: Category[] }) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">
-        Manage Categories
-      </h1>
-      <div className="grid gap-4 md:grid-cols-2 items-end">
-        <div>
-          <label className="block text-xs uppercase tracking-wide mb-1 text-neutral-600">
-            Name
-          </label>
-          <input
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              if (!slug) setSlug(slugify(e.target.value));
-            }}
-            className="w-full border rounded px-3 py-2 text-sm"
-            placeholder="Category name"
-          />
+    <div className="space-y-6">
+      {/* Add New Category Section */}
+      <div className="bg-gray-50 p-6 rounded-lg">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
+          Add New Category
+        </h3>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Category Name
+            </label>
+            <input
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (!slug) setSlug(slugify(e.target.value));
+              }}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter category name"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              URL Slug
+            </label>
+            <input
+              value={slug}
+              onChange={(e) => setSlug(slugify(e.target.value))}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="auto-generated-slug"
+            />
+          </div>
         </div>
-        <div>
-          <label className="block text-xs uppercase tracking-wide mb-1 text-neutral-600">
-            Slug
-          </label>
-          <input
-            value={slug}
-            onChange={(e) => setSlug(slugify(e.target.value))}
-            className="w-full border rounded px-3 py-2 text-sm font-mono"
-            placeholder="auto-generated"
-          />
-        </div>
-        <div className="md:col-span-2 flex gap-2">
+        <div className="mt-4 flex gap-3 items-center">
           <button
-            disabled={loading}
+            disabled={loading || !name.trim() || !slug.trim()}
             onClick={createCategory}
-            className="px-4 py-2 text-sm rounded bg-neutral-900 text-white disabled:opacity-50"
+            className="px-6 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Add
+            {loading ? "Adding..." : "Add Category"}
           </button>
           {error && (
-            <div className="text-sm text-red-600 self-center">{error}</div>
+            <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-md">
+              {error}
+            </div>
           )}
         </div>
       </div>
-      <div className="border rounded overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-neutral-50 text-left">
-            <tr>
-              <th className="py-2 px-3 font-medium">Name</th>
-              <th className="py-2 px-3 font-medium">Slug</th>
-              <th className="py-2 px-3 font-medium w-32" />
-            </tr>
-          </thead>
-          <tbody>
-            {categories.map((c) => (
-              <tr
-                key={c.id}
-                className="border-t last:border-b hover:bg-neutral-50/70"
-              >
-                <td className="py-2 px-3">{c.name}</td>
-                <td className="py-2 px-3 font-mono text-[11px]">{c.slug}</td>
-                <td className="py-2 px-3 text-right flex gap-2 justify-end">
-                  <button
-                    onClick={() => rename(c.id, c.name)}
-                    className="text-[11px] underline"
-                  >
-                    Rename
-                  </button>
-                  <button
-                    onClick={() => remove(c.id)}
-                    className="text-[11px] text-red-600 underline"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {categories.length === 0 && (
+
+      {/* Categories Table */}
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
-                <td colSpan={3} className="py-6 text-center text-neutral-500">
-                  No categories yet.
-                </td>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Category Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  URL Slug
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Products
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {categories.map((category) => (
+                <tr
+                  key={category.id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {category.name}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-600 font-mono bg-gray-100 px-2 py-1 rounded">
+                      {category.slug}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {category.productCount || 0}{" "}
+                      {category.productCount === 1 ? "product" : "products"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        (category.productCount || 0) > 0
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {(category.productCount || 0) > 0 ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                    <div className="flex justify-end gap-3">
+                      <button
+                        onClick={() => rename(category.id, category.name)}
+                        className="text-blue-600 hover:text-blue-900 font-medium transition-colors"
+                      >
+                        Rename
+                      </button>
+                      <button
+                        onClick={() => remove(category.id)}
+                        className="text-red-600 hover:text-red-900 font-medium transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {categories.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center">
+                    <div className="text-gray-500">
+                      <div className="text-lg font-medium mb-2">
+                        No categories found
+                      </div>
+                      <div className="text-sm">
+                        Get started by adding your first category above.
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
