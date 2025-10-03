@@ -40,7 +40,7 @@ Sentry.init({
   // Custom tags for all events
   initialScope: {
     tags: {
-      component: "asos-clone",
+      component: "dyofficiallette",
       runtime: typeof window !== "undefined" ? "client" : "server",
     },
   },

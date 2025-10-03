@@ -4,8 +4,7 @@ import { prisma } from "@/lib/server/prisma";
 import type { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-// @ts-ignore - local client component import fallback for TS resolution edge
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const RestoreProductButton = require("./restoreButton").default as (props: {
   productId: string;
 }) => JSX.Element;

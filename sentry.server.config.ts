@@ -52,7 +52,7 @@ Sentry.init({
   // Custom tags for server events
   initialScope: {
     tags: {
-      component: "asos-clone-server",
+      component: "dyofficiallette-server",
       runtime: "server",
     },
   },

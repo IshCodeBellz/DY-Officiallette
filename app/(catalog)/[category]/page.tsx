@@ -27,15 +27,27 @@ export default function CategoryPage({
   const { toggle, has } = useWishlist();
   const { addItem } = useCart();
   const { push } = useToast();
-  const category = params.category.toLowerCase();
-  if (!validCategories.includes(category)) return notFound();
-
+  
+  // Initialize all hooks before any conditional returns
   const [size, setSize] = useState<string>("");
   const [price, setPrice] = useState<[number, number]>([0, 200]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<Array<{
+    id: string;
+    name: string;
+    priceCents: number;
+    price?: number;
+    imageUrl?: string;
+    image?: string;
+    sizes?: string[];
+    brand?: { name: string };
+    category?: { name: string };
+  }>>([]);
   const viewedRef = useRef<Set<string>>(new Set());
+
+  const category = params.category.toLowerCase();
+  if (!validCategories.includes(category)) return notFound();
 
   useEffect(() => {
     // If navigating to face-body, ensure any previously selected apparel size is cleared
@@ -234,7 +246,7 @@ export default function CategoryPage({
                       productId: p.id,
                       name: p.name,
                       priceCents: p.priceCents,
-                      image: p.image,
+                      image: p.image || p.imageUrl || "",
                     });
                     try {
                       navigator.sendBeacon?.(
@@ -280,7 +292,7 @@ export default function CategoryPage({
                           productId: p.id,
                           name: p.name,
                           priceCents: p.priceCents,
-                          image: p.image,
+                          image: p.image || p.imageUrl || "",
                         },
                         1
                       );
@@ -313,7 +325,7 @@ export default function CategoryPage({
                         Select size
                       </div>
                       <div className="flex flex-wrap gap-1">
-                        {p.sizes.map((s: string) => (
+                        {p.sizes?.map((s: string) => (
                           <button
                             key={s}
                             onClick={() => {
@@ -322,7 +334,7 @@ export default function CategoryPage({
                                   productId: p.id,
                                   name: p.name,
                                   priceCents: p.priceCents,
-                                  image: p.image,
+                                  image: p.image || p.imageUrl || "",
                                   size: s,
                                 },
                                 1

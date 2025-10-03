@@ -46,7 +46,7 @@ export default function RegisterPage() {
           setSuccess(true);
         }
       }
-    } catch (e) {
+    } catch {
       setError("Network error");
     } finally {
       setLoading(false);

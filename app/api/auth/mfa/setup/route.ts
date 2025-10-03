@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     // Setup TOTP MFA
     const setupResult = await MFAService.setupTOTP(
       session.user.id,
-      "ASOS Clone"
+      "DYOFFICIALLETTE"
     );
 
     return NextResponse.json({

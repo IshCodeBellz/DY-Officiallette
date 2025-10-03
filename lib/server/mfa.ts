@@ -16,7 +16,7 @@ export class MFAService {
    */
   static async setupTOTP(
     userId: string,
-    appName: string = "ASOS Clone"
+    appName: string = "DYOFFICIALLETTE"
   ): Promise<MFASetupResult> {
     const user = await prisma.user.findUnique({
       where: { id: userId },

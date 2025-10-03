@@ -199,7 +199,7 @@ async function main() {
             alt: `${c.name} image ${idx + 1}`,
           })),
         },
-        sizes: {
+        sizeVariants: {
           create: c.sizes.map((label) => ({
             label,
             stock: 25 + ((label.length * 7 + i * 3) % 60),
@@ -276,7 +276,7 @@ async function main() {
               },
             ],
           },
-          sizes: {
+          sizeVariants: {
             create: sizes.map((label, sIdx) => ({
               label,
               stock: 30 + ((globalIndex + sIdx * 5) % 70),
@@ -320,7 +320,7 @@ async function main() {
               },
             ],
           },
-          sizes: {
+          sizeVariants: {
             create: sizesPool
               .slice(0, (i % sizesPool.length) + 1)
               .map((label) => ({

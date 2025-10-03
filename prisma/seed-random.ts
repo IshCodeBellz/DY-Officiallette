@@ -114,7 +114,7 @@ async function main() {
             alt: `${baseName} image ${p + 1}`,
           })),
         },
-        sizes: {
+        sizeVariants: {
           create: sizes.map((label, sIdx) => ({
             label,
             stock: randInt(15, 120) - sIdx * 2,

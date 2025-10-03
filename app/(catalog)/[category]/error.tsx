@@ -1,4 +1,6 @@
 "use client";
+import Link from "next/link";
+
 export default function CategoryError({
   error,
   reset,
@@ -16,9 +18,9 @@ export default function CategoryError({
         <button onClick={() => reset()} className="btn-outline">
           Retry
         </button>
-        <a href="/" className="btn-primary">
+        <Link href="/" className="btn-primary">
           Go Home
-        </a>
+        </Link>
       </div>
     </div>
   );

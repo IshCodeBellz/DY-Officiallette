@@ -2,7 +2,7 @@ import { prisma } from "../lib/server/prisma";
 import { hash } from "bcryptjs";
 
 /**
- * Demo Data Seeder for ASOS Clone
+ * Demo Data Seeder for DYOFFICIALLETTE
  * Creates sample data to showcase all functionality:
  * - Admin accounts
  * - User accounts with orders

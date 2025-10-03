@@ -7,9 +7,9 @@
 
 <!-- NOTE: Content copied from prior consolidated README before split -->
 
-# DYOFFICIAL (Architecture & Internal Documentation)
+# DYOFFICIALLETTE (Architecture & Internal Documentation)
 
-Educational fashion e‑commerce demo (formerly "ASOS Clone") showcasing modern commerce patterns: App Router, server + client composition, search relevance, analytics events, and a full checkout → payment → webhook lifecycle.
+Educational fashion e‑commerce demo (formerly "ASOS Clone", now "DYOFFICIALLETTE") showcasing modern commerce patterns: App Router, server + client composition, search relevance, analytics events, and a full checkout → payment → webhook lifecycle.
 
 > This file supersedes scattered historical \*.md reports. Historical originals are preserved in `docs/archive/` for audit.
 

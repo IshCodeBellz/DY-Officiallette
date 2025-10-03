@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { redirect } from "next/navigation";
 import { EditProductClient } from "./EditProductClient";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -24,12 +25,12 @@ export default async function AdminEditProductPage({
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 space-y-8">
       <div className="flex items-center gap-3">
-        <a
+        <Link
           href="/admin"
           className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded border border-neutral-300 hover:bg-neutral-50"
         >
           ← Back
-        </a>
+        </Link>
         <h1 className="text-2xl font-semibold">Edit Product</h1>
       </div>
       <EditProductClient product={product} />

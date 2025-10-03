@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 export default function SearchError({
   error,
   reset,
@@ -16,9 +17,9 @@ export default function SearchError({
         <button onClick={() => reset()} className="btn-outline">
           Retry
         </button>
-        <a href="/" className="btn-primary">
+        <Link href="/" className="btn-primary">
           Go Home
-        </a>
+        </Link>
       </div>
     </div>
   );

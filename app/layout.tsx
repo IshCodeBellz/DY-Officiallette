@@ -10,9 +10,9 @@ import { AuthProvider } from "../components/providers/AuthProvider";
 import { LiveRegion } from "../components/a11y/LiveRegion";
 
 export const metadata: Metadata = {
-  title: "DYOFFICIAL",
+  title: "DYOFFICIALLETTE",
   description:
-    "DYOFFICIAL fashion storefront built with Next.js 14 & Tailwind (educational demo)",
+    "DYOFFICIALLETTE fashion storefront built with Next.js 14 & Tailwind (educational demo)",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

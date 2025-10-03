@@ -7,8 +7,6 @@
 //  - orderDraft includes: subtotalCents, items[{priceCents, qty, productId}], destination {country, region, postalCode}
 //  - breakdown is a serializable object (safe for logging / debugging) with rule matches etc.
 
-import type { Prisma } from "@prisma/client";
-
 export interface OrderDraftItem {
   productId: string;
   unitPriceCents: number;

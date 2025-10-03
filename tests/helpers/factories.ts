@@ -45,7 +45,7 @@ export async function createProduct(
           url: i.url,
         })),
       },
-      sizes: opts.sizes
+      sizeVariants: opts.sizes
         ? {
             create: opts.sizes.map((s) => ({
               label: s.label,
@@ -54,7 +54,7 @@ export async function createProduct(
           }
         : undefined,
     },
-    include: { sizes: true, images: true },
+    include: { sizeVariants: true, images: true },
   });
 }
 

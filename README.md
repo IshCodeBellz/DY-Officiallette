@@ -1,6 +1,6 @@
 <div align="center">
 
-# DYOFFICIAL
+# DYOFFICIALLETTE
 
 Modern fashion e‑commerce demo (Next.js 14 + Tailwind). Production‑style architecture: storefront, admin, checkout → payment simulation, analytics, and trending discovery.
 

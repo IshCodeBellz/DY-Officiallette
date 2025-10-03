@@ -72,30 +72,6 @@ const getCachedUserWishlists = cache(async (userId: string) => {
   });
 });
 
-const getCachedPublicWishlists = cache(async () => {
-  return await prisma.wishlist.findMany({
-    where: { isPublic: true },
-    include: {
-      items: {
-        include: {
-          product: {
-            include: {
-              images: true,
-            },
-          },
-        },
-      },
-      user: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
-    },
-    orderBy: [{ updatedAt: "desc" }],
-  });
-});
-
 /**
  * Enhanced Social Wishlist Service with Real Database Integration
  */
@@ -163,6 +139,7 @@ export class SocialWishlistService {
 
   /**
    * Transform Prisma wishlist to SocialWishlist interface
+   * TODO: Replace with proper Prisma-generated types
    */
   private static transformWishlist(wishlist: any): SocialWishlist {
     return {
@@ -207,7 +184,7 @@ export class SocialWishlistService {
       // Get or create default wishlist if none specified
       let targetWishlistId = wishlistId;
       if (!targetWishlistId) {
-        let defaultWishlist = await prisma.wishlist.findFirst({
+        const defaultWishlist = await prisma.wishlist.findFirst({
           where: { userId, name: "My Wishlist" },
         });
 

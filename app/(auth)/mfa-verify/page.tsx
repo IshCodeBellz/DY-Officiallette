@@ -1,10 +1,10 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 
-export default function MFAVerificationPage() {
+function MFAVerificationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
@@ -16,7 +16,7 @@ export default function MFAVerificationPage() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const email = searchParams.get("email") || "";
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const callbackUrl = searchParams.get("callbackUrl") || "";
 
   useEffect(() => {
     // Focus first input on mount
@@ -274,5 +274,13 @@ export default function MFAVerificationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MFAVerificationPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <MFAVerificationContent />
+    </Suspense>
   );
 }

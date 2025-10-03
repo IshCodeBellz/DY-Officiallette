@@ -39,6 +39,7 @@ heapdump-*.heapsnapshot
 
 ### TypeScript incremental build info
 *.tsbuildinfo
+tsconfig.tsbuildinfo
 
 ### Coverage / build artifacts
 coverage/
@@ -49,11 +50,22 @@ artifacts/
 tmp/
 temp/
 
+### Next.js specific
+.next/
+out/
+.vercel/
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
 ### Caches
 .cache/
 .eslintcache
 .stylelintcache
 /.parcel-cache
+node_modules/.cache/
+.swc/
 
 ### Storybook
 storybook-static/
@@ -121,3 +133,14 @@ pgdata/
 
 ### Prevent committing generated OpenAPI or similar unless intentional
 openapi.generated.*
+
+### IDE and editor files
+.vscode/settings.json.bak
+.idea/
+*.swp
+*.swo
+
+### Temporary files
+*~
+*.tmp
+*.temp

@@ -2,7 +2,7 @@ import { prisma } from "../lib/server/prisma";
 import { hash } from "bcryptjs";
 
 /**
- * Comprehensive Sample Data Seeder for ASOS Clone
+ * Comprehensive Sample Data Seeder for DYOFFICIALLETTE
  * Populates database with realistic e-commerce data
  */
 

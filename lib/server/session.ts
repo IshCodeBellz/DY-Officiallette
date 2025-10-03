@@ -10,4 +10,5 @@ export async function getSessionUserId(
   return header || null;
 }
 
-export default { getSessionUserId };
+const sessionUtils = { getSessionUserId };
+export default sessionUtils;
