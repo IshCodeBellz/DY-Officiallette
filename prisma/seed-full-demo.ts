@@ -318,8 +318,20 @@ async function main() {
   ];
   for (const product of products.slice(0, 5)) {
     for (const type of recommendationTypes) {
-      await prisma.recommendation.create({
-        data: {
+      await prisma.recommendation.upsert({
+        where: {
+          userId_productId_type: {
+            userId: testUser.id,
+            productId: product.id,
+            type,
+          },
+        },
+        update: {
+          score: Math.random() * 0.8 + 0.2, // 0.2-1.0 score
+          metadata: JSON.stringify({ reason: `Generated for demo purposes` }),
+          validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        },
+        create: {
           userId: testUser.id,
           productId: product.id,
           type,
