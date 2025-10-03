@@ -26,7 +26,7 @@ export default function HomePage() {
           </div>
         </div>
         <div className="relative z-10 text-center bg-white/80 backdrop-blur rounded p-8 mx-4 max-w-xl">
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-black">
             Discover Fashion Online
           </h1>
           <p className="mt-4 text-sm md:text-base text-neutral-700">

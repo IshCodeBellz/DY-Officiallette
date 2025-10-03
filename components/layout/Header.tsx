@@ -49,24 +49,26 @@ export function Header() {
 
   return (
     <>
-      <header className="border-b border-neutral-200 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-40">
+      <header className="border-b border-neutral-200 dark:border-neutral-700 bg-white/95 dark:bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-neutral-900/80 sticky top-0 z-40">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center gap-4">
             <div className="flex items-center gap-4 flex-1 min-w-0">
               <Link
                 href="/"
-                className="font-black text-lg md:text-xl tracking-tight whitespace-nowrap"
+                className="font-black text-lg md:text-xl tracking-tight whitespace-nowrap flex-shrink-0 text-neutral-900 dark:text-white"
               >
                 DY<span className="text-brand-accent">OFFICIALLETTE</span>
               </Link>
-              <EnhancedSearchBar />
+              <div className="hidden md:block flex-1 max-w-2xl">
+                <EnhancedSearchBar />
+              </div>
             </div>
             <nav className="hidden md:flex items-center gap-4 ml-auto">
               <DarkModeToggle />
               {session ? (
                 <div className="flex items-center gap-2 text-sm max-w-xs">
                   <span
-                    className="text-neutral-700 truncate max-w-[140px]"
+                    className="text-neutral-700 dark:text-neutral-300 truncate max-w-[140px]"
                     title={
                       session.user?.name || session.user?.email || undefined
                     }
@@ -74,11 +76,17 @@ export function Header() {
                     {session.user?.name || session.user?.email}
                   </span>
                   {(session.user as any)?.isAdmin && (
-                    <Link href="/admin" className="hover:underline font-medium">
+                    <Link
+                      href="/admin"
+                      className="hover:underline font-medium text-neutral-900 dark:text-white"
+                    >
                       Admin
                     </Link>
                   )}
-                  <Link href="/account" className="hover:underline">
+                  <Link
+                    href="/account"
+                    className="hover:underline text-neutral-900 dark:text-white"
+                  >
                     My Account
                   </Link>
                   <button
@@ -93,21 +101,27 @@ export function Header() {
                       } catch {}
                       signOut();
                     }}
-                    className="hover:underline"
+                    className="hover:underline text-neutral-900 dark:text-white"
                   >
                     Sign out
                   </button>
                 </div>
               ) : (
-                <Link href="/login" className="text-sm hover:underline">
+                <Link
+                  href="/login"
+                  className="text-sm hover:underline text-neutral-900 dark:text-white"
+                >
                   Sign in
                 </Link>
               )}
-              <Link href="/saved" className="relative text-sm hover:underline">
+              <Link
+                href="/saved"
+                className="relative text-sm hover:underline text-neutral-900 dark:text-white"
+              >
                 Saved
                 <span
                   className={
-                    "absolute -top-2 -right-3 bg-neutral-900 text-white rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center transition-opacity " +
+                    "absolute -top-2 -right-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center transition-opacity " +
                     (wishItems.length === 0 ? "opacity-0" : "opacity-100")
                   }
                   aria-hidden={wishItems.length === 0}
@@ -117,15 +131,18 @@ export function Header() {
               </Link>
               <Link
                 href="/social/wishlists"
-                className="text-sm hover:underline"
+                className="text-sm hover:underline text-neutral-900 dark:text-white"
               >
                 Social
               </Link>
-              <Link href="/bag" className="relative text-sm hover:underline">
+              <Link
+                href="/bag"
+                className="relative text-sm hover:underline text-neutral-900 dark:text-white"
+              >
                 Bag
                 <span
                   className={
-                    "absolute -top-2 -right-3 bg-neutral-900 text-white rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center transition-opacity " +
+                    "absolute -top-2 -right-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center transition-opacity " +
                     (totalQuantity === 0 ? "opacity-0" : "opacity-100")
                   }
                   aria-hidden={totalQuantity === 0}
@@ -138,13 +155,13 @@ export function Header() {
               <DarkModeToggle />
               <Link
                 href="/saved"
-                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-[11px]"
+                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-[11px] text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
                 aria-label="Saved items"
               >
                 ♥
                 <span
                   className={
-                    "absolute -top-1 -right-1 bg-neutral-900 text-white rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center " +
+                    "absolute -top-1 -right-1 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center " +
                     (wishItems.length === 0 ? "opacity-0" : "opacity-100")
                   }
                   aria-hidden={wishItems.length === 0}
@@ -154,13 +171,13 @@ export function Header() {
               </Link>
               <Link
                 href="/bag"
-                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 text-[11px]"
+                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-[11px] text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
                 aria-label="Bag"
               >
                 👜
                 <span
                   className={
-                    "absolute -top-1 -right-1 bg-neutral-900 text-white rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center " +
+                    "absolute -top-1 -right-1 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center " +
                     (totalQuantity === 0 ? "opacity-0" : "opacity-100")
                   }
                   aria-hidden={totalQuantity === 0}
@@ -171,7 +188,7 @@ export function Header() {
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 aria-label="Open menu"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
               >
                 <svg
                   width="18"
@@ -190,6 +207,12 @@ export function Header() {
               </button>
             </div>
           </div>
+
+          {/* Mobile Search Bar */}
+          <div className="md:hidden pb-3">
+            <EnhancedSearchBar />
+          </div>
+
           <SiteNav />
         </div>
       </header>
@@ -199,31 +222,33 @@ export function Header() {
             className="fixed inset-0 bg-black/55 backdrop-blur-sm z-[60]"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="fixed top-0 right-0 h-full w-80 max-w-[92%] bg-white z-[61] shadow-xl flex flex-col will-change-transform animate-slide-in">
-            <div className="flex items-center justify-between pl-4 pr-2 h-16 border-b">
-              <span className="font-semibold text-sm">Menu</span>
+          <div className="fixed top-0 right-0 h-full w-80 max-w-[92%] bg-white dark:bg-neutral-900 z-[61] shadow-xl flex flex-col will-change-transform animate-slide-in">
+            <div className="flex items-center justify-between pl-4 pr-2 h-16 border-b border-neutral-200 dark:border-neutral-700">
+              <span className="font-semibold text-sm text-neutral-900 dark:text-white">
+                Menu
+              </span>
               <button
                 onClick={() => setMobileMenuOpen(false)}
                 aria-label="Close menu"
-                className="rounded-full h-10 w-10 inline-flex items-center justify-center border border-neutral-300 hover:bg-neutral-50"
+                className="rounded-full h-10 w-10 inline-flex items-center justify-center border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-900 dark:text-white"
               >
                 <span className="text-lg leading-none">×</span>
               </button>
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-5 text-sm space-y-6">
               {status === "loading" && (
-                <div className="h-5 w-32 bg-neutral-200 animate-pulse rounded" />
+                <div className="h-5 w-32 bg-neutral-200 dark:bg-neutral-700 animate-pulse rounded" />
               )}
               {status !== "loading" && session && (
                 <div className="space-y-2">
-                  <div className="font-medium truncate">
+                  <div className="font-medium truncate text-neutral-900 dark:text-white">
                     {session.user?.name || session.user?.email}
                   </div>
                   {(session.user as any)?.isAdmin && (
                     <Link
                       href="/admin"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="block hover:text-brand-accent"
+                      className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
                     >
                       Admin Dashboard
                     </Link>
@@ -231,7 +256,7 @@ export function Header() {
                   <Link
                     href="/account"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block hover:text-brand-accent"
+                    className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
                   >
                     My Account
                   </Link>
@@ -247,7 +272,7 @@ export function Header() {
                       } catch {}
                       signOut();
                     }}
-                    className="block hover:text-brand-accent text-left w-full"
+                    className="block hover:text-brand-accent text-left w-full text-neutral-700 dark:text-neutral-300"
                   >
                     Sign out
                   </button>
@@ -258,21 +283,21 @@ export function Header() {
                   <Link
                     href="/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block hover:text-brand-accent font-medium"
+                    className="block hover:text-brand-accent font-medium text-neutral-900 dark:text-white"
                   >
                     Sign in
                   </Link>
                   <Link
                     href="/register"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block hover:text-brand-accent"
+                    className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
                   >
                     Create account
                   </Link>
                 </div>
               )}
-              <div className="space-y-2 pt-2 border-t">
-                <p className="text-[10px] font-semibold tracking-wide text-neutral-500 uppercase">
+              <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
+                <p className="text-[10px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400 uppercase">
                   Categories
                 </p>
                 <div className="grid grid-cols-2 gap-1.5 text-[13px]">
@@ -292,7 +317,7 @@ export function Header() {
                       key={c}
                       href={`/${c}`}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="px-2 py-1 rounded hover:bg-neutral-100 capitalize border border-transparent focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                      className="px-2 py-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 capitalize border border-transparent focus:outline-none focus:ring-2 focus:ring-neutral-300 dark:focus:ring-neutral-600 text-neutral-700 dark:text-neutral-300"
                     >
                       {c
                         .replace("womens-clothing", "Women")
@@ -304,37 +329,37 @@ export function Header() {
                   ))}
                 </div>
               </div>
-              <div className="space-y-2 pt-2 border-t">
+              <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
                 <Link
                   href="/saved"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between"
+                  className="flex items-center justify-between text-neutral-700 dark:text-neutral-300 hover:text-brand-accent"
                 >
                   <span>Saved Items</span>
-                  <span className="text-xs bg-neutral-900 text-white rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center">
+                  <span className="text-xs bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center">
                     {wishItems.length}
                   </span>
                 </Link>
                 <Link
                   href="/social/wishlists"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block hover:text-brand-accent"
+                  className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
                 >
                   Social Wishlists
                 </Link>
                 <Link
                   href="/bag"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between"
+                  className="flex items-center justify-between text-neutral-700 dark:text-neutral-300 hover:text-brand-accent"
                 >
                   <span>Bag</span>
-                  <span className="text-xs bg-neutral-900 text-white rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center">
+                  <span className="text-xs bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center">
                     {totalQuantity}
                   </span>
                 </Link>
               </div>
             </div>
-            <div className="px-4 py-3 border-t text-[10px] text-neutral-500">
+            <div className="px-4 py-3 border-t border-neutral-200 dark:border-neutral-700 text-[10px] text-neutral-500 dark:text-neutral-400">
               © {new Date().getFullYear()} DYOFFICIALLETTE
             </div>
           </div>
