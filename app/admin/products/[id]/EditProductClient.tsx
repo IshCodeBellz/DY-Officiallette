@@ -405,7 +405,9 @@ export function EditProductClient({ product }: { product: any }) {
         </div>
       </section>
       <section className="space-y-3">
-        <h2 className="font-medium text-sm uppercase tracking-wide">Sizes</h2>
+        <h2 className="font-medium text-sm uppercase tracking-wide dark:text-white">
+          Sizes
+        </h2>
         <div className="space-y-3">
           {sizes.map((s, i) => (
             <div key={i} className="flex gap-3 items-center">
@@ -413,7 +415,7 @@ export function EditProductClient({ product }: { product: any }) {
                 placeholder="Label"
                 value={s.label}
                 onChange={(e) => updateSize(i, { label: e.target.value })}
-                className="border rounded px-3 py-2 text-sm w-32"
+                className="border dark:border-neutral-600 rounded px-3 py-2 text-sm w-32 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
               />
               <input
                 type="number"
@@ -422,13 +424,13 @@ export function EditProductClient({ product }: { product: any }) {
                 onChange={(e) =>
                   updateSize(i, { stock: parseInt(e.target.value || "0", 10) })
                 }
-                className="border rounded px-3 py-2 text-sm w-28"
+                className="border dark:border-neutral-600 rounded px-3 py-2 text-sm w-28 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
               />
               {sizes.length > 1 && (
                 <button
                   type="button"
                   onClick={() => removeSize(i)}
-                  className="text-xs text-red-600 underline"
+                  className="text-xs text-red-600 dark:text-red-400 underline"
                 >
                   Remove
                 </button>

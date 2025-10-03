@@ -174,35 +174,56 @@ export default async function SocialPage() {
 
       {/* Reported Content */}
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Reported Content</h2>
-        <div className="bg-white rounded-lg border overflow-hidden">
+        <h2 className="text-xl font-semibold dark:text-white">
+          Reported Content
+        </h2>
+        <div className="bg-white dark:bg-neutral-800 rounded-lg border dark:border-neutral-700 overflow-hidden">
           <table className="w-full">
-            <thead className="bg-neutral-50">
+            <thead className="bg-neutral-50 dark:bg-neutral-700">
               <tr>
-                <th className="text-left py-3 px-4 font-medium">Content</th>
-                <th className="text-left py-3 px-4 font-medium">Type</th>
-                <th className="text-left py-3 px-4 font-medium">Reports</th>
-                <th className="text-left py-3 px-4 font-medium">Reason</th>
-                <th className="text-left py-3 px-4 font-medium">Status</th>
-                <th className="text-left py-3 px-4 font-medium">Actions</th>
+                <th className="text-left py-3 px-4 font-medium dark:text-white">
+                  Content
+                </th>
+                <th className="text-left py-3 px-4 font-medium dark:text-white">
+                  Type
+                </th>
+                <th className="text-left py-3 px-4 font-medium dark:text-white">
+                  Reports
+                </th>
+                <th className="text-left py-3 px-4 font-medium dark:text-white">
+                  Reason
+                </th>
+                <th className="text-left py-3 px-4 font-medium dark:text-white">
+                  Status
+                </th>
+                <th className="text-left py-3 px-4 font-medium dark:text-white">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {reportedContent.map((report, index) => (
-                <tr key={index} className="border-t hover:bg-neutral-50">
+                <tr
+                  key={index}
+                  className="border-t dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                >
                   <td className="py-3 px-4 max-w-xs">
-                    <div className="text-sm truncate">{report.content}</div>
-                    <div className="text-xs text-neutral-500">
+                    <div className="text-sm truncate dark:text-white">
+                      {report.content}
+                    </div>
+                    <div className="text-xs text-neutral-500 dark:text-neutral-400">
                       By: {report.authorName}
                     </div>
                   </td>
                   <td className="py-3 px-4">
-                    <span className="px-2 py-1 text-xs rounded bg-neutral-100 text-neutral-800">
+                    <span className="px-2 py-1 text-xs rounded bg-neutral-100 dark:bg-neutral-600 text-neutral-800 dark:text-neutral-200">
                       {report.type}
                     </span>
                   </td>
                   <td className="py-3 px-4">
-                    <span className="font-medium">{report.reportCount}</span>
+                    <span className="font-medium dark:text-white">
+                      {report.reportCount}
+                    </span>
                   </td>
                   <td className="py-3 px-4 text-sm">
                     {report.reasons.join(", ")}

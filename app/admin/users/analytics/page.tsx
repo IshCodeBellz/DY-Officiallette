@@ -410,37 +410,47 @@ export default async function UserAnalyticsPage() {
             </div>
             <div className="text-center">
               <div className="text-2xl font-semibold">43</div>
-              <div className="text-sm text-neutral-600">Searching</div>
+              <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                Searching
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Export Tools */}
-      <section className="bg-neutral-50 rounded-lg p-6">
-        <h3 className="font-medium mb-4">Analytics Export</h3>
+      <section className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-6">
+        <h3 className="font-medium mb-4 dark:text-white">Analytics Export</h3>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <button className="bg-white border rounded-lg p-4 text-left hover:bg-neutral-50">
-            <h4 className="font-medium text-sm">User Behavior Report</h4>
-            <p className="text-xs text-neutral-600 mt-1">
+          <button className="bg-white dark:bg-neutral-700 border dark:border-neutral-600 rounded-lg p-4 text-left hover:bg-neutral-50 dark:hover:bg-neutral-600">
+            <h4 className="font-medium text-sm dark:text-white">
+              User Behavior Report
+            </h4>
+            <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
               Download detailed user analytics
             </p>
           </button>
-          <button className="bg-white border rounded-lg p-4 text-left hover:bg-neutral-50">
-            <h4 className="font-medium text-sm">Conversion Funnel</h4>
-            <p className="text-xs text-neutral-600 mt-1">
+          <button className="bg-white dark:bg-neutral-700 border dark:border-neutral-600 rounded-lg p-4 text-left hover:bg-neutral-50 dark:hover:bg-neutral-600">
+            <h4 className="font-medium text-sm dark:text-white">
+              Conversion Funnel
+            </h4>
+            <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
               Export conversion data
             </p>
           </button>
-          <button className="bg-white border rounded-lg p-4 text-left hover:bg-neutral-50">
-            <h4 className="font-medium text-sm">Custom Date Range</h4>
-            <p className="text-xs text-neutral-600 mt-1">
+          <button className="bg-white dark:bg-neutral-700 border dark:border-neutral-600 rounded-lg p-4 text-left hover:bg-neutral-50 dark:hover:bg-neutral-600">
+            <h4 className="font-medium text-sm dark:text-white">
+              Custom Date Range
+            </h4>
+            <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
               Generate custom reports
             </p>
           </button>
-          <button className="bg-white border rounded-lg p-4 text-left hover:bg-neutral-50">
-            <h4 className="font-medium text-sm">Real-time Data</h4>
-            <p className="text-xs text-neutral-600 mt-1">
+          <button className="bg-white dark:bg-neutral-700 border dark:border-neutral-600 rounded-lg p-4 text-left hover:bg-neutral-50 dark:hover:bg-neutral-600">
+            <h4 className="font-medium text-sm dark:text-white">
+              Real-time Data
+            </h4>
+            <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
               Export live activity logs
             </p>
           </button>

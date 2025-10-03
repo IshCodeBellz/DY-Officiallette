@@ -297,29 +297,35 @@ export default function CheckoutClient() {
   if (authStatus === "loading" || !hydrated) {
     return (
       <div className="container mx-auto px-4 py-12">
-        <p className="text-sm text-neutral-600">Preparing checkout…</p>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          Preparing checkout…
+        </p>
       </div>
     );
   }
   if (authStatus !== "authenticated") {
     return (
       <div className="container mx-auto px-4 py-12">
-        <h1 className="text-2xl font-semibold mb-4">Checkout</h1>
-        <p className="text-sm">Please sign in to continue.</p>
+        <h1 className="text-2xl font-semibold mb-4 dark:text-white">
+          Checkout
+        </h1>
+        <p className="text-sm dark:text-neutral-300">
+          Please sign in to continue.
+        </p>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-3xl">
-      <h1 className="text-2xl font-semibold mb-6">Checkout</h1>
+      <h1 className="text-2xl font-semibold mb-6 dark:text-white">Checkout</h1>
       {error && (
-        <div className="bg-red-100 text-red-700 p-2 rounded text-sm mb-4">
+        <div className="bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200 p-2 rounded text-sm mb-4">
           {error}
         </div>
       )}
       <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
-        <div className="md:col-span-2 font-medium text-neutral-700">
+        <div className="md:col-span-2 font-medium text-neutral-700 dark:text-neutral-300">
           Shipping
         </div>
         <input
@@ -357,7 +363,7 @@ export default function CheckoutClient() {
           defaultValue="US"
         />
         <input name="phone" placeholder="Phone" className="input" />
-        <div className="md:col-span-2 mt-4 font-medium text-neutral-700 flex items-center gap-2">
+        <div className="md:col-span-2 mt-4 font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-2">
           <span>Discount code</span>
         </div>
         <div className="space-y-1 md:col-span-2">
@@ -369,10 +375,12 @@ export default function CheckoutClient() {
             onChange={(e) => setDiscountInput(e.target.value.toUpperCase())}
           />
           {discountStatus.state === "checking" && (
-            <p className="text-xs text-neutral-500">Checking…</p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              Checking…
+            </p>
           )}
           {discountStatus.state === "invalid" && (
-            <p className="text-xs text-red-600">
+            <p className="text-xs text-red-600 dark:text-red-400">
               {discountStatus.reason === "not_found" && "Code not found"}
               {discountStatus.reason === "missing_code" && "Enter a code"}
               {discountStatus.reason === "network" && "Network error"}
@@ -382,7 +390,7 @@ export default function CheckoutClient() {
             </p>
           )}
           {discountStatus.state === "valid" && (
-            <p className="text-xs text-green-600">
+            <p className="text-xs text-green-600 dark:text-green-400">
               {discountStatus.kind === "fixed"
                 ? `Valid: saves $${(
                     (discountStatus.valueCents || 0) / 100

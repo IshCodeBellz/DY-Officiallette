@@ -150,23 +150,23 @@ export default async function SettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 dark:text-white">
                 SMTP Host
               </label>
               <input
                 type="text"
                 defaultValue={systemSettings.email.smtpHost}
-                className="w-full border rounded-lg px-3 py-2 text-sm"
+                className="w-full border dark:border-neutral-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 dark:text-white">
                 SMTP Port
               </label>
               <input
                 type="number"
                 defaultValue={systemSettings.email.smtpPort}
-                className="w-full border rounded-lg px-3 py-2 text-sm"
+                className="w-full border dark:border-neutral-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
               />
             </div>
             <div className="flex items-center">
@@ -176,7 +176,7 @@ export default async function SettingsPage() {
                 defaultChecked={systemSettings.email.smtpSecure}
                 className="mr-2"
               />
-              <label htmlFor="smtpSecure" className="text-sm">
+              <label htmlFor="smtpSecure" className="text-sm dark:text-white">
                 Use SSL/TLS
               </label>
             </div>
@@ -184,8 +184,10 @@ export default async function SettingsPage() {
         </section>
 
         {/* Checkout Configuration */}
-        <section className="bg-white rounded-lg border p-6">
-          <h2 className="text-xl font-semibold mb-4">Checkout & Pricing</h2>
+        <section className="bg-white dark:bg-neutral-800 rounded-lg border dark:border-neutral-700 p-6">
+          <h2 className="text-xl font-semibold mb-4 dark:text-white">
+            Checkout & Pricing
+          </h2>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="block text-sm font-medium mb-1">

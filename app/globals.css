@@ -6,7 +6,7 @@
   --color-bg: #ffffff;
 
   .input {
-    @apply w-full border border-neutral-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-400;
+    @apply w-full border border-neutral-300 dark:border-neutral-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-400 dark:focus:ring-neutral-500 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white;
   }
 
   --color-fg: #111111;
@@ -26,14 +26,6 @@ body {
 }
 ::-webkit-scrollbar-track {
   background: transparent;
-
-  .btn-primary {
-    @apply inline-flex items-center justify-center rounded bg-black text-white px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-800 transition;
-  }
-
-  .btn-outline {
-    @apply inline-flex items-center justify-center rounded border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-100 transition;
-  }
 }
 ::-webkit-scrollbar-thumb {
   background: #c2c2c2;
@@ -47,12 +39,16 @@ body {
   .btn {
     @apply inline-flex items-center justify-center rounded px-4 py-2 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed;
   }
+
+  /* Hero section buttons - maintain same appearance in light/dark mode */
   .btn-primary {
-    @apply btn bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200;
+    @apply btn bg-black text-white hover:bg-neutral-800;
   }
+
   .btn-outline {
-    @apply btn border border-neutral-300 hover:border-neutral-900 dark:border-neutral-600 dark:hover:border-neutral-300 dark:text-neutral-200;
+    @apply btn border border-neutral-300 text-neutral-900 hover:bg-neutral-100;
   }
+
   .badge {
     @apply text-xs px-2 py-0.5 rounded bg-neutral-900 text-white;
   }
