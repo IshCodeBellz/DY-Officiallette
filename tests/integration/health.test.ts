@@ -14,9 +14,15 @@ describe("health endpoint", () => {
     });
 
     const res = await healthRoute.GET(req);
+
+    // Debug output to see what we're getting
+    const debugData = await res.json();
+    console.log("Health response status:", res.status);
+    console.log("Health response data:", JSON.stringify(debugData, null, 2));
+
     expect(res.status).toBe(200);
 
-    const data = await res.json();
+    const data = debugData;
 
     // Overall structure
     expect(data).toHaveProperty("status");

@@ -24,6 +24,14 @@ export async function invokePOST(
 }
 
 export async function resetDb() {
+  // If some test disconnected Prisma, reconnect here so reset can run
+  if ((global as any).__prismaDisconnected) {
+    try {
+      await prisma.$connect();
+    } catch (e) {
+      // ignore - we'll surface errors later
+    }
+  }
   let isSqlite = false;
   const dbUrl = process.env.DATABASE_URL || "";
   if (dbUrl.includes("sqlite")) isSqlite = true;
@@ -87,32 +95,37 @@ export async function resetDb() {
   }
 
   // Non-sqlite path (e.g., Postgres soon). Use a transaction + two passes for safety.
-  await prisma.$transaction(async (tx) => {
-    const del = async () => {
-      const time = (label: string, fn: () => Promise<any>) => fn();
-      await tx.paymentRecord.deleteMany();
-      await (prismaX.orderEvent as any).deleteMany();
-      await tx.orderItem.deleteMany();
-      await tx.order.deleteMany();
-      await tx.cartLine.deleteMany();
-      await tx.cart.deleteMany();
-      await tx.wishlistItem.deleteMany();
-      await tx.wishlist.deleteMany();
-      await tx.productImage.deleteMany();
-      await tx.sizeVariant.deleteMany();
-      await tx.productMetrics.deleteMany();
-      await tx.processedWebhookEvent.deleteMany();
-      await tx.address.deleteMany();
-      await tx.product.deleteMany();
-      await tx.brand.deleteMany();
-      await tx.category.deleteMany();
-      await tx.discountCode.deleteMany();
-      await (prismaX.passwordResetToken as any).deleteMany();
-      await tx.user.deleteMany();
-    };
-    await del();
-    await del(); // second pass (idempotent) cleans up any rows inserted mid-reset (rare)
-  });
+  await prisma.$transaction(
+    async (tx) => {
+      const del = async () => {
+        const time = (label: string, fn: () => Promise<any>) => fn();
+        await tx.paymentRecord.deleteMany();
+        await (prismaX.orderEvent as any).deleteMany();
+        await tx.orderItem.deleteMany();
+        await tx.order.deleteMany();
+        await tx.cartLine.deleteMany();
+        await tx.cart.deleteMany();
+        await tx.wishlistItem.deleteMany();
+        await tx.wishlist.deleteMany();
+        await tx.productImage.deleteMany();
+        await tx.sizeVariant.deleteMany();
+        await tx.productMetrics.deleteMany();
+        await tx.processedWebhookEvent.deleteMany();
+        await tx.address.deleteMany();
+        await tx.product.deleteMany();
+        await tx.brand.deleteMany();
+        await tx.category.deleteMany();
+        await tx.discountCode.deleteMany();
+        await (prismaX.passwordResetToken as any).deleteMany();
+        await tx.user.deleteMany();
+      };
+      await del();
+      await del(); // second pass (idempotent) cleans up any rows inserted mid-reset (rare)
+    },
+    {
+      timeout: 30000, // Increase timeout to 30 seconds
+    }
+  );
 }
 
 export async function createBasicProduct(
@@ -134,23 +147,29 @@ export async function createBasicProduct(
 }
 
 export async function ensureTestUserAndCart(id: string = "test-user") {
-  // Use upsert to be race-safe across parallel test files.
-  const user = await prisma.user.upsert({
-    where: { id },
-    update: {},
-    create: {
-      id,
-      email: id + "@example.test", // differentiate parallel ids if ever expanded
-      passwordHash: "x",
-      isAdmin: true,
-    },
+  // Upsert user and cart inside one transaction to avoid FK race conditions
+  const result = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.upsert({
+      where: { id },
+      update: {},
+      create: {
+        id,
+        email: id + "@example.test",
+        passwordHash: "x",
+        isAdmin: true,
+      },
+    });
+
+    const cart = await tx.cart.upsert({
+      where: { userId: user.id },
+      update: {},
+      create: { user: { connect: { id: user.id } } },
+    });
+
+    return { user, cart } as const;
   });
-  const cart = await prisma.cart.upsert({
-    where: { userId: user.id },
-    update: {},
-    create: { userId: user.id },
-  });
-  return { user, cart };
+
+  return { user: result.user, cart: result.cart };
 }
 
 export async function ensurePaymentRecord(orderId: string) {
@@ -169,6 +188,7 @@ export async function createOrderForTest(opts: {
   size?: string;
   idempotencyKey?: string;
   userId?: string;
+  removeSimulatedPayments?: boolean;
 }) {
   const {
     priceCents = 2500,
@@ -181,7 +201,7 @@ export async function createOrderForTest(opts: {
     priceCents,
     sizes: size ? [size] : undefined,
   });
-  await addLineToCart(product.id, product.priceCents, size, qty);
+  await addLineToCart(product.id, product.priceCents, size, qty, userId);
   const body = {
     shippingAddress: {
       fullName: "Order T",
@@ -200,7 +220,28 @@ export async function createOrderForTest(opts: {
     body,
     { "x-test-user": userId, "x-test-bypass-rate-limit": "1" }
   );
-  const json = await res.json();
+  const status = res.status;
+  const json = await res.json().catch(() => null);
+  if (status !== 200) {
+    // Provide detailed failure diagnostics for flaky test runs
+    const errBody = json || { status };
+    throw new Error(
+      `createOrderForTest: checkout failed with status=${status} body=${JSON.stringify(
+        errBody
+      )}`
+    );
+  }
+  // Optionally remove simulated payment placeholders created by checkout
+  if (opts?.removeSimulatedPayments) {
+    try {
+      await prisma.paymentRecord.deleteMany({
+        where: { orderId: json?.orderId, providerRef: { startsWith: "pi_sim_" } },
+      });
+    } catch (e) {
+      // ignore
+    }
+  }
+
   return { ...json, product } as {
     orderId: string;
     subtotalCents: number;
@@ -213,9 +254,10 @@ export async function addLineToCart(
   productId: string,
   priceCents: number,
   size?: string,
-  qty = 1
+  qty = 1,
+  userId?: string
 ) {
-  const { cart } = await ensureTestUserAndCart();
+  const { cart } = await ensureTestUserAndCart(userId);
   return prisma.cartLine.create({
     data: {
       cartId: cart.id,
