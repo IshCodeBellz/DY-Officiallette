@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatPriceCents } from "@/lib/money";
+import { ClientPrice } from "@/components/ui/ClientPrice";
 import FiltersClient from "./_client/FiltersClient";
 import SortClient from "./_client/SortClient";
 import SearchFilters from "@/components/search/SearchFilters";
@@ -120,7 +121,7 @@ export default async function SearchPage({
                       {p.name}
                     </p>
                     <p className="text-[12px] font-semibold">
-                      {formatPriceCents(p.priceCents)}
+                      <ClientPrice cents={p.priceCents} size="xs" />
                     </p>
                   </Link>
                 </li>

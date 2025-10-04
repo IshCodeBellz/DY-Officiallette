@@ -5,6 +5,7 @@ import { prisma } from "@/lib/server/prisma";
 // Search is now rendered inside client Filters component
 import FiltersClient from "./FiltersClient";
 import { Suspense } from "react";
+import { ClientPrice } from "@/components/ui/ClientPrice";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -163,8 +164,8 @@ export default async function AdminProductsPage({
                   <td className="py-3 px-4 text-sm">
                     {p.category?.name || "-"}
                   </td>
-                  <td className="py-3 px-4 font-medium">
-                    ${(p.priceCents / 100).toFixed(2)}
+                  <td className="py-2 px-4 text-sm text-gray-900">
+                    <ClientPrice cents={p.priceCents} size="sm" />
                   </td>
                   <td className="py-3 px-4">
                     <span

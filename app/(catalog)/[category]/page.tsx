@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { lineIdFor } from "@/lib/types";
 import { formatPriceCents } from "@/lib/money";
 import { useToast } from "@/components/providers/ToastProvider";
+import { ClientPrice } from "@/components/ui/ClientPrice";
 
 const validCategories = [
   "womens-clothing",
@@ -31,6 +32,7 @@ export default function CategoryPage({
   // Initialize all hooks before any conditional returns
   const [size, setSize] = useState<string>("");
   const [price, setPrice] = useState<[number, number]>([0, 200]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 200]); // Dynamic range based on actual products
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<
@@ -51,6 +53,55 @@ export default function CategoryPage({
   const category = params.category.toLowerCase();
   if (!validCategories.includes(category)) return notFound();
 
+  // Effect to calculate dynamic price range from all products in category
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadPriceRange() {
+      try {
+        const params = new URLSearchParams();
+        params.set("category", category);
+        params.set("limit", "1000"); // Get more products to calculate accurate range
+
+        const res = await fetch(`/api/products?${params.toString()}`, {
+          signal: controller.signal,
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const products = (data.items || []).map((p: any) => ({
+            ...p,
+            priceCents: p.priceCents ?? Math.round((p.price || 0) * 100),
+          }));
+
+          if (products.length > 0) {
+            const prices = products.map((p: any) =>
+              Math.round(p.priceCents / 100)
+            );
+            const minPrice = Math.max(0, Math.min(...prices));
+            const maxPrice = Math.max(...prices);
+
+            // Round to nice numbers for better UX
+            const roundedMin = Math.floor(minPrice / 10) * 10;
+            const roundedMax = Math.ceil(maxPrice / 10) * 10;
+
+            setPriceRange([roundedMin, roundedMax]);
+
+            // Reset price filter to new range if it's still at default
+            if (price[0] === 0 && price[1] === 200) {
+              setPrice([roundedMin, roundedMax]);
+            }
+          }
+        }
+      } catch (e) {
+        // Keep default range on error
+        console.warn("Failed to load price range:", e);
+      }
+    }
+
+    loadPriceRange();
+    return () => controller.abort();
+  }, [category]); // Only depend on category change
+
   useEffect(() => {
     // If navigating to face-body, ensure any previously selected apparel size is cleared
     if (category === "face-body" && size) {
@@ -64,8 +115,8 @@ export default function CategoryPage({
       if (query) params.set("q", query);
       // Only include size filter for non face-body categories (apparel sizing)
       if (size && category !== "face-body") params.set("size", size);
-      if (price[0] !== 0) params.set("min", String(price[0]));
-      if (price[1] !== 200) params.set("max", String(price[1]));
+      if (price[0] !== priceRange[0]) params.set("min", String(price[0]));
+      if (price[1] !== priceRange[1]) params.set("max", String(price[1]));
       try {
         const res = await fetch(`/api/products?${params.toString()}`, {
           signal: controller.signal,
@@ -88,7 +139,7 @@ export default function CategoryPage({
     }
     load();
     return () => controller.abort();
-  }, [category, query, size, price]);
+  }, [category, query, size, price, priceRange]);
 
   const isFaceBody = category === "face-body";
   return (
@@ -121,9 +172,18 @@ export default function CategoryPage({
         >
           {category}
         </h1>
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">
-          Showing {items.length} items {loading && <span>(loading...)</span>}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
+                Loading products...
+              </span>
+            ) : (
+              `Showing ${items.length} item${items.length !== 1 ? "s" : ""}`
+            )}
+          </p>
+        </div>
       </header>
       <div className="flex flex-wrap gap-4 items-end text-sm">
         <div className="flex flex-col gap-1">
@@ -134,7 +194,8 @@ export default function CategoryPage({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Filter in page"
-            className="border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1 bg-white dark:bg-neutral-800"
+            disabled={loading}
+            className="border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1 bg-white dark:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </div>
         {!isFaceBody && (
@@ -145,7 +206,8 @@ export default function CategoryPage({
             <select
               value={size}
               onChange={(e) => setSize(e.target.value)}
-              className="border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1 bg-white dark:bg-neutral-800"
+              disabled={loading}
+              className="border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1 bg-white dark:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="">All</option>
               {["XS", "S", "M", "L", "XL"].map((s) => (
@@ -158,244 +220,324 @@ export default function CategoryPage({
         )}
         <div className="flex flex-col gap-1">
           <label className="text-xs uppercase tracking-wide font-semibold">
-            Price ${price[0]} - ${price[1]}
+            Price{" "}
+            <span className="inline-flex items-center gap-1">
+              <ClientPrice cents={price[0] * 100} size="xs" />
+              {" - "}
+              <ClientPrice cents={price[1] * 100} size="xs" />
+            </span>
           </label>
           <div className="flex items-center gap-2 w-56">
             <input
               type="range"
-              min={0}
-              max={200}
+              min={priceRange[0]}
+              max={priceRange[1]}
               value={price[0]}
               onChange={(e) => setPrice([Number(e.target.value), price[1]])}
-              className="w-full"
+              disabled={loading}
+              className="w-full disabled:opacity-50"
             />
             <input
               type="range"
-              min={0}
-              max={200}
+              min={priceRange[0]}
+              max={priceRange[1]}
               value={price[1]}
               onChange={(e) => setPrice([price[0], Number(e.target.value)])}
-              className="w-full"
+              disabled={loading}
+              className="w-full disabled:opacity-50"
             />
           </div>
         </div>
-        {(size || query || price[0] !== 0 || price[1] !== 200) && (
+        {(size ||
+          query ||
+          price[0] !== priceRange[0] ||
+          price[1] !== priceRange[1]) && (
           <button
             onClick={() => {
               setSize("");
               setQuery("");
-              setPrice([0, 200]);
+              setPrice([priceRange[0], priceRange[1]]);
             }}
-            className="btn-outline text-xs"
+            disabled={loading}
+            className="btn-outline text-xs disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Reset
           </button>
         )}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {items.map((p) => {
-          const id = lineIdFor(p.id);
-          const inWish = has(id);
-          const hasSizes = Array.isArray(p.sizes) && p.sizes.length > 0;
-          // Local ephemeral chosen size per product (keyed by id) – simple ref via data attribute
-          return (
+        {loading ? (
+          // Loading skeleton
+          Array.from({ length: 20 }).map((_, index) => (
             <div
-              key={p.id}
-              className="group relative bg-neutral-100 aspect-[3/4] overflow-hidden rounded flex flex-col"
-              ref={(el) => {
-                if (!el) return;
-                if (viewedRef.current.has(p.id)) return;
-                const io = new IntersectionObserver(
-                  (entries) => {
-                    entries.forEach((e) => {
-                      if (e.isIntersecting) {
-                        viewedRef.current.add(p.id);
-                        try {
-                          navigator.sendBeacon?.(
-                            "/api/events",
-                            new Blob(
-                              [
-                                JSON.stringify([
-                                  { productId: p.id, type: "VIEW" },
-                                ]),
-                              ],
-                              { type: "application/json" }
-                            )
-                          );
-                        } catch {}
-                        io.disconnect();
-                      }
-                    });
-                  },
-                  { threshold: 0.4 }
-                );
-                io.observe(el);
-              }}
+              key={index}
+              className="group relative bg-neutral-100 dark:bg-neutral-800 aspect-[3/4] overflow-hidden rounded flex flex-col animate-pulse"
             >
-              <Link href={`/product/${p.id}`} className="absolute inset-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={p.image}
-                  alt={p.name}
-                  className="object-cover w-full h-full group-hover:scale-105 transition-transform"
-                />
-              </Link>
+              {/* Image skeleton */}
+              <div className="absolute inset-0 bg-neutral-200 dark:bg-neutral-700" />
+
+              {/* Action buttons skeleton */}
               <div className="absolute top-2 right-2 flex flex-col gap-2">
-                <button
-                  onClick={() => {
-                    const already = inWish;
-                    toggle({
-                      productId: p.id,
-                      name: p.name,
-                      priceCents: p.priceCents,
-                      image: p.image || p.imageUrl || "",
-                    });
-                    try {
-                      navigator.sendBeacon?.(
-                        "/api/events",
-                        new Blob(
-                          [
-                            JSON.stringify([
-                              {
-                                productId: p.id,
-                                type: already ? "UNWISHLIST" : "WISHLIST",
-                              },
-                            ]),
-                          ],
-                          { type: "application/json" }
-                        )
-                      );
-                    } catch {}
-                    push({
-                      type: already ? "info" : "success",
-                      message: already ? "Removed from saved" : "Saved",
-                    });
-                  }}
-                  className={`rounded-full h-8 w-8 text-[11px] font-semibold flex items-center justify-center backdrop-blur bg-white/80 border ${
-                    inWish ? "border-neutral-900" : "border-transparent"
-                  }`}
-                >
-                  {inWish ? "♥" : "♡"}
-                </button>
-                <div className="relative">
+                <div className="rounded-full h-8 w-8 bg-neutral-300 dark:bg-neutral-600" />
+                <div className="rounded-full h-8 w-8 bg-neutral-300 dark:bg-neutral-600" />
+              </div>
+
+              {/* Content skeleton */}
+              <div className="absolute inset-x-0 bottom-0 p-2 space-y-2">
+                <div className="h-3 bg-neutral-300 dark:bg-neutral-600 rounded w-3/4" />
+                <div className="h-3 bg-neutral-300 dark:bg-neutral-600 rounded w-1/2" />
+              </div>
+            </div>
+          ))
+        ) : items.length === 0 ? (
+          // Empty state
+          <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-neutral-100 dark:bg-neutral-700 flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-neutral-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.18 0-4.157.91-5.556 2.376M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-2">
+              No products found
+            </h3>
+            <p className="text-neutral-500 dark:text-neutral-400 mb-4">
+              Try adjusting your search or filter criteria
+            </p>
+            {(size || query || price[0] !== 0 || price[1] !== 200) && (
+              <button
+                onClick={() => {
+                  setSize("");
+                  setQuery("");
+                  setPrice([0, 200]);
+                }}
+                className="bg-black text-white px-6 py-2 text-sm font-medium hover:bg-neutral-800 transition-colors"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        ) : (
+          // Products grid
+          items.map((p) => {
+            const id = lineIdFor(p.id);
+            const inWish = has(id);
+            const hasSizes = Array.isArray(p.sizes) && p.sizes.length > 0;
+            // Local ephemeral chosen size per product (keyed by id) – simple ref via data attribute
+            return (
+              <div
+                key={p.id}
+                className="group relative bg-neutral-100 aspect-[3/4] overflow-hidden rounded flex flex-col"
+                ref={(el) => {
+                  if (!el) return;
+                  if (viewedRef.current.has(p.id)) return;
+                  const io = new IntersectionObserver(
+                    (entries) => {
+                      entries.forEach((e) => {
+                        if (e.isIntersecting) {
+                          viewedRef.current.add(p.id);
+                          try {
+                            navigator.sendBeacon?.(
+                              "/api/events",
+                              new Blob(
+                                [
+                                  JSON.stringify([
+                                    { productId: p.id, type: "VIEW" },
+                                  ]),
+                                ],
+                                { type: "application/json" }
+                              )
+                            );
+                          } catch {}
+                          io.disconnect();
+                        }
+                      });
+                    },
+                    { threshold: 0.4 }
+                  );
+                  io.observe(el);
+                }}
+              >
+                <Link href={`/product/${p.id}`} className="absolute inset-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="object-cover w-full h-full group-hover:scale-105 transition-transform"
+                  />
+                </Link>
+                <div className="absolute top-2 right-2 flex flex-col gap-2">
                   <button
-                    onClick={(e) => {
-                      if (hasSizes) {
-                        // Open size chooser popover (toggle) instead of immediate add
-                        const host = (e.currentTarget
-                          .parentElement as HTMLElement)!.querySelector<HTMLElement>(
-                          "[data-size-popover]"
-                        );
-                        if (host) host.toggleAttribute("data-open");
-                        return;
-                      }
-                      addItem(
-                        {
-                          productId: p.id,
-                          name: p.name,
-                          priceCents: p.priceCents,
-                          image: p.image || p.imageUrl || "",
-                        },
-                        1
-                      );
+                    onClick={() => {
+                      const already = inWish;
+                      toggle({
+                        productId: p.id,
+                        name: p.name,
+                        priceCents: p.priceCents,
+                        image: p.image || p.imageUrl || "",
+                      });
                       try {
                         navigator.sendBeacon?.(
                           "/api/events",
                           new Blob(
                             [
                               JSON.stringify([
-                                { productId: p.id, type: "ADD_TO_CART" },
+                                {
+                                  productId: p.id,
+                                  type: already ? "UNWISHLIST" : "WISHLIST",
+                                },
                               ]),
                             ],
                             { type: "application/json" }
                           )
                         );
                       } catch {}
-                      push({ type: "success", message: "Added to bag" });
+                      push({
+                        type: already ? "info" : "success",
+                        message: already ? "Removed from saved" : "Saved",
+                      });
                     }}
-                    className="rounded-full h-8 w-8 text-[15px] leading-none font-semibold flex items-center justify-center backdrop-blur bg-white/80 border border-transparent"
-                    aria-label={hasSizes ? "Choose size" : "Add to bag"}
+                    className={`rounded-full h-8 w-8 text-[11px] font-semibold flex items-center justify-center backdrop-blur bg-white/80 border ${
+                      inWish ? "border-neutral-900" : "border-transparent"
+                    }`}
                   >
-                    +
+                    {inWish ? "♥" : "♡"}
                   </button>
-                  {hasSizes && (
-                    <div
-                      data-size-popover
-                      className="absolute top-9 right-0 z-20 hidden data-[open]:flex flex-col gap-1 bg-white shadow-lg border border-neutral-200 rounded p-2 min-w-[120px]"
+                  <div className="relative">
+                    <button
+                      onClick={(e) => {
+                        if (hasSizes) {
+                          // Open size chooser popover (toggle) instead of immediate add
+                          const host = (e.currentTarget
+                            .parentElement as HTMLElement)!.querySelector<HTMLElement>(
+                            "[data-size-popover]"
+                          );
+                          if (host) host.toggleAttribute("data-open");
+                          return;
+                        }
+                        addItem(
+                          {
+                            productId: p.id,
+                            name: p.name,
+                            priceCents: p.priceCents,
+                            image: p.image || p.imageUrl || "",
+                          },
+                          1
+                        );
+                        try {
+                          navigator.sendBeacon?.(
+                            "/api/events",
+                            new Blob(
+                              [
+                                JSON.stringify([
+                                  { productId: p.id, type: "ADD_TO_CART" },
+                                ]),
+                              ],
+                              { type: "application/json" }
+                            )
+                          );
+                        } catch {}
+                        push({ type: "success", message: "Added to bag" });
+                      }}
+                      className="rounded-full h-8 w-8 text-[15px] leading-none font-semibold flex items-center justify-center backdrop-blur bg-white/80 border border-transparent"
+                      aria-label={hasSizes ? "Choose size" : "Add to bag"}
                     >
-                      <div className="text-[10px] uppercase tracking-wide font-semibold text-neutral-500 pb-1 border-b mb-1">
-                        Select size
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {p.sizes?.map((s: string) => (
-                          <button
-                            key={s}
-                            onClick={() => {
-                              addItem(
-                                {
-                                  productId: p.id,
-                                  name: p.name,
-                                  priceCents: p.priceCents,
-                                  image: p.image || p.imageUrl || "",
-                                  size: s,
-                                },
-                                1
-                              );
-                              try {
-                                navigator.sendBeacon?.(
-                                  "/api/events",
-                                  new Blob(
-                                    [
-                                      JSON.stringify([
-                                        {
-                                          productId: p.id,
-                                          type: "ADD_TO_CART",
-                                        },
-                                      ]),
-                                    ],
-                                    { type: "application/json" }
-                                  )
-                                );
-                              } catch {}
-                              push({
-                                type: "success",
-                                message: `Added ${s}`,
-                              });
-                              const host =
-                                (document.querySelector(
-                                  `[data-size-popover][data-open]`
-                                ) as HTMLElement) || null;
-                              host?.removeAttribute("data-open");
-                            }}
-                            className="px-2 py-1 text-[11px] rounded border border-neutral-300 hover:bg-neutral-100 active:bg-neutral-200"
-                          >
-                            {s}
-                          </button>
-                        ))}
-                      </div>
-                      <button
-                        onClick={() => {
-                          const host =
-                            (document.querySelector(
-                              `[data-size-popover][data-open]`
-                            ) as HTMLElement) || null;
-                          host?.removeAttribute("data-open");
-                        }}
-                        className="mt-2 text-[10px] text-neutral-500 hover:text-neutral-700"
+                      +
+                    </button>
+                    {hasSizes && (
+                      <div
+                        data-size-popover
+                        className="absolute top-9 right-0 z-20 hidden data-[open]:flex flex-col gap-1 bg-white shadow-lg border border-neutral-200 rounded p-2 min-w-[120px]"
                       >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
+                        <div className="text-[10px] uppercase tracking-wide font-semibold text-neutral-500 pb-1 border-b mb-1">
+                          Select size
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {p.sizes?.map((s: string) => (
+                            <button
+                              key={s}
+                              onClick={() => {
+                                addItem(
+                                  {
+                                    productId: p.id,
+                                    name: p.name,
+                                    priceCents: p.priceCents,
+                                    image: p.image || p.imageUrl || "",
+                                    size: s,
+                                  },
+                                  1
+                                );
+                                try {
+                                  navigator.sendBeacon?.(
+                                    "/api/events",
+                                    new Blob(
+                                      [
+                                        JSON.stringify([
+                                          {
+                                            productId: p.id,
+                                            type: "ADD_TO_CART",
+                                          },
+                                        ]),
+                                      ],
+                                      { type: "application/json" }
+                                    )
+                                  );
+                                } catch {}
+                                push({
+                                  type: "success",
+                                  message: `Added ${s}`,
+                                });
+                                const host =
+                                  (document.querySelector(
+                                    `[data-size-popover][data-open]`
+                                  ) as HTMLElement) || null;
+                                host?.removeAttribute("data-open");
+                              }}
+                              className="px-2 py-1 text-[11px] rounded border border-neutral-300 hover:bg-neutral-100 active:bg-neutral-200"
+                            >
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => {
+                            const host =
+                              (document.querySelector(
+                                `[data-size-popover][data-open]`
+                              ) as HTMLElement) || null;
+                            host?.removeAttribute("data-open");
+                          }}
+                          className="mt-2 text-[10px] text-neutral-500 hover:text-neutral-700"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs">
+                  <div className="font-semibold truncate">{p.name}</div>
+                  <div className="text-white">
+                    <ClientPrice
+                      cents={p.priceCents}
+                      size="sm"
+                      className="text-white"
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs">
-                <div className="font-semibold truncate">{p.name}</div>
-                <div>{formatPriceCents(p.priceCents)}</div>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </div>
   );

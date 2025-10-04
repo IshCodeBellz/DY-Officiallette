@@ -8,6 +8,7 @@ import {
   useStripe,
 } from "@stripe/react-stripe-js";
 import { useCart } from "@/components/providers/CartProvider";
+import { useCurrency } from "@/components/providers/CurrencyProvider";
 import { useSession } from "next-auth/react";
 import { formatPriceCents } from "@/lib/money";
 
@@ -28,6 +29,7 @@ interface PrimedOrderData {
 
 export default function CheckoutClient() {
   const { items, subtotal, clear, hydrated } = useCart();
+  const { formatPrice, convertPrice } = useCurrency();
   const { status: authStatus } = useSession();
   const [step, setStep] = useState<"form" | "payment" | "success">("form");
   const [loading, setLoading] = useState(false);
@@ -236,17 +238,17 @@ export default function CheckoutClient() {
         <div className="border rounded p-4 space-y-2 text-sm mb-6">
           <div className="flex justify-between">
             <span>Subtotal</span>
-            <span>{formatPriceCents(primed.subtotalCents)}</span>
+            <span>{formatPrice(primed.subtotalCents)}</span>
           </div>
           {primed.discountCents > 0 && (
             <div className="flex justify-between text-green-700">
               <span>Discount</span>
-              <span>-{formatPriceCents(primed.discountCents)}</span>
+              <span>-{formatPrice(primed.discountCents)}</span>
             </div>
           )}
           <div className="flex justify-between font-semibold border-t pt-2">
             <span>Total</span>
-            <span>{formatPriceCents(primed.totalCents)}</span>
+            <span>{formatPrice(primed.totalCents)}</span>
           </div>
         </div>
         <button
@@ -392,12 +394,14 @@ export default function CheckoutClient() {
           {discountStatus.state === "valid" && (
             <p className="text-xs text-green-600 dark:text-green-400">
               {discountStatus.kind === "fixed"
-                ? `Valid: saves $${(
-                    (discountStatus.valueCents || 0) / 100
-                  ).toFixed(2)}`
+                ? `Valid: saves ${formatPrice(
+                    convertPrice(discountStatus.valueCents || 0)
+                  )}`
                 : `Valid: ${discountStatus.percent}% off`}
               {discountStatus.minSubtotalCents
-                ? ` (min ${formatPriceCents(discountStatus.minSubtotalCents)})`
+                ? ` (min ${formatPrice(
+                    convertPrice(discountStatus.minSubtotalCents)
+                  )})`
                 : ""}
             </p>
           )}
@@ -405,18 +409,19 @@ export default function CheckoutClient() {
         <div className="md:col-span-2 border-t pt-4 mt-2 space-y-2 text-sm">
           <div className="flex justify-between">
             <span>Subtotal</span>
-            <span>{formatPriceCents(Math.round(subtotal * 100))}</span>
+            <span>{formatPrice(convertPrice(Math.round(subtotal * 100)))}</span>
           </div>
           <div className="flex justify-between">
             <span>Shipping</span>
-            <span>$0.00</span>
+            <span>{formatPrice(0)}</span>
           </div>
           {discountStatus.state === "valid" && (
             <div className="flex justify-between text-green-700">
               <span>Discount</span>
               <span>
                 {discountStatus.kind === "fixed"
-                  ? "-" + formatPriceCents(discountStatus.valueCents || 0)
+                  ? "-" +
+                    formatPrice(convertPrice(discountStatus.valueCents || 0))
                   : `-${discountStatus.percent}%`}
               </span>
             </div>
@@ -427,14 +432,14 @@ export default function CheckoutClient() {
               {(() => {
                 const base = Math.round(subtotal * 100);
                 if (discountStatus.state !== "valid")
-                  return formatPriceCents(base);
+                  return formatPrice(convertPrice(base));
                 if (discountStatus.kind === "fixed") {
                   const v = Math.min(base, discountStatus.valueCents || 0);
-                  return formatPriceCents(base - v);
+                  return formatPrice(convertPrice(base - v));
                 }
                 const pct = discountStatus.percent || 0;
                 const off = Math.floor((base * pct) / 100);
-                return formatPriceCents(base - off);
+                return formatPrice(convertPrice(base - off));
               })()}
             </span>
           </div>

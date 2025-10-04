@@ -6,6 +6,7 @@ import { SiteNav } from "./SiteNav";
 import { useCart, useWishlist } from "../providers/CartProvider";
 import { useSession, signOut } from "next-auth/react";
 import { DarkModeToggle } from "./DarkModeToggle";
+import { CurrencySelector } from "../ui/CurrencySelector";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
@@ -63,29 +64,30 @@ export function Header() {
                 <EnhancedSearchBar />
               </div>
             </div>
-            <nav className="hidden md:flex items-center gap-4 ml-auto">
+            <nav className="hidden md:flex items-center gap-3 ml-auto">
+              <CurrencySelector variant="minimal" showLabel={false} size="sm" />
               <DarkModeToggle />
               {session ? (
-                <div className="flex items-center gap-2 text-sm max-w-xs">
+                <div className="flex items-center gap-3 text-sm">
                   <span
-                    className="text-neutral-700 dark:text-neutral-300 truncate max-w-[140px]"
+                    className="text-neutral-700 dark:text-neutral-300 truncate max-w-[120px]"
                     title={
                       session.user?.name || session.user?.email || undefined
                     }
                   >
-                    {session.user?.name || session.user?.email}
+                    {session.user?.name?.split(" ")[0] || session.user?.email}
                   </span>
                   {(session.user as any)?.isAdmin && (
                     <Link
                       href="/admin"
-                      className="hover:underline font-medium text-neutral-900 dark:text-white"
+                      className="hover:underline font-medium text-neutral-900 dark:text-white whitespace-nowrap"
                     >
                       Admin
                     </Link>
                   )}
                   <Link
                     href="/account"
-                    className="hover:underline text-neutral-900 dark:text-white"
+                    className="hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
                   >
                     My Account
                   </Link>
@@ -101,7 +103,7 @@ export function Header() {
                       } catch {}
                       signOut();
                     }}
-                    className="hover:underline text-neutral-900 dark:text-white"
+                    className="hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
                   >
                     Sign out
                   </button>
@@ -116,7 +118,7 @@ export function Header() {
               )}
               <Link
                 href="/saved"
-                className="relative text-sm hover:underline text-neutral-900 dark:text-white"
+                className="relative text-sm hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
               >
                 Saved
                 <span
@@ -131,13 +133,13 @@ export function Header() {
               </Link>
               <Link
                 href="/social/wishlists"
-                className="text-sm hover:underline text-neutral-900 dark:text-white"
+                className="text-sm hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
               >
                 Social
               </Link>
               <Link
                 href="/bag"
-                className="relative text-sm hover:underline text-neutral-900 dark:text-white"
+                className="relative text-sm hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
               >
                 Bag
                 <span

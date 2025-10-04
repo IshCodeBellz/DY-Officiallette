@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { redirect } from "next/navigation";
 import AccountSettingsClient from "./settingsClient";
+import { AccountNavigation } from "@/components/account/AccountNavigation";
 import Link from "next/link";
 import clsx from "clsx";
 
@@ -52,98 +53,12 @@ export default async function AccountPage() {
     });
   }
 
-  const sections = [
-    {
-      label: "My Account",
-      items: [
-        { href: "#account-details", text: "Account details" },
-        {
-          href: "#contact-preferences",
-          text: "Contact preferences",
-          disabled: true,
-        },
-        { href: "#delivery-address", text: "Addresses" },
-        { href: "#payment-details", text: "Payment details", disabled: true },
-      ],
-    },
-    {
-      label: "Security",
-      items: [
-        {
-          href: "/account/security",
-          text: "Security Settings",
-          external: false,
-        },
-        { href: "#password", text: "Change Password", disabled: true },
-      ],
-    },
-    {
-      label: "Order Information",
-      items: [
-        { href: "#order-history", text: "Order History" },
-        { href: "#returns", text: "Returns", disabled: true },
-        { href: "#start-return", text: "Start a Return", disabled: true },
-      ],
-    },
-    {
-      label: "Track My Order",
-      items: [{ href: "#tracking", text: "Tracking", disabled: true }],
-    },
-    {
-      label: "Wish List",
-      items: [{ href: "/saved", text: "My Wish List", external: false }],
-    },
-    {
-      label: "Shop Confidently",
-      items: [
-        { href: "/privacy", text: "Privacy Policy", disabled: true },
-        { href: "/returns", text: "Returns Information", disabled: true },
-      ],
-    },
-  ];
-
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
       <h1 className="text-3xl font-semibold tracking-tight mb-8">My Account</h1>
       <div className="md:grid md:grid-cols-[230px_1fr] md:gap-10 lg:gap-16">
         {/* Left Navigation */}
-        <aside
-          className="mb-10 md:mb-0 space-y-10 text-sm"
-          aria-label="Account navigation"
-        >
-          {sections.map((group) => (
-            <div key={group.label} className="space-y-4">
-              <div className="px-2 py-3 bg-neutral-50 uppercase tracking-wider text-xs font-semibold text-neutral-600 border border-neutral-200">
-                {group.label}
-              </div>
-              <ul className="space-y-4 pl-2">
-                {group.items.map((item) => {
-                  const disabled = (item as any).disabled;
-                  const className = clsx(
-                    "block text-neutral-800 hover:underline",
-                    disabled &&
-                      "opacity-40 cursor-not-allowed hover:underline-none"
-                  );
-                  return disabled ? (
-                    <li
-                      key={item.href}
-                      className={className}
-                      aria-disabled="true"
-                    >
-                      {item.text}
-                    </li>
-                  ) : (
-                    <li key={item.href}>
-                      <Link href={item.href} className={className}>
-                        {item.text}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
-        </aside>
+        <AccountNavigation />
 
         {/* Main Content */}
         <div className="space-y-12">
@@ -154,12 +69,12 @@ export default async function AccountPage() {
                 <h2 className="uppercase tracking-wide text-xs font-semibold text-neutral-600">
                   Account Details
                 </h2>
-                <a
-                  href="#profile-settings"
-                  className="text-xs underline font-medium"
+                <Link
+                  href="/account/details"
+                  className="text-xs underline font-medium hover:text-neutral-600 dark:hover:text-neutral-300"
                 >
                   View details &gt;
-                </a>
+                </Link>
               </div>
               <div className="border rounded p-5 flex gap-5 bg-white dark:bg-neutral-800 dark:border-neutral-700">
                 <div className="w-16 h-16 rounded flex items-center justify-center bg-neutral-50 dark:bg-neutral-700 border dark:border-neutral-600 text-neutral-500 dark:text-neutral-400">
@@ -239,12 +154,12 @@ export default async function AccountPage() {
                 <h2 className="uppercase tracking-wide text-xs font-semibold text-neutral-600">
                   Delivery Address
                 </h2>
-                <a
-                  href="#delivery-address"
+                <Link
+                  href="/account/addresses"
                   className="text-xs underline font-medium"
                 >
                   All Addresses &gt;
-                </a>
+                </Link>
               </div>
               <div className="border rounded p-5 flex gap-5 bg-white dark:bg-neutral-800 dark:border-neutral-700">
                 <div className="w-16 h-16 rounded flex items-center justify-center bg-neutral-50 dark:bg-neutral-700 border dark:border-neutral-600 text-neutral-500 dark:text-neutral-400">
