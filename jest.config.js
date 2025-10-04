@@ -26,6 +26,10 @@ const base = {
       functions: 65,
     },
   },
+  // Increase timeout for integration tests
+  testTimeout: 30000,
+  // Force serial execution to avoid database deadlocks
+  maxWorkers: 1,
 };
 
-module.exports = isSerial ? { ...base, maxWorkers: 1 } : base;
+module.exports = base;

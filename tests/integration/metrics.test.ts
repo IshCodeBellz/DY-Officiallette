@@ -43,11 +43,13 @@ describe("metrics endpoint", () => {
     const order1Data = await createOrderForTest({
       userId: "metrics-user-1",
       priceCents: 5000,
+      removeSimulatedPayments: true,
     });
 
     const order2Data = await createOrderForTest({
       userId: "metrics-user-2",
       priceCents: 7500,
+      removeSimulatedPayments: true,
     });
 
     // Update one order to PAID status

@@ -52,7 +52,7 @@ describe("admin products positive", () => {
     const json = await res.json();
     expect(json.product.sku).toBe("SKU-ABC1");
     expect(json.product.images.length).toBe(1);
-    expect(json.product.sizes.length).toBe(2);
+    expect(json.product.sizeVariants.length).toBe(2);
   });
 });
 

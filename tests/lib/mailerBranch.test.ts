@@ -7,6 +7,17 @@ import { prisma } from "@/lib/server/prisma";
 
 describe("mailer branch coverage", () => {
   test("sendOrderConfirmation + sendPaymentReceipt invoke underlying mailer", async () => {
+    // Temporarily remove RESEND_API_KEY to force console mailer
+    const originalKey = process.env.RESEND_API_KEY;
+    delete process.env.RESEND_API_KEY;
+
+    // Clear the cached mailer instance by requiring the module fresh
+    jest.resetModules();
+    const {
+      sendOrderConfirmation,
+      sendPaymentReceipt,
+    } = require("@/lib/server/mailer");
+
     const user = await prisma.user.create({
       data: {
         id: "mail-u-" + Date.now(),
@@ -28,12 +39,20 @@ describe("mailer branch coverage", () => {
         status: "PENDING",
       },
     });
+
     const spy = jest.spyOn(console, "log").mockImplementation(() => {
       /* swallow log */
     });
+
     await sendOrderConfirmation(user as any, order as any);
     await sendPaymentReceipt(user as any, order as any);
+
     expect(spy).toHaveBeenCalled();
     spy.mockRestore();
+
+    // Restore the original key
+    if (originalKey) {
+      process.env.RESEND_API_KEY = originalKey;
+    }
   });
 });
