@@ -8,6 +8,7 @@ import Providers from "../components/providers/Providers";
 import { CartSync } from "../components/providers/CartSync";
 import { AuthProvider } from "../components/providers/AuthProvider";
 import { LiveRegion } from "../components/a11y/LiveRegion";
+import { CurrencyNotification } from "../components/ui/CurrencyNotification";
 
 export const metadata: Metadata = {
   title: "DYOFFICIALLETTE",
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <CartSync />
             <main className="flex-1">{children}</main>
             <Footer />
+            <CurrencyNotification />
           </Providers>
         </AuthProvider>
       </body>

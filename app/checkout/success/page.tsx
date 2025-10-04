@@ -4,6 +4,7 @@ import { prisma } from "@/lib/server/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { formatPriceCents } from "@/lib/money";
+import { ClientPrice } from "@/components/ui/ClientPrice";
 
 export const dynamic = "force-dynamic";
 
@@ -37,10 +38,10 @@ export default async function CheckoutSuccessPage({
             <li key={it.id} className="py-2 flex justify-between gap-4">
               <span className="flex-1 line-clamp-1">{it.nameSnapshot}</span>
               <span className="tabular-nums">
-                {it.qty} × {formatPriceCents(it.unitPriceCents)}
+                {it.qty} × <ClientPrice cents={it.unitPriceCents} size="sm" />
               </span>
               <span className="tabular-nums font-medium">
-                {formatPriceCents(it.lineTotalCents)}
+                <ClientPrice cents={it.lineTotalCents} size="sm" />
               </span>
             </li>
           ))}
@@ -48,25 +49,35 @@ export default async function CheckoutSuccessPage({
         <div className="mt-4 pt-4 border-t space-y-1 text-sm">
           <div className="flex justify-between">
             <span>Subtotal</span>
-            <span>{formatPriceCents(order.subtotalCents)}</span>
+            <span>
+              <ClientPrice cents={order.subtotalCents} size="sm" />
+            </span>
           </div>
           {order.discountCents > 0 && (
             <div className="flex justify-between text-green-700">
               <span>Discount</span>
-              <span>-{formatPriceCents(order.discountCents)}</span>
+              <span>
+                -<ClientPrice cents={order.discountCents} size="sm" />
+              </span>
             </div>
           )}
           <div className="flex justify-between">
             <span>Tax</span>
-            <span>{formatPriceCents(order.taxCents)}</span>
+            <span>
+              <ClientPrice cents={order.taxCents} size="sm" />
+            </span>
           </div>
           <div className="flex justify-between">
             <span>Shipping</span>
-            <span>{formatPriceCents(order.shippingCents)}</span>
+            <span>
+              <ClientPrice cents={order.shippingCents} size="sm" />
+            </span>
           </div>
           <div className="flex justify-between font-semibold border-t pt-2">
             <span>Total</span>
-            <span>{formatPriceCents(order.totalCents)}</span>
+            <span>
+              <ClientPrice cents={order.totalCents} size="base" />
+            </span>
           </div>
         </div>
       </div>

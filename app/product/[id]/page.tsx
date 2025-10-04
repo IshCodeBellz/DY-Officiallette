@@ -6,6 +6,7 @@ import Link from "next/link";
 import ProductClient from "./ProductClient";
 import ProductReviews from "@/components/product/ProductReviews";
 import { formatPriceCents } from "@/lib/money";
+import { ClientPrice } from "@/components/ui/ClientPrice";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 
@@ -75,7 +76,7 @@ export default async function ProductPage({
       <div className="lg:col-span-2 -mt-4 mb-2">
         {backCategorySlug && (
           <Link
-            href={`/category/${backCategorySlug}`}
+            href={`/${backCategorySlug}`}
             className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-neutral-900 group"
           >
             <svg
@@ -335,7 +336,11 @@ export default async function ProductPage({
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
           <p className="mt-2 text-2xl font-semibold">
-            {formatPriceCents(product.priceCents)}
+            <ClientPrice
+              cents={product.priceCents}
+              size="2xl"
+              variant="large"
+            />
           </p>
         </div>
         <p className="text-sm leading-relaxed text-neutral-700 max-w-prose">

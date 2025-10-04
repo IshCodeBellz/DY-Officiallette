@@ -1,13 +1,14 @@
 "use client";
 import { useCart } from "@/components/providers/CartProvider";
+import { useCurrency } from "@/components/providers/CurrencyProvider";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { formatPriceCents } from "@/lib/money";
 import Image from "next/image";
 
 export default function BagPage() {
   const { items, subtotal, updateQty, removeItem, clear } = useCart();
+  const { formatPrice, convertPrice } = useCurrency();
   const { status: authStatus } = useSession();
   const router = useRouter();
   const [checkingOut, setCheckingOut] = useState(false);
@@ -63,7 +64,7 @@ export default function BagPage() {
                   Size: {line.size ? line.size : "One size"}
                 </div>
                 <div className="text-sm font-semibold">
-                  {formatPriceCents(line.priceCents)}
+                  {formatPrice(convertPrice(line.priceCents))}
                 </div>
                 <div className="flex items-center gap-2 mt-2">
                   <label className="text-xs uppercase tracking-wide">Qty</label>
@@ -98,7 +99,7 @@ export default function BagPage() {
           <h2 className="font-semibold">Summary</h2>
           <div className="flex justify-between text-sm">
             <span>Subtotal</span>
-            <span>{formatPriceCents(Math.round(subtotal * 100))}</span>
+            <span>{formatPrice(convertPrice(Math.round(subtotal * 100)))}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span>Delivery</span>
@@ -106,7 +107,7 @@ export default function BagPage() {
           </div>
           <div className="border-t pt-2 flex justify-between font-semibold">
             <span>Total</span>
-            <span>{formatPriceCents(Math.round(subtotal * 100))}</span>
+            <span>{formatPrice(convertPrice(Math.round(subtotal * 100)))}</span>
           </div>
           <button
             disabled={items.length === 0 || checkingOut}

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/server/prisma";
+import { ClientPrice } from "@/components/ui/ClientPrice";
 
 // Basic trending scoring with time decay
 const HALF_LIFE_HOURS = 72;
@@ -128,7 +129,13 @@ export async function TrendingNow() {
             />
             <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs">
               <div className="font-semibold truncate">{p.name}</div>
-              <div>£{(p.priceCents / 100).toFixed(2)}</div>
+              <div className="text-white">
+                <ClientPrice
+                  cents={p.priceCents}
+                  size="sm"
+                  className="text-white"
+                />
+              </div>
             </div>
           </Link>
         ))}
