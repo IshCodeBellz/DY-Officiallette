@@ -58,7 +58,19 @@ interface Device {
   riskScore?: number;
 }
 
-export function SecuritySettings() {
+interface SecuritySettingsProps {
+  initialMfaStatus?: {
+    enabled: boolean;
+    hasBackupCodes: boolean;
+    trustedDevices: number;
+  };
+  onMfaStatusChange?: (enabled: boolean) => void;
+}
+
+export function SecuritySettings({ 
+  initialMfaStatus, 
+  onMfaStatusChange 
+}: SecuritySettingsProps = {}) {
   const [activeTab, setActiveTab] = useState<
     "overview" | "mfa" | "devices" | "sessions" | "activity"
   >("overview");
@@ -72,8 +84,18 @@ export function SecuritySettings() {
   const { push } = useToast();
 
   useEffect(() => {
+    if (initialMfaStatus) {
+      // Use initial MFA status if provided
+      setMfaStatus({
+        enabled: initialMfaStatus.enabled,
+        status: initialMfaStatus.enabled ? 'active' : 'disabled',
+        failedAttempts: 0,
+        backupCodesRemaining: initialMfaStatus.hasBackupCodes ? 8 : 0,
+        suspended: false,
+      });
+    }
     loadSecurityData();
-  }, []);
+  }, [initialMfaStatus]);
 
   const loadSecurityData = async () => {
     setLoading(true);
@@ -148,6 +170,7 @@ export function SecuritySettings() {
     setShowMfaSetup(false);
     setActiveTab("mfa"); // Switch to MFA tab to show the setup result
     loadSecurityData();
+    onMfaStatusChange?.(true); // Notify parent component
     push({
       message: "Two-factor authentication has been enabled!",
       type: "success",
@@ -177,6 +200,7 @@ export function SecuritySettings() {
       });
 
       if (response.ok) {
+        onMfaStatusChange?.(false); // Notify parent component
         push({
           message: "Two-factor authentication disabled",
           type: "success",
