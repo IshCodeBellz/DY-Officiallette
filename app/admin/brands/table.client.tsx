@@ -4,6 +4,11 @@ import { useState } from "react";
 interface Brand {
   id: string;
   name: string;
+  logoUrl?: string | null;
+  backgroundImage?: string | null;
+  description?: string | null;
+  isFeatured: boolean;
+  displayOrder: number;
   productCount?: number;
 }
 
@@ -12,6 +17,15 @@ export default function BrandsClient({ initial }: { initial: Brand[] }) {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    logoUrl: "",
+    backgroundImage: "",
+    description: "",
+    isFeatured: false,
+    displayOrder: 0,
+  });
 
   async function createBrand() {
     if (!name.trim()) return;
@@ -28,21 +42,62 @@ export default function BrandsClient({ initial }: { initial: Brand[] }) {
     } else {
       const data = await res.json();
       setBrands((prev) =>
-        [...prev, { ...data.brand, productCount: 0 }].sort((a, b) =>
-          a.name.localeCompare(b.name)
-        )
+        [
+          ...prev,
+          {
+            ...data.brand,
+            productCount: 0,
+            isFeatured: false,
+            displayOrder: 0,
+          },
+        ].sort((a, b) => {
+          if (a.isFeatured !== b.isFeatured) return b.isFeatured ? 1 : -1;
+          if (a.displayOrder !== b.displayOrder)
+            return a.displayOrder - b.displayOrder;
+          return a.name.localeCompare(b.name);
+        })
       );
       setName("");
     }
     setLoading(false);
   }
 
-  async function rename(id: string, current: string) {
-    const next = prompt("New brand name", current);
-    if (!next || next === current) return;
+  function startEdit(brand: Brand) {
+    setEditingBrand(brand);
+    setEditForm({
+      name: brand.name,
+      logoUrl: brand.logoUrl || "",
+      backgroundImage: brand.backgroundImage || "",
+      description: brand.description || "",
+      isFeatured: brand.isFeatured,
+      displayOrder: brand.displayOrder,
+    });
+  }
+
+  function cancelEdit() {
+    setEditingBrand(null);
+    setEditForm({
+      name: "",
+      logoUrl: "",
+      backgroundImage: "",
+      description: "",
+      isFeatured: false,
+      displayOrder: 0,
+    });
+  }
+
+  async function saveEdit() {
+    if (!editingBrand) return;
+    setLoading(true);
     const res = await fetch("/api/admin/brands", {
       method: "PUT",
-      body: JSON.stringify({ id, name: next }),
+      body: JSON.stringify({
+        id: editingBrand.id,
+        ...editForm,
+        logoUrl: editForm.logoUrl || null,
+        backgroundImage: editForm.backgroundImage || null,
+        description: editForm.description || null,
+      }),
       headers: { "Content-Type": "application/json" },
     });
     if (res.ok) {
@@ -50,13 +105,22 @@ export default function BrandsClient({ initial }: { initial: Brand[] }) {
       setBrands((prev) =>
         prev
           .map((b) =>
-            b.id === id ? { ...data.brand, productCount: b.productCount } : b
+            b.id === editingBrand.id
+              ? { ...data.brand, productCount: b.productCount }
+              : b
           )
-          .sort((a, b) => a.name.localeCompare(b.name))
+          .sort((a, b) => {
+            if (a.isFeatured !== b.isFeatured) return b.isFeatured ? 1 : -1;
+            if (a.displayOrder !== b.displayOrder)
+              return a.displayOrder - b.displayOrder;
+            return a.name.localeCompare(b.name);
+          })
       );
+      cancelEdit();
     } else {
-      alert("Rename failed");
+      alert("Update failed");
     }
+    setLoading(false);
   }
 
   async function remove(id: string) {
@@ -101,6 +165,160 @@ export default function BrandsClient({ initial }: { initial: Brand[] }) {
         )}
       </div>
 
+      {/* Edit Brand Modal */}
+      {editingBrand && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">
+                Edit Brand: {editingBrand.name}
+              </h3>
+            </div>
+            <div className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Brand Name
+                </label>
+                <input
+                  value={editForm.name}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, name: e.target.value })
+                  }
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter brand name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Logo URL
+                </label>
+                <input
+                  value={editForm.logoUrl}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, logoUrl: e.target.value })
+                  }
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="https://example.com/logo.png"
+                />
+                {editForm.logoUrl && (
+                  <div className="mt-2">
+                    <img
+                      src={editForm.logoUrl}
+                      alt="Logo preview"
+                      className="w-20 h-20 object-contain border border-gray-200 rounded"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Background Image URL (for featured brands)
+                </label>
+                <input
+                  value={editForm.backgroundImage}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      backgroundImage: e.target.value,
+                    })
+                  }
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="https://example.com/background.jpg"
+                />
+                {editForm.backgroundImage && (
+                  <div className="mt-2">
+                    <img
+                      src={editForm.backgroundImage}
+                      alt="Background preview"
+                      className="w-32 h-20 object-cover border border-gray-200 rounded"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={editForm.description}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, description: e.target.value })
+                  }
+                  rows={3}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Brand description (optional)"
+                />
+              </div>
+
+              <div className="flex items-center gap-6">
+                <div className="flex items-center">
+                  <input
+                    id="featured"
+                    type="checkbox"
+                    checked={editForm.isFeatured}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, isFeatured: e.target.checked })
+                    }
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label
+                    htmlFor="featured"
+                    className="ml-2 block text-sm text-gray-900"
+                  >
+                    Featured Brand
+                  </label>
+                </div>
+
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Display Order
+                  </label>
+                  <input
+                    type="number"
+                    value={editForm.displayOrder}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        displayOrder: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="w-20 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    min="0"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Lower numbers appear first
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={cancelEdit}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveEdit}
+                disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-md transition-colors"
+              >
+                {loading ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Brands Table */}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
@@ -108,7 +326,10 @@ export default function BrandsClient({ initial }: { initial: Brand[] }) {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Brand Name
+                  Brand
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Images
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Products
@@ -125,11 +346,62 @@ export default function BrandsClient({ initial }: { initial: Brand[] }) {
               {brands.map((brand) => (
                 <tr
                   key={brand.id}
-                  className="hover:bg-gray-50 transition-colors"
+                  className={`hover:bg-gray-50 transition-colors ${
+                    brand.isFeatured
+                      ? "bg-blue-50 border-l-4 border-blue-500"
+                      : ""
+                  }`}
                 >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {brand.name}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-10 h-10">
+                        {brand.logoUrl ? (
+                          <img
+                            src={brand.logoUrl}
+                            alt={brand.name}
+                            className="w-10 h-10 object-contain border border-gray-200 rounded"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center text-sm font-medium text-gray-600">
+                            {brand.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                          {brand.name}
+                          {brand.isFeatured && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                              ⭐ Featured
+                            </span>
+                          )}
+                        </div>
+                        {brand.description && (
+                          <div className="text-xs text-gray-500 mt-1 max-w-xs truncate">
+                            {brand.description}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          brand.logoUrl ? "bg-green-400" : "bg-gray-300"
+                        }`}
+                        title={brand.logoUrl ? "Logo set" : "No logo"}
+                      />
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          brand.backgroundImage ? "bg-green-400" : "bg-gray-300"
+                        }`}
+                        title={
+                          brand.backgroundImage
+                            ? "Background set"
+                            : "No background"
+                        }
+                      />
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -152,10 +424,10 @@ export default function BrandsClient({ initial }: { initial: Brand[] }) {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                     <div className="flex justify-end gap-3">
                       <button
-                        onClick={() => rename(brand.id, brand.name)}
+                        onClick={() => startEdit(brand)}
                         className="text-blue-600 hover:text-blue-900 font-medium transition-colors"
                       >
-                        Rename
+                        Edit
                       </button>
                       <button
                         onClick={() => remove(brand.id)}
@@ -169,7 +441,7 @@ export default function BrandsClient({ initial }: { initial: Brand[] }) {
               ))}
               {brands.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center">
+                  <td colSpan={5} className="px-6 py-12 text-center">
                     <div className="text-gray-500">
                       <div className="text-lg font-medium mb-2">
                         No brands found
