@@ -134,10 +134,14 @@ export default function AddressesPage() {
   };
 
   const handleDeleteAddress = async (id: string) => {
-    const addressToDelete = addresses.find(addr => addr.id === id);
-    
+    const addressToDelete = addresses.find((addr) => addr.id === id);
+
     if (addressToDelete?.isDefault && addresses.length > 1) {
-      if (!confirm("This is your default address. Deleting it will set another address as default. Are you sure you want to continue?")) {
+      if (
+        !confirm(
+          "This is your default address. Deleting it will set another address as default. Are you sure you want to continue?"
+        )
+      ) {
         return;
       }
     } else if (!confirm("Are you sure you want to delete this address?")) {

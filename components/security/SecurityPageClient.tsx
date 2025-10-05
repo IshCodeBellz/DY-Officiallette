@@ -26,8 +26,12 @@ interface SecurityPageClientProps {
   };
 }
 
-export function SecurityPageClient({ initialSecurityData }: SecurityPageClientProps) {
-  const [mfaEnabled, setMfaEnabled] = useState(initialSecurityData.mfaStatus.enabled);
+export function SecurityPageClient({
+  initialSecurityData,
+}: SecurityPageClientProps) {
+  const [mfaEnabled, setMfaEnabled] = useState(
+    initialSecurityData.mfaStatus.enabled
+  );
 
   const handleMfaStatusChange = (enabled: boolean) => {
     setMfaEnabled(enabled);
@@ -137,7 +141,9 @@ export function SecurityPageClient({ initialSecurityData }: SecurityPageClientPr
               </p>
               <p className="text-xs text-neutral-600 dark:text-neutral-400">
                 {initialSecurityData.user.lastLogin
-                  ? new Date(initialSecurityData.user.lastLogin).toLocaleDateString()
+                  ? new Date(
+                      initialSecurityData.user.lastLogin
+                    ).toLocaleDateString()
                   : "No recent activity"}
               </p>
             </div>
@@ -167,9 +173,9 @@ export function SecurityPageClient({ initialSecurityData }: SecurityPageClientPr
                 Security Recommendation
               </h3>
               <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
-                Enable two-factor authentication to significantly improve
-                your account security. This adds an extra layer of
-                protection even if your password is compromised.
+                Enable two-factor authentication to significantly improve your
+                account security. This adds an extra layer of protection even if
+                your password is compromised.
               </p>
             </div>
           </div>
@@ -177,7 +183,7 @@ export function SecurityPageClient({ initialSecurityData }: SecurityPageClientPr
       )}
 
       {/* Main Security Settings Component */}
-      <SecuritySettings 
+      <SecuritySettings
         initialMfaStatus={initialSecurityData.mfaStatus}
         onMfaStatusChange={handleMfaStatusChange}
       />

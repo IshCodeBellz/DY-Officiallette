@@ -17,7 +17,7 @@ export async function GET() {
         addresses: {
           orderBy: [
             { isDefault: "desc" }, // Default address first
-            { createdAt: "desc" },  // Then by creation date
+            { createdAt: "desc" }, // Then by creation date
           ],
         },
       },
