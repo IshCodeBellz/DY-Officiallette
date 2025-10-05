@@ -16,6 +16,7 @@ interface Address {
   postalCode: string;
   country: string;
   phone?: string | null;
+  isDefault: boolean;
   createdAt: string;
 }
 
@@ -133,7 +134,13 @@ export default function AddressesPage() {
   };
 
   const handleDeleteAddress = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this address?")) {
+    const addressToDelete = addresses.find(addr => addr.id === id);
+    
+    if (addressToDelete?.isDefault && addresses.length > 1) {
+      if (!confirm("This is your default address. Deleting it will set another address as default. Are you sure you want to continue?")) {
+        return;
+      }
+    } else if (!confirm("Are you sure you want to delete this address?")) {
       return;
     }
 
@@ -168,11 +175,33 @@ export default function AddressesPage() {
   };
 
   const getAddressDisplayName = (address: Address, index: number) => {
-    // First address is default, others get numbered
-    if (index === 0) {
+    // Use the isDefault field to determine if it's the default address
+    if (address.isDefault) {
       return `DEFAULT ADDRESS - ${address.city.toUpperCase()}`;
     }
     return `${address.city.toUpperCase()}-${index}`;
+  };
+
+  const handleSetDefault = async (addressId: string) => {
+    try {
+      const response = await fetch("/api/addresses/set-default", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ addressId }),
+      });
+
+      if (response.ok) {
+        await fetchAddresses(); // Refresh the list to show updated default status
+      } else {
+        const error = await response.json();
+        alert(error.error || "Failed to set default address");
+      }
+    } catch (error) {
+      console.error("Error setting default address:", error);
+      alert("Failed to set default address");
+    }
   };
 
   if (loading) {
@@ -230,7 +259,7 @@ export default function AddressesPage() {
                     <h3 className="font-semibold text-sm uppercase tracking-wide text-neutral-800 dark:text-neutral-200">
                       {getAddressDisplayName(address, index)}
                     </h3>
-                    {index === 0 && (
+                    {address.isDefault && (
                       <span className="text-xs text-green-600 dark:text-green-400 font-medium">
                         (Default)
                       </span>
@@ -259,6 +288,14 @@ export default function AddressesPage() {
                     >
                       Edit
                     </button>
+                    {!address.isDefault && (
+                      <button
+                        onClick={() => handleSetDefault(address.id)}
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline"
+                      >
+                        Set as Default
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDeleteAddress(address.id)}
                       className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 underline"

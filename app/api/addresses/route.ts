@@ -15,7 +15,10 @@ export async function GET() {
       where: { email: session.user.email },
       include: {
         addresses: {
-          orderBy: { createdAt: "desc" },
+          orderBy: [
+            { isDefault: "desc" }, // Default address first
+            { createdAt: "desc" },  // Then by creation date
+          ],
         },
       },
     });
@@ -62,6 +65,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if this is the user's first address
+    const existingAddressCount = await prisma.address.count({
+      where: { userId: user.id },
+    });
+
     const address = await prisma.address.create({
       data: {
         userId: user.id,
@@ -73,6 +81,7 @@ export async function POST(request: NextRequest) {
         postalCode,
         country,
         phone: phone || null,
+        isDefault: existingAddressCount === 0, // First address is automatically default
       },
     });
 
