@@ -314,6 +314,9 @@ describe("email verification flow", () => {
     });
     expect(firstToken).toBeTruthy();
 
+    // Wait to avoid Resend rate limit (2 req/sec)
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
     // Second request should update the existing token
     const req2 = new NextRequest(
       "http://localhost:3000/api/auth/verify-email/request",

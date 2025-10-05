@@ -24,6 +24,19 @@ export async function invokePOST(
 }
 
 export async function resetDb() {
+  const dbUrl = process.env.DATABASE_URL || "";
+  // Safety guard: abort if DATABASE_URL looks like production
+  const prodPatterns = [
+    "railway",
+    "prod",
+    "dy-officiallette.com",
+    "hopper.proxy.rlwy.net",
+  ];
+  if (prodPatterns.some((p) => dbUrl.includes(p))) {
+    throw new Error(
+      `[SAFETY] Refusing to reset a production database: ${dbUrl}`
+    );
+  }
   // If some test disconnected Prisma, reconnect here so reset can run
   if ((global as any).__prismaDisconnected) {
     try {
@@ -32,8 +45,20 @@ export async function resetDb() {
       // ignore - we'll surface errors later
     }
   }
+  // Pre-test DB health check: fail fast if DB is unreachable
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+  } catch (err) {
+    // Print a clear diagnostic and throw so tests fail fast
+    console.error(
+      "[TEST DB ERROR] Could not connect to database. Check DATABASE_URL and DB status.",
+      err
+    );
+    throw new Error(
+      "[TEST DB ERROR] Could not connect to database. Check DATABASE_URL and DB status."
+    );
+  }
   let isSqlite = false;
-  const dbUrl = process.env.DATABASE_URL || "";
   if (dbUrl.includes("sqlite")) isSqlite = true;
   else {
     // Probe with PRAGMA to detect sqlite when env var missing in process (but present in generated client).
@@ -95,37 +120,45 @@ export async function resetDb() {
   }
 
   // Non-sqlite path (e.g., Postgres soon). Use a transaction + two passes for safety.
-  await prisma.$transaction(
-    async (tx) => {
-      const del = async () => {
-        const time = (label: string, fn: () => Promise<any>) => fn();
-        await tx.paymentRecord.deleteMany();
-        await (prismaX.orderEvent as any).deleteMany();
-        await tx.orderItem.deleteMany();
-        await tx.order.deleteMany();
-        await tx.cartLine.deleteMany();
-        await tx.cart.deleteMany();
-        await tx.wishlistItem.deleteMany();
-        await tx.wishlist.deleteMany();
-        await tx.productImage.deleteMany();
-        await tx.sizeVariant.deleteMany();
-        await tx.productMetrics.deleteMany();
-        await tx.processedWebhookEvent.deleteMany();
-        await tx.address.deleteMany();
-        await tx.product.deleteMany();
-        await tx.brand.deleteMany();
-        await tx.category.deleteMany();
-        await tx.discountCode.deleteMany();
-        await (prismaX.passwordResetToken as any).deleteMany();
-        await tx.user.deleteMany();
-      };
-      await del();
-      await del(); // second pass (idempotent) cleans up any rows inserted mid-reset (rare)
-    },
-    {
-      timeout: 30000, // Increase timeout to 30 seconds
-    }
-  );
+  try {
+    await prisma.$transaction(
+      async (tx) => {
+        const del = async () => {
+          const time = (label: string, fn: () => Promise<any>) => fn();
+          await tx.paymentRecord.deleteMany();
+          await (prismaX.orderEvent as any).deleteMany();
+          await tx.orderItem.deleteMany();
+          await tx.order.deleteMany();
+          await tx.cartLine.deleteMany();
+          await tx.cart.deleteMany();
+          await tx.wishlistItem.deleteMany();
+          await tx.wishlist.deleteMany();
+          await tx.productImage.deleteMany();
+          await tx.sizeVariant.deleteMany();
+          await tx.productMetrics.deleteMany();
+          await tx.processedWebhookEvent.deleteMany();
+          await tx.address.deleteMany();
+          await tx.product.deleteMany();
+          await tx.brand.deleteMany();
+          await tx.category.deleteMany();
+          await tx.discountCode.deleteMany();
+          await (prismaX.passwordResetToken as any).deleteMany();
+          await tx.user.deleteMany();
+        };
+        await del();
+        await del(); // second pass (idempotent) cleans up any rows inserted mid-reset (rare)
+      },
+      {
+        timeout: 30000, // Increase timeout to 30 seconds
+      }
+    );
+  } catch (err) {
+    console.error(
+      "[TEST DB ERROR] Transaction failed during resetDb. Check DB status and logs.",
+      err
+    );
+    throw err;
+  }
 }
 
 export async function createBasicProduct(
@@ -235,7 +268,10 @@ export async function createOrderForTest(opts: {
   if (opts?.removeSimulatedPayments) {
     try {
       await prisma.paymentRecord.deleteMany({
-        where: { orderId: json?.orderId, providerRef: { startsWith: "pi_sim_" } },
+        where: {
+          orderId: json?.orderId,
+          providerRef: { startsWith: "pi_sim_" },
+        },
       });
     } catch (e) {
       // ignore

@@ -6,6 +6,7 @@ export async function GET(req: NextRequest) {
   const idsParam = (searchParams.get("ids") || "").trim();
   const q = (searchParams.get("q") || "").trim();
   const category = searchParams.get("category") || undefined;
+  const brand = searchParams.get("brand") || undefined;
   const size = searchParams.get("size") || undefined;
   const min = parseFloat(searchParams.get("min") || "0");
   const max = parseFloat(searchParams.get("max") || "1000000");
@@ -17,8 +18,16 @@ export async function GET(req: NextRequest) {
 
   const where: any = {
     priceCents: { gte: Math.round(min * 100), lte: Math.round(max * 100) },
+    // Only show active, non-deleted products
+    isActive: true,
+    deletedAt: null,
   };
   if (category) where.category = { slug: category };
+  if (brand) {
+    // Convert slug back to brand name for filtering (simple conversion)
+    const brandName = brand.replace(/-/g, " ");
+    where.brand = { name: { contains: brandName, mode: "insensitive" } };
+  }
   if (q) {
     where.OR = [
       { name: { contains: q, mode: "insensitive" } },
@@ -46,7 +55,12 @@ export async function GET(req: NextRequest) {
       });
     }
     const products = await prisma.product.findMany({
-      where: { id: { in: ids } },
+      where: {
+        id: { in: ids },
+        // Only show active, non-deleted products even when fetching by IDs
+        isActive: true,
+        deletedAt: null,
+      },
       include: {
         images: { orderBy: { position: "asc" }, take: 1 },
         brand: true,

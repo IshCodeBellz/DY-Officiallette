@@ -27,7 +27,12 @@ async function toCartItems(
   if (!dbLines.length) return [];
   const productIds = Array.from(new Set(dbLines.map((l) => l.productId)));
   const products = await prisma.product.findMany({
-    where: { id: { in: productIds } },
+    where: {
+      id: { in: productIds },
+      // Only include active, non-deleted products in cart items
+      isActive: true,
+      deletedAt: null,
+    },
     select: {
       id: true,
       name: true,

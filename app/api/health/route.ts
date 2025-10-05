@@ -181,7 +181,9 @@ export const GET = withRequest(async function GET(req: NextRequest) {
       checks: checks.reduce((acc, check) => {
         acc[check.component] = {
           status: check.status,
-          ...(check.latency_ms && { latency_ms: check.latency_ms }),
+          ...(check.latency_ms !== undefined && {
+            latency_ms: check.latency_ms,
+          }),
           ...(check.details && { details: check.details }),
           ...(check.error && { error: check.error }),
         };
