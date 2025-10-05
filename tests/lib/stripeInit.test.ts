@@ -1,8 +1,10 @@
 import { getStripe } from "@/lib/server/stripe";
 
 describe("stripe init", () => {
-  test("returns null when no key set", () => {
+  test("returns Stripe instance when key is set", () => {
     const s = getStripe();
-    expect(s).toBeNull();
+    expect(s).not.toBeNull();
+    expect(s).toHaveProperty("paymentIntents");
+    expect(s).toHaveProperty("customers");
   });
 });

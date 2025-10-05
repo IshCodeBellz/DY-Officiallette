@@ -228,8 +228,22 @@ export const GET = withRequest(async function GET(req: NextRequest) {
           database: { status: "error", latency_ms: null },
         },
         business: {
-          orders: { by_status: { pending: { count: 0, total_value: 0 }, paid: { count: 0, total_value: 0 } }, total_count: 0, total_value: 0 },
-          payments: { by_status: { payment_pending: { count: 0, total_amount: 0 }, captured: { count: 0, total_amount: 0 } }, total_transactions: 0, total_processed: 0 },
+          orders: {
+            by_status: {
+              pending: { count: 0, total_value: 0 },
+              paid: { count: 0, total_value: 0 },
+            },
+            total_count: 0,
+            total_value: 0,
+          },
+          payments: {
+            by_status: {
+              payment_pending: { count: 0, total_amount: 0 },
+              captured: { count: 0, total_amount: 0 },
+            },
+            total_transactions: 0,
+            total_processed: 0,
+          },
         },
       },
       { status: 500 }

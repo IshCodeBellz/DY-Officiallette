@@ -2,7 +2,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { useWishlist, useCart } from "@/components/providers/CartProvider";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { lineIdFor } from "@/lib/types";
 import { formatPriceCents } from "@/lib/money";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -31,9 +31,14 @@ export default function CategoryPage({
 
   // Initialize all hooks before any conditional returns
   const [size, setSize] = useState<string>("");
+  const [brand, setBrand] = useState<string>("");
+  const [availableBrands, setAvailableBrands] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
   const [price, setPrice] = useState<[number, number]>([0, 200]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 200]); // Dynamic range based on actual products
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<
     Array<{
@@ -52,6 +57,15 @@ export default function CategoryPage({
 
   const category = params.category.toLowerCase();
   if (!validCategories.includes(category)) return notFound();
+
+  // Debounce the search query to avoid excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 1000); // 1000ms debounce delay
+
+    return () => clearTimeout(timer);
+  }, [query]);
 
   // Effect to calculate dynamic price range from all products in category
   useEffect(() => {
@@ -102,6 +116,26 @@ export default function CategoryPage({
     return () => controller.abort();
   }, [category]); // Only depend on category change
 
+  // Load available brands for this category
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadBrands() {
+      try {
+        const res = await fetch(`/api/categories/${category}/brands`, {
+          signal: controller.signal,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAvailableBrands(data || []);
+        }
+      } catch (e) {
+        // Keep empty brands on error
+      }
+    }
+    loadBrands();
+    return () => controller.abort();
+  }, [category]);
+
   useEffect(() => {
     // If navigating to face-body, ensure any previously selected apparel size is cleared
     if (category === "face-body" && size) {
@@ -112,7 +146,8 @@ export default function CategoryPage({
       setLoading(true);
       const params = new URLSearchParams();
       params.set("category", category);
-      if (query) params.set("q", query);
+      if (debouncedQuery) params.set("q", debouncedQuery);
+      if (brand) params.set("brand", brand);
       // Only include size filter for non face-body categories (apparel sizing)
       if (size && category !== "face-body") params.set("size", size);
       if (price[0] !== priceRange[0]) params.set("min", String(price[0]));
@@ -139,7 +174,7 @@ export default function CategoryPage({
     }
     load();
     return () => controller.abort();
-  }, [category, query, size, price, priceRange]);
+  }, [category, debouncedQuery, brand, size, price, priceRange]);
 
   const isFaceBody = category === "face-body";
   return (
@@ -218,6 +253,26 @@ export default function CategoryPage({
             </select>
           </div>
         )}
+        {availableBrands.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <label className="text-xs uppercase tracking-wide font-semibold">
+              Brand
+            </label>
+            <select
+              value={brand}
+              onChange={(e) => setBrand(e.target.value)}
+              disabled={loading}
+              className="border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1 bg-white dark:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">All brands</option>
+              {availableBrands.map((b: any) => (
+                <option key={b.slug} value={b.slug}>
+                  {b.name} ({b.productCount})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="flex flex-col gap-1">
           <label className="text-xs uppercase tracking-wide font-semibold">
             Price{" "}
@@ -249,12 +304,14 @@ export default function CategoryPage({
           </div>
         </div>
         {(size ||
+          brand ||
           query ||
           price[0] !== priceRange[0] ||
           price[1] !== priceRange[1]) && (
           <button
             onClick={() => {
               setSize("");
+              setBrand("");
               setQuery("");
               setPrice([priceRange[0], priceRange[1]]);
             }}
@@ -313,12 +370,17 @@ export default function CategoryPage({
             <p className="text-neutral-500 dark:text-neutral-400 mb-4">
               Try adjusting your search or filter criteria
             </p>
-            {(size || query || price[0] !== 0 || price[1] !== 200) && (
+            {(size ||
+              brand ||
+              query ||
+              price[0] !== priceRange[0] ||
+              price[1] !== priceRange[1]) && (
               <button
                 onClick={() => {
                   setSize("");
+                  setBrand("");
                   setQuery("");
-                  setPrice([0, 200]);
+                  setPrice([priceRange[0], priceRange[1]]);
                 }}
                 className="bg-black text-white px-6 py-2 text-sm font-medium hover:bg-neutral-800 transition-colors"
               >

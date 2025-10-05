@@ -11,6 +11,7 @@ const base = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
+  setupFiles: ["<rootDir>/jest.env.setup.js"],
   setupFilesAfterEnv: ["<rootDir>/tests/setup/sessionMock.ts"],
   collectCoverageFrom: [
     "app/**/*.{ts,tsx}",

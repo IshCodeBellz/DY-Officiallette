@@ -56,15 +56,15 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     await prisma.$transaction(
       entries.map(([productId, inc]) =>
         prisma.$executeRawUnsafe(
-          `INSERT INTO ProductMetrics (productId, views, detailViews, wishlists, addToCart, purchases, updatedAt)
-           VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-           ON CONFLICT(productId) DO UPDATE SET
-             views = views + excluded.views,
-             detailViews = detailViews + excluded.detailViews,
-             wishlists = wishlists + excluded.wishlists,
-             addToCart = addToCart + excluded.addToCart,
-             purchases = purchases + excluded.purchases,
-             updatedAt = CURRENT_TIMESTAMP;`,
+          `INSERT INTO "ProductMetrics" ("productId", views, "detailViews", wishlists, "addToCart", purchases, "updatedAt")
+           VALUES ($1, $2, $3, $4, $5, $6, NOW())
+           ON CONFLICT("productId") DO UPDATE SET
+             views = "ProductMetrics".views + EXCLUDED.views,
+             "detailViews" = "ProductMetrics"."detailViews" + EXCLUDED."detailViews",
+             wishlists = "ProductMetrics".wishlists + EXCLUDED.wishlists,
+             "addToCart" = "ProductMetrics"."addToCart" + EXCLUDED."addToCart",
+             purchases = "ProductMetrics".purchases + EXCLUDED.purchases,
+             "updatedAt" = NOW()`,
           productId,
           inc.views || 0,
           inc.detailViews || 0,

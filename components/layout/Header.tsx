@@ -50,8 +50,8 @@ export function Header() {
 
   return (
     <>
-      <header className="border-b border-neutral-200 dark:border-neutral-700 bg-white/95 dark:bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-neutral-900/80 sticky top-0 z-40">
-        <div className="container mx-auto px-4">
+      <header className="border-b border-neutral-200 dark:border-neutral-700 bg-white/95 dark:bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-neutral-900/80 sticky top-0 z-40 overflow-visible">
+        <div className="container mx-auto px-4 overflow-visible">
           <div className="flex h-16 items-center gap-4">
             <div className="flex items-center gap-4 flex-1 min-w-0">
               <Link
@@ -215,7 +215,9 @@ export function Header() {
             <EnhancedSearchBar />
           </div>
 
-          <SiteNav />
+          <div className="overflow-visible">
+            <SiteNav />
+          </div>
         </div>
       </header>
       {mobileMenuOpen && (
@@ -302,33 +304,49 @@ export function Header() {
                 <p className="text-[10px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400 uppercase">
                   Categories
                 </p>
-                <div className="grid grid-cols-2 gap-1.5 text-[13px]">
+                {/* Primary Categories */}
+                <div className="space-y-3">
                   {[
-                    "womens-clothing",
-                    "mens-clothing",
-                    "denim",
-                    "footwear",
-                    "accessories",
-                    "sportswear",
-                    "dresses",
-                    "outerwear",
-                    "new-in",
-                    "brands",
-                  ].map((c) => (
+                    { href: "/new-in", label: "New In" },
+                    { href: "/womens-clothing", label: "Women" },
+                    { href: "/mens-clothing", label: "Men" },
+                    { href: "/footwear", label: "Shoes" },
+                    { href: "/accessories", label: "Accessories" },
+                    { href: "/brands", label: "Brands" },
+                  ].map((item) => (
                     <Link
-                      key={c}
-                      href={`/${c}`}
+                      key={item.href}
+                      href={item.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="px-2 py-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 capitalize border border-transparent focus:outline-none focus:ring-2 focus:ring-neutral-300 dark:focus:ring-neutral-600 text-neutral-700 dark:text-neutral-300"
+                      className="block text-base font-medium text-neutral-900 dark:text-white hover:text-brand-accent py-1"
                     >
-                      {c
-                        .replace("womens-clothing", "Women")
-                        .replace("mens-clothing", "Men")
-                        .replace("footwear", "Shoes")
-                        .replace("face-body", "Face + Body")
-                        .replace("new-in", "New In")}
+                      {item.label}
                     </Link>
                   ))}
+                </div>
+
+                {/* Subcategories */}
+                <div className="pt-3 border-t border-neutral-200 dark:border-neutral-700">
+                  <p className="text-[10px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400 uppercase mb-2">
+                    Popular Categories
+                  </p>
+                  <div className="grid grid-cols-2 gap-1.5 text-[13px]">
+                    {[
+                      { href: "/dresses", label: "Dresses" },
+                      { href: "/outerwear", label: "Outerwear" },
+                      { href: "/sportswear", label: "Sportswear" },
+                      { href: "/denim", label: "Denim" },
+                    ].map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="px-2 py-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-transparent focus:outline-none focus:ring-2 focus:ring-neutral-300 dark:focus:ring-neutral-600 text-neutral-700 dark:text-neutral-300"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">

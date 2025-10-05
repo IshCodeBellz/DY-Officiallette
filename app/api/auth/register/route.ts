@@ -4,6 +4,7 @@ import { hashPassword } from "@/lib/server/auth";
 import { z } from "zod";
 import crypto from "crypto";
 import { sendEmailVerification } from "@/lib/server/mailer";
+import { Prisma } from "@prisma/client";
 
 const schema = z.object({
   email: z.string().email(),
@@ -45,8 +46,60 @@ export async function POST(req: NextRequest) {
       status: "pending_verification",
       message: "Registration received. Please verify via email link.",
     });
-  } catch (e) {
+  } catch (e: any) {
+    // Centralized logging with a stable prefix so we can grep in logs
     console.error("[REGISTER:error]", e);
-    return NextResponse.json({ error: "register_failed" }, { status: 500 });
+
+    // Map common Prisma / DB issues to clearer diagnostics (only exposed outside production)
+    const isProd = process.env.NODE_ENV === "production";
+    let debug: Record<string, any> | undefined;
+
+    if (!isProd) {
+      // Unique constraint (email already taken but race before findUnique returned)
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === "P2002") {
+          debug = {
+            classification: "unique_constraint",
+            field: e.meta?.target,
+            suggestion:
+              "Email already exists. Frontend should handle 409 gracefully.",
+          };
+        }
+      }
+      // Look for missing column / schema drift issues (commonly seen when prod DB missing migrations)
+      const msg = (e?.message || "").toLowerCase();
+      if (!debug && /column .*name.* does not exist/.test(msg)) {
+        debug = {
+          classification: "schema_drift_missing_column",
+          missing: "User.name or related column",
+          suggestion:
+            "Run: export DATABASE_URL=<prod_url> && npx prisma migrate deploy (or ensure all migrations are applied).",
+        };
+      }
+      if (
+        !debug &&
+        /emailverificationtoken/i.test(msg) &&
+        /relation/i.test(msg)
+      ) {
+        debug = {
+          classification: "schema_drift_missing_table",
+          missing: "EmailVerificationToken table",
+          suggestion:
+            "Production DB may be missing recent migrations. Apply pending migrations.",
+        };
+      }
+      if (!debug) {
+        debug = {
+          classification: "unclassified",
+          suggestion:
+            "Inspect server log stack & confirm migrations are in sync.",
+        };
+      }
+    }
+
+    return NextResponse.json(
+      { error: "register_failed", ...(debug ? { debug } : {}) },
+      { status: 500 }
+    );
   }
 }
