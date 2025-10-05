@@ -30,7 +30,7 @@ export default async function BrandsAdminPage() {
 
   // Fetch brands with statistics
   const brands = await prisma.brand.findMany({
-    orderBy: { name: "asc" },
+    orderBy: [{ isFeatured: "desc" }, { displayOrder: "asc" }, { name: "asc" }],
     include: {
       _count: {
         select: {
@@ -42,6 +42,7 @@ export default async function BrandsAdminPage() {
 
   // Calculate metrics
   const totalBrands = brands.length;
+  const featuredBrands = brands.filter((brand) => brand.isFeatured).length;
   const totalProducts = brands.reduce(
     (sum, brand) => sum + brand._count.products,
     0
@@ -76,11 +77,16 @@ export default async function BrandsAdminPage() {
         </div>
 
         {/* Metrics Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <MetricCard
             title="Total Brands"
             value={totalBrands}
             subtitle="All brands in system"
+          />
+          <MetricCard
+            title="Featured Brands"
+            value={featuredBrands}
+            subtitle="Highlighted brands"
           />
           <MetricCard
             title="Active Brands"
@@ -112,6 +118,11 @@ export default async function BrandsAdminPage() {
               initial={brands.map((b) => ({
                 id: b.id,
                 name: b.name,
+                logoUrl: b.logoUrl,
+                backgroundImage: b.backgroundImage,
+                description: b.description,
+                isFeatured: b.isFeatured,
+                displayOrder: b.displayOrder,
                 productCount: b._count.products,
               }))}
             />

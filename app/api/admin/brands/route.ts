@@ -48,13 +48,36 @@ export const PUT = withRequest(async function PUT(req: NextRequest) {
   const schema = z.object({
     id: z.string().length(25),
     name: z.string().min(2).max(80),
+    logoUrl: z.string().url().optional().nullable(),
+    backgroundImage: z.string().url().optional().nullable(),
+    description: z.string().max(500).optional().nullable(),
+    isFeatured: z.boolean().optional(),
+    displayOrder: z.number().int().min(0).optional(),
   });
   const parsed = schema.safeParse(body);
   if (!parsed.success)
     return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
-  const { id, name } = parsed.data;
+
+  const {
+    id,
+    name,
+    logoUrl,
+    backgroundImage,
+    description,
+    isFeatured,
+    displayOrder,
+  } = parsed.data;
+
+  const updateData: any = { name };
+  if (logoUrl !== undefined) updateData.logoUrl = logoUrl;
+  if (backgroundImage !== undefined)
+    updateData.backgroundImage = backgroundImage;
+  if (description !== undefined) updateData.description = description;
+  if (isFeatured !== undefined) updateData.isFeatured = isFeatured;
+  if (displayOrder !== undefined) updateData.displayOrder = displayOrder;
+
   const updated = await prisma.brand
-    .update({ where: { id }, data: { name } })
+    .update({ where: { id }, data: updateData })
     .catch(() => null);
   if (!updated)
     return NextResponse.json({ error: "not_found" }, { status: 404 });

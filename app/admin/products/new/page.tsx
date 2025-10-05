@@ -233,11 +233,11 @@ export default function NewProductPage() {
               </div>
               <div className="space-y-2 max-w-xs">
                 <label className="block text-sm font-medium text-gray-700">
-                  Price (USD) *
+                  Price (GBP) *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 sm:text-sm">$</span>
+                    <span className="text-gray-500 sm:text-sm">£</span>
                   </div>
                   <input
                     value={price}
@@ -250,6 +250,10 @@ export default function NewProductPage() {
                     placeholder="0.00"
                   />
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter price in British Pounds. Will be displayed with proper
+                  currency formatting.
+                </p>
               </div>
             </div>
 

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/server/prisma";
 import FiltersClient from "./FiltersClient";
 import { Suspense } from "react";
 import { ClientPrice } from "@/components/ui/ClientPrice";
+import { formatPriceCents } from "@/lib/money";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -100,13 +101,13 @@ export default async function AdminProductsPage({
         />
         <MetricCard
           title="Average Price"
-          value={`$${(averagePrice / 100).toFixed(2)}`}
+          value={formatPriceCents(averagePrice)}
           trend="Across all products"
           color="green"
         />
         <MetricCard
           title="Total Catalog Value"
-          value={`$${(totalValue / 100).toLocaleString()}`}
+          value={formatPriceCents(totalValue)}
           trend="Sum of all product prices"
           color="purple"
         />
