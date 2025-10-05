@@ -9,30 +9,31 @@ const HALF_LIFE_HOURS = 72;
 export async function TrendingNow() {
   let items: any[] = [];
   try {
-    // Raw SQL for scoring (SQLite flavor) - directly from database
+    // Raw SQL for scoring (PostgreSQL) - directly from database
     const rawItems: any[] = await prisma.$queryRawUnsafe(`
       SELECT
         p.id,
         p.name,
-        p.priceCents,
-        (SELECT url FROM ProductImage WHERE productId = p.id ORDER BY position ASC LIMIT 1) as image,
-        p.createdAt,
+        p."priceCents",
+        (SELECT url FROM "ProductImage" WHERE "productId" = p.id ORDER BY position ASC LIMIT 1) as image,
+        p."createdAt",
         COALESCE(m.views,0) as views,
-        COALESCE(m.detailViews,0) as detailViews,
+        COALESCE(m."detailViews",0) as "detailViews",
         COALESCE(m.wishlists,0) as wishlists,
-        COALESCE(m.addToCart,0) as addToCart,
+        COALESCE(m."addToCart",0) as "addToCart",
         COALESCE(m.purchases,0) as purchases,
         (
           (0.5 * COALESCE(m.views,0)) +
-          (1.0 * COALESCE(m.detailViews,0)) +
+          (1.0 * COALESCE(m."detailViews",0)) +
           (1.3 * COALESCE(m.wishlists,0)) +
-          (2.2 * COALESCE(m.addToCart,0)) +
+          (2.2 * COALESCE(m."addToCart",0)) +
           (4.0 * COALESCE(m.purchases,0))
         ) *
-        (1.0 / (1.0 + ((strftime('%s','now') - strftime('%s', p.createdAt)) / (3600.0 * ${HALF_LIFE_HOURS}))))
+        (1.0 / (1.0 + ((EXTRACT(EPOCH FROM NOW()) - EXTRACT(EPOCH FROM p."createdAt")) / (3600.0 * ${HALF_LIFE_HOURS}))))
         AS score
-      FROM Product p
-      LEFT JOIN ProductMetrics m ON m.productId = p.id
+      FROM "Product" p
+      LEFT JOIN "ProductMetrics" m ON m."productId" = p.id
+      WHERE p."isActive" = true AND p."deletedAt" IS NULL
       ORDER BY score DESC
       LIMIT 12;
     `);
