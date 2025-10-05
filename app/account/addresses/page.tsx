@@ -27,6 +27,12 @@ export default function AddressesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [makeDefault, setMakeDefault] = useState(false);
+  const [notification, setNotification] = useState<{
+    type: "success" | "error";
+    message: string;
+    id: number;
+  } | null>(null);
   const [newAddress, setNewAddress] = useState({
     fullName: "",
     line1: "",
@@ -53,12 +59,23 @@ export default function AddressesPage() {
         setAddresses(data);
       } else {
         console.error("Failed to fetch addresses");
+        showNotification("error", "Failed to load addresses");
       }
     } catch (error) {
       console.error("Error fetching addresses:", error);
+      showNotification("error", "Unexpected error loading addresses");
     } finally {
       setLoading(false);
     }
+  };
+
+  const showNotification = (type: "success" | "error", message: string) => {
+    const id = Date.now();
+    setNotification({ type, message, id });
+    // Auto dismiss after 4s
+    setTimeout(() => {
+      setNotification((current) => (current?.id === id ? null : current));
+    }, 4000);
   };
 
   const handleAddAddress = async () => {
@@ -73,16 +90,26 @@ export default function AddressesPage() {
       });
 
       if (response.ok) {
-        await fetchAddresses(); // Refresh the list
+        const created = await response.json();
+        // If user requested to make it default and it's not already default (first address case)
+        if (makeDefault && !created.isDefault) {
+          await fetch("/api/addresses/set-default", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ addressId: created.id }),
+          });
+        }
+        await fetchAddresses();
         resetForm();
         setShowAddModal(false);
+        showNotification("success", "Address added successfully");
       } else {
         const error = await response.json();
-        alert(error.error || "Failed to add address");
+        showNotification("error", error.error || "Failed to add address");
       }
     } catch (error) {
       console.error("Error adding address:", error);
-      alert("Failed to add address");
+      showNotification("error", "Failed to add address");
     } finally {
       setSubmitting(false);
     }
@@ -117,17 +144,26 @@ export default function AddressesPage() {
       });
 
       if (response.ok) {
-        await fetchAddresses(); // Refresh the list
+        const updated = await response.json();
+        if (makeDefault && !updated.isDefault) {
+          await fetch("/api/addresses/set-default", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ addressId: updated.id }),
+          });
+        }
+        await fetchAddresses();
         setEditingAddress(null);
         resetForm();
         setShowAddModal(false);
+        showNotification("success", "Address updated successfully");
       } else {
         const error = await response.json();
-        alert(error.error || "Failed to update address");
+        showNotification("error", error.error || "Failed to update address");
       }
     } catch (error) {
       console.error("Error updating address:", error);
-      alert("Failed to update address");
+      showNotification("error", "Failed to update address");
     } finally {
       setSubmitting(false);
     }
@@ -155,13 +191,14 @@ export default function AddressesPage() {
 
       if (response.ok) {
         await fetchAddresses(); // Refresh the list
+        showNotification("success", "Address deleted");
       } else {
         const error = await response.json();
-        alert(error.error || "Failed to delete address");
+        showNotification("error", error.error || "Failed to delete address");
       }
     } catch (error) {
       console.error("Error deleting address:", error);
-      alert("Failed to delete address");
+      showNotification("error", "Failed to delete address");
     }
   };
 
@@ -198,13 +235,17 @@ export default function AddressesPage() {
 
       if (response.ok) {
         await fetchAddresses(); // Refresh the list to show updated default status
+        showNotification("success", "Default address updated");
       } else {
         const error = await response.json();
-        alert(error.error || "Failed to set default address");
+        showNotification(
+          "error",
+          error.error || "Failed to set default address"
+        );
       }
     } catch (error) {
       console.error("Error setting default address:", error);
-      alert("Failed to set default address");
+      showNotification("error", "Failed to set default address");
     }
   };
 
@@ -231,6 +272,29 @@ export default function AddressesPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
       <h1 className="text-3xl font-semibold tracking-tight mb-8">Addresses</h1>
+      {notification && (
+        <div
+          className={
+            "mb-4 rounded-md border px-4 py-3 text-sm flex items-start gap-3 " +
+            (notification.type === "success"
+              ? "border-green-300 bg-green-50 text-green-800 dark:bg-green-900/30 dark:border-green-700 dark:text-green-200"
+              : "border-red-300 bg-red-50 text-red-800 dark:bg-red-900/30 dark:border-red-700 dark:text-red-200")
+          }
+          role="status"
+        >
+          <span className="font-medium">
+            {notification.type === "success" ? "Success" : "Error"}:
+          </span>
+          <span className="flex-1">{notification.message}</span>
+          <button
+            onClick={() => setNotification(null)}
+            className="ml-2 text-xs opacity-70 hover:opacity-100"
+            aria-label="Dismiss notification"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       <div className="md:grid md:grid-cols-[230px_1fr] md:gap-10 lg:gap-16">
         {/* Left Navigation */}
@@ -362,6 +426,7 @@ export default function AddressesPage() {
                   setShowAddModal(false);
                   setEditingAddress(null);
                   resetForm();
+                  setMakeDefault(false);
                 }}
                 className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
               >
@@ -486,6 +551,25 @@ export default function AddressesPage() {
                   placeholder="Enter phone number"
                 />
               </div>
+              {/* Make Default Checkbox (shown only when relevant) */}
+              {(!editingAddress && addresses.length > 0) ||
+              (editingAddress && !editingAddress.isDefault) ? (
+                <div className="flex items-center gap-2 pt-2">
+                  <input
+                    id="makeDefault"
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-neutral-300 dark:border-neutral-600 text-blue-600 focus:ring-blue-500"
+                    checked={makeDefault}
+                    onChange={(e) => setMakeDefault(e.target.checked)}
+                  />
+                  <label
+                    htmlFor="makeDefault"
+                    className="text-sm text-neutral-700 dark:text-neutral-300"
+                  >
+                    Make this my default shipping address
+                  </label>
+                </div>
+              ) : null}
             </div>
 
             <div className="flex gap-3 mt-6">
@@ -494,6 +578,7 @@ export default function AddressesPage() {
                   setShowAddModal(false);
                   setEditingAddress(null);
                   resetForm();
+                  setMakeDefault(false);
                 }}
                 className="flex-1 bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-white py-2 px-4 rounded-md hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors"
                 disabled={submitting}

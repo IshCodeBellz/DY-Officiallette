@@ -52,7 +52,7 @@ async function updateDefaultAddresses() {
     console.log("\nUpdated addresses:");
     allAddresses.forEach((addr) => {
       console.log(
-        `${addr.user.email}: ${addr.city} (${
+        `${addr.user?.email || "Unknown"}: ${addr.city} (${
           addr.isDefault ? "DEFAULT" : "secondary"
         })`
       );
