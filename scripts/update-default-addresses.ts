@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -8,32 +8,34 @@ async function updateDefaultAddresses() {
     const usersWithAddresses = await prisma.user.findMany({
       include: {
         addresses: {
-          orderBy: { createdAt: 'asc' }
-        }
+          orderBy: { createdAt: "asc" },
+        },
       },
       where: {
         addresses: {
-          some: {}
-        }
-      }
+          some: {},
+        },
+      },
     });
 
     console.log(`Found ${usersWithAddresses.length} users with addresses`);
 
     for (const user of usersWithAddresses) {
       // Check if any address is already marked as default
-      const hasDefault = user.addresses.some(addr => addr.isDefault);
-      
+      const hasDefault = user.addresses.some((addr) => addr.isDefault);
+
       if (!hasDefault && user.addresses.length > 0) {
         // Set the first (oldest) address as default
         const firstAddress = user.addresses[0];
-        
+
         await prisma.address.update({
           where: { id: firstAddress.id },
-          data: { isDefault: true }
+          data: { isDefault: true },
         });
-        
-        console.log(`Set default address for user ${user.email}: ${firstAddress.city}`);
+
+        console.log(
+          `Set default address for user ${user.email}: ${firstAddress.city}`
+        );
       }
     }
 
@@ -41,24 +43,24 @@ async function updateDefaultAddresses() {
     const allAddresses = await prisma.address.findMany({
       include: {
         user: {
-          select: { email: true }
-        }
+          select: { email: true },
+        },
       },
-      orderBy: [
-        { isDefault: 'desc' },
-        { createdAt: 'asc' }
-      ]
+      orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
     });
 
-    console.log('\nUpdated addresses:');
-    allAddresses.forEach(addr => {
-      console.log(`${addr.user.email}: ${addr.city} (${addr.isDefault ? 'DEFAULT' : 'secondary'})`);
+    console.log("\nUpdated addresses:");
+    allAddresses.forEach((addr) => {
+      console.log(
+        `${addr.user.email}: ${addr.city} (${
+          addr.isDefault ? "DEFAULT" : "secondary"
+        })`
+      );
     });
 
-    console.log('\nDefault address update completed!');
-    
+    console.log("\nDefault address update completed!");
   } catch (error) {
-    console.error('Error updating default addresses:', error);
+    console.error("Error updating default addresses:", error);
   } finally {
     await prisma.$disconnect();
   }

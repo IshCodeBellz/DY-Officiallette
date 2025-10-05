@@ -67,9 +67,9 @@ interface SecuritySettingsProps {
   onMfaStatusChange?: (enabled: boolean) => void;
 }
 
-export function SecuritySettings({ 
-  initialMfaStatus, 
-  onMfaStatusChange 
+export function SecuritySettings({
+  initialMfaStatus,
+  onMfaStatusChange,
 }: SecuritySettingsProps = {}) {
   const [activeTab, setActiveTab] = useState<
     "overview" | "mfa" | "devices" | "sessions" | "activity"
@@ -88,7 +88,7 @@ export function SecuritySettings({
       // Use initial MFA status if provided
       setMfaStatus({
         enabled: initialMfaStatus.enabled,
-        status: initialMfaStatus.enabled ? 'active' : 'disabled',
+        status: initialMfaStatus.enabled ? "active" : "disabled",
         failedAttempts: 0,
         backupCodesRemaining: initialMfaStatus.hasBackupCodes ? 8 : 0,
         suspended: false,

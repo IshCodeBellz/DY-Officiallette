@@ -54,16 +54,21 @@ async function getSecurityData(userId: string): Promise<SecurityData> {
   };
 
   try {
-    const mfaResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/mfa/setup`, {
-      headers: {
-        'Cookie': '', // Server-side fetch won't have session cookies automatically
-      },
-    });
-    
+    const mfaResponse = await fetch(
+      `${
+        process.env.NEXTAUTH_URL || "http://localhost:3000"
+      }/api/auth/mfa/setup`,
+      {
+        headers: {
+          Cookie: "", // Server-side fetch won't have session cookies automatically
+        },
+      }
+    );
+
     // For server-side, we'll use the MFAService directly
     const { MFAService } = await import("@/lib/server/mfa");
     const mfaData = await MFAService.getMFAStatus(userId);
-    
+
     mfaStatus = {
       enabled: mfaData.enabled || false,
       hasBackupCodes: (mfaData.backupCodesRemaining || 0) > 0,

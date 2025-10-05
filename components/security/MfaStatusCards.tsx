@@ -8,10 +8,10 @@ interface MfaStatusCardsProps {
   userLastLogin: Date | null;
 }
 
-export function MfaStatusCards({ 
-  initialMfaEnabled, 
-  userEmailVerified, 
-  userLastLogin 
+export function MfaStatusCards({
+  initialMfaEnabled,
+  userEmailVerified,
+  userLastLogin,
 }: MfaStatusCardsProps) {
   const [mfaEnabled, setMfaEnabled] = useState(initialMfaEnabled);
 
@@ -131,6 +131,6 @@ export function useMfaStatusUpdate() {
     updateMfaStatus: (enabled: boolean) => {
       // This would be handled by the parent component's state
       // We'll pass this as a callback to the SecuritySettings component
-    }
+    },
   };
 }
