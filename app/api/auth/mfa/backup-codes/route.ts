@@ -5,6 +5,8 @@ import { MFAService } from "@/lib/server/mfa";
 import { captureError } from "@/lib/server/errors";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+
 const regenerateSchema = z.object({
   confirmationToken: z.string().min(6), // Require MFA token to regenerate
 });

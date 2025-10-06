@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+
 const createReviewSchema = z.object({
   rating: z.number().min(1).max(5),
   title: z.string().min(1).max(100),

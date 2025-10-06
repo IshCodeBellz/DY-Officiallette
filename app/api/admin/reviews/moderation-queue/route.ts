@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/server/authOptions";
 import { ReviewService } from "@/lib/server/reviewService";
 import { prisma } from "@/lib/server/prisma";
 
+export const dynamic = 'force-dynamic';
+
 async function ensureAdmin() {
   const session = await getServerSession(authOptions);
   const uid = (session?.user as any)?.id as string | undefined;

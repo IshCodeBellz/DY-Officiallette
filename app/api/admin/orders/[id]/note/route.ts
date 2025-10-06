@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
 
+export const dynamic = 'force-dynamic';
+
 // POST /api/admin/orders/:id/note { message }
 export const POST = withRequest(async function POST(
   req: NextRequest,

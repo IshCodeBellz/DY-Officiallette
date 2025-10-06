@@ -5,6 +5,8 @@ import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+
 const categorySchema = z.object({
   name: z.string().min(2).max(80),
   slug: z

@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/orders - list current user's orders (most recent first)
 export const GET = withRequest(async function GET() {
   const session = await getServerSession(authOptions);

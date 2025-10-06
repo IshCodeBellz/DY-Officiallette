@@ -10,6 +10,8 @@ import {
   isOrderStatus,
 } from "@/lib/status";
 
+export const dynamic = 'force-dynamic';
+
 export const POST = withRequest(async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }

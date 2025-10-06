@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/orders/:id/events - timeline events for user's order
 export const GET = withRequest(async function GET(
   _req: NextRequest,

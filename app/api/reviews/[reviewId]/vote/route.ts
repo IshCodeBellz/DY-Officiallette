@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { ReviewService } from "@/lib/server/reviewService";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/reviews/[reviewId]/vote
  * Vote on a review as helpful

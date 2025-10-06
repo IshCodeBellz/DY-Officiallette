@@ -5,6 +5,8 @@ import { prisma } from "@/lib/server/prisma";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+
 const productUpdateSchema = z.object({
   sku: z.string().min(3),
   name: z.string().min(1),

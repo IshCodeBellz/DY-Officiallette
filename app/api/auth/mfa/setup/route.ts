@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/server/authOptions";
 import { MFAService } from "@/lib/server/mfa";
 import { captureError } from "@/lib/server/errors";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Setup MFA for the authenticated user
  * POST /api/auth/mfa/setup

@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/server/authOptions";
 import { ReviewService } from "@/lib/server/reviewService";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+
 const reportSchema = z.object({
   reason: z.enum([
     "spam",
