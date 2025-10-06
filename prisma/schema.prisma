@@ -21,12 +21,21 @@ model Brand {
 }
 
 model Category {
-  id        String    @id @default(cuid())
-  slug      String    @unique
-  name      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  products  Product[]
+  id           String     @id @default(cuid())
+  slug         String     @unique
+  name         String
+  description  String?
+  imageUrl     String?
+  parentId     String?
+  displayOrder Int        @default(0)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  products     Product[]
+  parent       Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children     Category[] @relation("CategoryHierarchy")
+
+  @@index([parentId])
 }
 
 model Product {
@@ -39,6 +48,7 @@ model Product {
   comparePriceCents Int?
   brandId           String?
   categoryId        String?
+  gender            String?           // 'women' | 'men' | 'unisex' (future extensibility)
   isActive          Boolean           @default(true)
   isFeatured        Boolean           @default(false)
   weight            Float?
@@ -71,6 +81,7 @@ model Product {
   @@index([deletedAt])
   @@index([isActive])
   @@index([isFeatured])
+  @@index([gender])
 }
 
 model ProductImage {

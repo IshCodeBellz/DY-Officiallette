@@ -13,6 +13,11 @@ const categorySchema = z.object({
     .regex(/^[a-z0-9-]+$/)
     .min(2)
     .max(80),
+  description: z.string().optional(),
+  imageUrl: z.string().url().optional().or(z.literal("")),
+  parentId: z.string().optional().nullable(),
+  displayOrder: z.number().int().min(0).optional(),
+  isActive: z.boolean().optional(),
 });
 
 async function ensureAdmin() {
@@ -29,6 +34,11 @@ export const GET = withRequest(async function GET() {
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const categories = await prisma.category.findMany({
     orderBy: { name: "asc" },
+    include: {
+      _count: {
+        select: { products: true },
+      },
+    },
   });
   return NextResponse.json({ categories });
 });
@@ -38,15 +48,61 @@ export const POST = withRequest(async function POST(req: NextRequest) {
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const body = await req.json().catch(() => null);
   const parsed = categorySchema.safeParse(body);
-  if (!parsed.success)
-    return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
-  const { slug, name } = parsed.data;
+  if (!parsed.success) {
+    console.error("Category validation failed:", parsed.error.issues);
+    return NextResponse.json(
+      {
+        error: "invalid_payload",
+        details: parsed.error.issues,
+      },
+      { status: 400 }
+    );
+  }
+  const {
+    slug,
+    name,
+    description,
+    imageUrl,
+    parentId,
+    displayOrder,
+    isActive,
+  } = parsed.data;
   const exists = await prisma.category.findFirst({
     where: { OR: [{ slug }, { name }] },
   });
   if (exists) return NextResponse.json({ error: "exists" }, { status: 409 });
-  const created = await prisma.category.create({ data: { slug, name } });
-  return NextResponse.json({ category: created }, { status: 201 });
+
+  // If parentId is provided, verify it exists
+  if (parentId) {
+    const parent = await prisma.category.findUnique({
+      where: { id: parentId },
+    });
+    if (!parent)
+      return NextResponse.json({ error: "parent_not_found" }, { status: 400 });
+  }
+
+  const created = await prisma.category.create({
+    data: {
+      slug,
+      name,
+      description: description || null,
+      imageUrl: imageUrl || null,
+      parentId: parentId || null,
+      displayOrder: displayOrder || 0,
+      isActive: isActive !== undefined ? isActive : true,
+    },
+    include: {
+      parent: true,
+      children: true,
+      _count: {
+        select: { products: true },
+      },
+    },
+  });
+  return NextResponse.json(
+    { category: { ...created, productCount: created._count.products } },
+    { status: 201 }
+  );
 });
 
 export const PUT = withRequest(async function PUT(req: NextRequest) {
@@ -56,13 +112,44 @@ export const PUT = withRequest(async function PUT(req: NextRequest) {
   const schema = z.object({
     id: z.string().length(25),
     name: z.string().min(2).max(80),
+    description: z.string().optional(),
+    imageUrl: z.string().url().optional().or(z.literal("")),
+    parentId: z.string().optional().nullable(),
+    displayOrder: z.number().int().min(0).optional(),
+    isActive: z.boolean().optional(),
   });
   const parsed = schema.safeParse(body);
   if (!parsed.success)
     return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
-  const { id, name } = parsed.data;
+  const { id, name, description, imageUrl, parentId, displayOrder, isActive } =
+    parsed.data;
+
+  // If parentId is provided, verify it exists and prevent circular references
+  if (parentId) {
+    const parent = await prisma.category.findUnique({
+      where: { id: parentId },
+    });
+    if (!parent)
+      return NextResponse.json({ error: "parent_not_found" }, { status: 400 });
+    if (parentId === id)
+      return NextResponse.json(
+        { error: "circular_reference" },
+        { status: 400 }
+      );
+  }
+
+  const updateData: any = { name };
+  if (description !== undefined) updateData.description = description || null;
+  if (imageUrl !== undefined) updateData.imageUrl = imageUrl || null;
+  if (parentId !== undefined) updateData.parentId = parentId || null;
+  if (displayOrder !== undefined) updateData.displayOrder = displayOrder;
+  if (isActive !== undefined) updateData.isActive = isActive;
+
   const updated = await prisma.category
-    .update({ where: { id }, data: { name } })
+    .update({
+      where: { id },
+      data: updateData,
+    })
     .catch(() => null);
   if (!updated)
     return NextResponse.json({ error: "not_found" }, { status: 404 });

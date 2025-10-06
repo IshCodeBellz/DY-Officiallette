@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { BASE_CURRENCY } from "@/lib/currency";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -233,7 +234,7 @@ export default function NewProductPage() {
               </div>
               <div className="space-y-2 max-w-xs">
                 <label className="block text-sm font-medium text-gray-700">
-                  Price (GBP) *
+                  Price ({BASE_CURRENCY}) *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -251,8 +252,8 @@ export default function NewProductPage() {
                   />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Enter price in British Pounds. Will be displayed with proper
-                  currency formatting.
+                  Enter price in {BASE_CURRENCY}. Stored as integer minor units
+                  (cents).
                 </p>
               </div>
             </div>

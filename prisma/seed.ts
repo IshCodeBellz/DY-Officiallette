@@ -184,6 +184,12 @@ async function main() {
       // Could enhance with update diff if needed
       continue;
     }
+    const gender =
+      c.categorySlug === "women"
+        ? "women"
+        : c.categorySlug === "men"
+        ? "men"
+        : "unisex";
     await prisma.product.create({
       data: {
         sku: c.sku,
@@ -192,6 +198,7 @@ async function main() {
         priceCents: Math.round(c.price * 100),
         brandId: brand.id,
         categoryId: category.id,
+        gender,
         images: {
           create: c.images.map((seed, idx) => ({
             url: `https://picsum.photos/seed/${seed}/900/1200`,
@@ -254,6 +261,12 @@ async function main() {
           : categorySlug === "accessories"
           ? ["ONE"]
           : letterSizes.slice(0, 3 + (i % 3));
+      const gender =
+        categorySlug === "women"
+          ? "women"
+          : categorySlug === "men"
+          ? "men"
+          : "unisex";
       await prisma.product.create({
         data: {
           sku,
@@ -262,6 +275,7 @@ async function main() {
           priceCents: priceBase * 100,
           brandId: brand.id,
           categoryId: category.id,
+          gender,
           images: {
             create: [
               {
@@ -303,6 +317,12 @@ async function main() {
     for (let i = 0; i < targetExtra; i++) {
       const brand = brands[i % brands.length];
       const category = categories[i % categories.length];
+      const gender =
+        category.slug === "women"
+          ? "women"
+          : category.slug === "men"
+          ? "men"
+          : "unisex";
       await prisma.product.create({
         data: {
           sku: `BULK-${current + i + 1}`,
@@ -311,6 +331,7 @@ async function main() {
           priceCents: 1500 + (i % 80) * 100,
           brandId: brand.id,
           categoryId: category.id,
+          gender,
           images: {
             create: [
               {

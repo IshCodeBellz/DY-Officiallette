@@ -11,6 +11,8 @@ import { ClientPrice } from "@/components/ui/ClientPrice";
 const validCategories = [
   "womens-clothing",
   "mens-clothing",
+  "womens",
+  "mens",
   "denim",
   "footwear",
   "accessories",
@@ -58,6 +60,22 @@ export default function CategoryPage({
   const category = params.category.toLowerCase();
   if (!validCategories.includes(category)) return notFound();
 
+  // Detect gender prefix from full pathname (for /women/<sub> or /men/<sub> wrappers) or direct routes
+  const [genderFilter, setGenderFilter] = useState<string | undefined>(
+    undefined
+  );
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const path = window.location.pathname;
+      if (path.startsWith("/women/")) setGenderFilter("women");
+      else if (path.startsWith("/men/")) setGenderFilter("men");
+      else if (path === "/womens" || category === "womens")
+        setGenderFilter("women");
+      else if (path === "/mens" || category === "mens") setGenderFilter("men");
+      else setGenderFilter(undefined);
+    }
+  }, [params.category, category]);
+
   // Debounce the search query to avoid excessive API calls
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -76,6 +94,7 @@ export default function CategoryPage({
         params.set("category", category);
         params.set("limit", "1000"); // Get more products to calculate accurate range
 
+        if (genderFilter) params.set("gender", genderFilter);
         const res = await fetch(`/api/products?${params.toString()}`, {
           signal: controller.signal,
         });
@@ -153,6 +172,7 @@ export default function CategoryPage({
       if (price[0] !== priceRange[0]) params.set("min", String(price[0]));
       if (price[1] !== priceRange[1]) params.set("max", String(price[1]));
       try {
+        if (genderFilter) params.set("gender", genderFilter);
         const res = await fetch(`/api/products?${params.toString()}`, {
           signal: controller.signal,
         });

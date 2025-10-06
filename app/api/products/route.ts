@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
   const category = searchParams.get("category") || undefined;
   const brand = searchParams.get("brand") || undefined;
   const size = searchParams.get("size") || undefined;
+  const gender = searchParams.get("gender") || undefined; // women | men | unisex
   const min = parseFloat(searchParams.get("min") || "0");
   const max = parseFloat(searchParams.get("max") || "1000000");
   const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
@@ -37,6 +38,10 @@ export async function GET(req: NextRequest) {
   }
   if (size) {
     where.sizeVariants = { some: { label: size } };
+  }
+  if (gender) {
+    // Match requested gender OR unisex (fallback)
+    where.gender = { in: [gender, "unisex"] };
   }
 
   // If ids param provided -> fetch a specific set, preserve ordering

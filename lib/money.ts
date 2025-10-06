@@ -1,4 +1,4 @@
-import { currencyService } from "./currency";
+import { currencyService, BASE_CURRENCY } from "./currency";
 
 export function formatPriceCents(
   cents: number,
@@ -13,24 +13,20 @@ export function formatPriceCents(
   }).format(cents / 100);
 }
 
-/**
- * Convert USD cents to target currency using currency service
- */
+// Convert stored GBP cents to target currency cents.
 export function convertPriceCents(
-  usdCents: number,
+  gbpCents: number,
   targetCurrency: string
 ): number {
-  return currencyService.convertPrice(usdCents, targetCurrency);
+  return currencyService.convertPrice(gbpCents, targetCurrency);
 }
 
-/**
- * Format price with automatic currency conversion
- */
+// Format a stored GBP price into a different currency (or same) with locale.
 export function formatPriceWithCurrency(
-  usdCents: number,
+  gbpCents: number,
   targetCurrency: string,
   locale?: string
 ): string {
-  const convertedCents = convertPriceCents(usdCents, targetCurrency);
+  const convertedCents = convertPriceCents(gbpCents, targetCurrency);
   return formatPriceCents(convertedCents, { currency: targetCurrency, locale });
 }

@@ -65,7 +65,10 @@ export async function TrendingNow() {
         fallback: true,
       }));
     } else {
-      items = rawItems;
+      items = rawItems.map((item) => ({
+        ...item,
+        image: item.image || "/placeholder.svg",
+      }));
     }
   } catch (error) {
     console.log("TrendingNow database error:", error);

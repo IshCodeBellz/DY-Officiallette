@@ -4,9 +4,9 @@ import { useCurrency } from "@/components/providers/CurrencyProvider";
 import { Loader2 } from "lucide-react";
 
 interface PriceProps {
-  /** Price in USD cents */
+  /** Price in base currency cents (GBP) */
   cents: number;
-  /** Compare price in USD cents (for showing discounts) */
+  /** Compare price in base currency cents (GBP) */
   compareCents?: number;
   /** Additional CSS classes */
   className?: string;

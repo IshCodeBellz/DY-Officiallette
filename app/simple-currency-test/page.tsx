@@ -10,10 +10,10 @@ export default function SimpleCurrencyTest() {
 
   const runTest = () => {
     const results: string[] = [];
-    const amount = 1000; // $10 USD
+    const amount = 1000; // £10 GBP (base)
 
     results.push(`Current currency: ${currentCurrency}`);
-    results.push(`Converting ${amount} USD cents...`);
+    results.push(`Converting ${amount} GBP base cents...`);
 
     const converted = convertPrice(amount);
     results.push(`Converted: ${converted} cents`);
@@ -24,7 +24,7 @@ export default function SimpleCurrencyTest() {
     // Test specific currencies
     const eurConverted = convertPrice(amount);
     results.push(
-      `Manual EUR test: ${amount} USD cents * 0.92 = ${amount * 0.92} cents`
+      `Formula (GBP→USD→EUR). usd = amount / GBP.rate; eur = usd * EUR.rate.`
     );
     results.push(`Our EUR conversion: ${eurConverted} cents`);
 

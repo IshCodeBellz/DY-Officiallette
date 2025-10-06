@@ -7,8 +7,11 @@ export interface Currency {
   code: string;
   symbol: string;
   name: string;
-  rate: number; // Exchange rate from USD
+  rate: number; // Exchange rate relative to 1 USD (USD -> target). Base storage currency for the app is GBP.
 }
+
+// Canonical base currency for persisted priceCents values in the database.
+export const BASE_CURRENCY = "GBP";
 
 export const SUPPORTED_CURRENCIES: Record<string, Currency> = {
   USD: { code: "USD", symbol: "$", name: "US Dollar", rate: 1 },
@@ -303,18 +306,31 @@ export class CurrencyService {
   }
 
   /**
-   * Convert price from USD cents to target currency
+   * Convert price from the base currency (GBP cents) to the target currency.
+   *
+   * NOTE: The static exchange rates are defined relative to USD (1 USD = rate targetCurrency),
+   * but our persisted amounts are GBP. To convert we:
+   *   1. Convert GBP -> USD: usdAmount = gbpAmount / GBP.rate  (because 1 USD = GBP.rate GBP)
+   *   2. Convert USD -> target: targetAmount = usdAmount * target.rate
+   * If target is GBP we just return the original amount.
    */
-  convertPrice(usdCents: number, targetCurrency: string): number {
-    const currency = SUPPORTED_CURRENCIES[targetCurrency];
-    if (!currency) {
-      console.warn(`Unsupported currency: ${targetCurrency}`);
-      return usdCents;
-    }
+  convertPrice(gbpCents: number, targetCurrency: string): number {
+    if (targetCurrency === BASE_CURRENCY) return gbpCents;
 
-    const usdAmount = usdCents / 100;
-    const convertedAmount = usdAmount * currency.rate;
-    return Math.round(convertedAmount * 100); // Convert back to cents
+    const target = SUPPORTED_CURRENCIES[targetCurrency];
+    const gbp = SUPPORTED_CURRENCIES[BASE_CURRENCY];
+    if (!target) {
+      console.warn(`Unsupported currency: ${targetCurrency}`);
+      return gbpCents;
+    }
+    if (!gbp) {
+      console.warn("GBP rate missing; falling back to identity conversion");
+      return gbpCents;
+    }
+    const gbpAmount = gbpCents / 100; // in pounds
+    const usdAmount = gbpAmount / gbp.rate; // GBP -> USD
+    const targetAmount = usdAmount * target.rate; // USD -> target
+    return Math.round(targetAmount * 100);
   }
 
   /**

@@ -14,6 +14,7 @@ const nextConfig = {
       { protocol: "https", hostname: "flannels.com" },
       { protocol: "https", hostname: "www.flannels.com" },
       { protocol: "https", hostname: "static.nike.com" },
+      { protocol: "https", hostname: "example.com" },
     ],
   },
 };

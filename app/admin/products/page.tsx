@@ -166,7 +166,8 @@ export default async function AdminProductsPage({
                     {p.category?.name || "-"}
                   </td>
                   <td className="py-2 px-4 text-sm text-gray-900">
-                    <ClientPrice cents={p.priceCents} size="sm" />
+                    {/* Admin: show canonical stored price (GBP base) without currency conversion */}
+                    {formatPriceCents(p.priceCents, { currency: "GBP" })}
                   </td>
                   <td className="py-3 px-4">
                     <span
