@@ -24,16 +24,16 @@ model Category {
   id           String     @id @default(cuid())
   slug         String     @unique
   name         String
-  description  String?
-  imageUrl     String?
-  parentId     String?
-  displayOrder Int        @default(0)
-  isActive     Boolean    @default(true)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-  products     Product[]
+  description  String?
+  displayOrder Int        @default(0)
+  imageUrl     String?
+  isActive     Boolean    @default(true)
+  parentId     String?
   parent       Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children     Category[] @relation("CategoryHierarchy")
+  products     Product[]
 
   @@index([parentId])
 }
@@ -48,7 +48,6 @@ model Product {
   comparePriceCents Int?
   brandId           String?
   categoryId        String?
-  gender            String?           // 'women' | 'men' | 'unisex' (future extensibility)
   isActive          Boolean           @default(true)
   isFeatured        Boolean           @default(false)
   weight            Float?
@@ -61,6 +60,7 @@ model Product {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   deletedAt         DateTime?
+  gender            String?
   cartLines         CartLine[]
   brand             Brand?            @relation(fields: [brandId], references: [id])
   category          Category?         @relation(fields: [categoryId], references: [id])
@@ -321,9 +321,9 @@ model Address {
   postalCode     String
   country        String
   phone          String?
-  isDefault      Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  isDefault      Boolean  @default(false)
   user           User?    @relation(fields: [userId], references: [id])
   billingOrders  Order[]  @relation("BillingAddress")
   shippingOrders Order[]  @relation("ShippingAddress")
