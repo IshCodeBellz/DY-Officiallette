@@ -100,8 +100,8 @@ async function seedSubcategories() {
         displayOrder: 7,
       },
       {
-        name: "Accessories",
-        slug: "accessories",
+        name: "Fashion Accessories",
+        slug: "fashion-accessories",
         description: "Women's fashion accessories",
         displayOrder: 8,
       },

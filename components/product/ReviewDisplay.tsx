@@ -230,7 +230,8 @@ export function ReviewDisplay({
       <div className="space-y-6">
         {reviews.map((review) => {
           const isExpanded = expandedReviews[review.id];
-          const content = review.content || '';
+          const content =
+            typeof review.content === "string" ? review.content : "";
           const shouldTruncate = content.length > 300;
           const displayContent =
             shouldTruncate && !isExpanded
@@ -243,13 +244,15 @@ export function ReviewDisplay({
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                     <span className="text-sm font-medium text-gray-600">
-                      {review.userName ? review.userName.charAt(0).toUpperCase() : '?'}
+                      {review.userName
+                        ? review.userName.charAt(0).toUpperCase()
+                        : "?"}
                     </span>
                   </div>
                   <div>
                     <div className="flex items-center space-x-2">
                       <span className="font-medium text-gray-900">
-                        {review.userName || 'Anonymous'}
+                        {review.userName || "Anonymous"}
                       </span>
                       {review.isVerified && (
                         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">

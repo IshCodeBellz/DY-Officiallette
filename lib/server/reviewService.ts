@@ -654,38 +654,41 @@ export class ReviewService {
 
   // ✅ Implement moderation queue retrieval
   static async getModerationQueue(
-    limit: number = 50
+    limit: number = 50,
+    offset: number = 0
   ): Promise<ReviewModerationQueue[]> {
     try {
       // Get reviews that need moderation:
       // 1. Unpublished reviews (reported/flagged)
       // 2. Reviews with high report ratios
-      const reviews = await prisma.productReview.findMany({
-        where: {
-          OR: [
-            { isPublished: false },
-            {
-              AND: [
-                { totalVotes: { gt: 2 } },
-                {
-                  helpfulVotes: { lt: prisma.productReview.fields.totalVotes },
-                },
-              ],
-            },
-          ],
-        },
-        orderBy: [
-          { isPublished: "asc" }, // Unpublished first
-          { totalVotes: "desc" }, // Most reported first
-          { createdAt: "desc" }, // Newest first
-        ],
-        take: limit,
-        include: {
-          product: {
-            select: { name: true, sku: true },
-          },
-        },
-      });
+      // Get reviews that need moderation using raw SQL for field comparison
+      const reviews = await prisma.$queryRaw<
+        Array<{
+          id: string;
+          productId: string;
+          userId: string | null;
+          authorName: string;
+          authorEmail: string | null;
+          rating: number;
+          title: string | null;
+          content: string;
+          isVerified: boolean;
+          isPublished: boolean;
+          helpfulVotes: number;
+          totalVotes: number;
+          images: string | null;
+          adminResponse: string | null;
+          createdAt: Date;
+          updatedAt: Date;
+        }>
+      >`
+        SELECT * FROM "ProductReview" 
+        WHERE "isPublished" = false 
+           OR ("totalVotes" > 2 AND "helpfulVotes" < "totalVotes" / 2)
+        ORDER BY "isPublished" ASC, "totalVotes" DESC, "createdAt" DESC
+        LIMIT ${limit}
+        OFFSET ${offset}
+      `;
 
       return reviews.map((review) => {
         const reportCount = Math.max(
@@ -714,7 +717,7 @@ export class ReviewService {
           content: review.content,
           rating: review.rating,
           authorName: review.authorName,
-          productName: (review.product as any)?.name || "Unknown Product",
+          productName: "Unknown Product", // TODO: Join with Product table or separate query
           flagReason,
           reportCount,
           status,

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/server/prisma";
+import { formatPriceCents } from "@/lib/money";
 
 interface PageProps {
   params: {
@@ -158,11 +159,11 @@ export default async function MensSubcategoryPage({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <span className="font-semibold text-gray-900">
-                        ${(product.priceCents / 100).toFixed(2)}
+                        {formatPriceCents(product.priceCents)}
                       </span>
                       {product.comparePriceCents && (
                         <span className="text-sm text-gray-500 line-through">
-                          ${(product.comparePriceCents / 100).toFixed(2)}
+                          {formatPriceCents(product.comparePriceCents)}
                         </span>
                       )}
                     </div>
