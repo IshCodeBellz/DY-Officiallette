@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, fix/tests-stability/metrics-health]
   pull_request:
     branches: [main]
 
@@ -56,6 +56,12 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
+      - name: Create test environment file
+        run: |
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" > .env.local
+          echo "NEXTAUTH_SECRET=test-secret-for-ci" >> .env.local
+          echo "NEXTAUTH_URL=http://localhost:3000" >> .env.local
+
       - name: Wait for PostgreSQL
         run: |
           until pg_isready -h localhost -p 5432 -U postgres; do
@@ -64,13 +70,24 @@ jobs:
           done
 
       - name: Run Prisma Migrate (PostgreSQL)
-        run: npx prisma migrate deploy || npx prisma migrate dev --name init --skip-generate
+        run: |
+          echo "Attempting to apply migrations..."
+          npx prisma migrate deploy || {
+            echo "Deploy failed, trying to create database schema..."
+            npx prisma db push --skip-generate
+          }
 
       - name: Seed (optional)
         run: npm run prisma:seed || echo "Seed script optional – continuing"
 
+      - name: Debug Database Connection
+        run: |
+          echo "DATABASE_URL from env: $DATABASE_URL"
+          cat .env.local || echo "No .env.local file"
+          psql -h localhost -U postgres -d test_db -c "SELECT version();" || echo "Direct psql connection failed"
+
       - name: Run Tests
-        run: npm test --silent
+        run: npm test
 
       - name: Build
         run: npm run build
