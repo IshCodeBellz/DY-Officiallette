@@ -7,8 +7,13 @@ import { useRouter } from "next/navigation";
 interface ImageInput {
   id?: string;
   url: string;
-  alt?: string;
+  alt: string | null;
   position: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+  imageType?: string;
+  variantId?: string | null;
+  productId?: string;
 }
 interface SizeInput {
   id?: string;
@@ -31,8 +36,8 @@ interface Product {
   name: string;
   description: string;
   priceCents: number;
-  brandId?: string;
-  categoryId?: string;
+  brandId: string | null;
+  categoryId: string | null;
   images: ImageInput[];
   sizeVariants: SizeInput[];
   deletedAt?: Date | null;
@@ -108,7 +113,7 @@ export function EditProductClient({ product }: { product: Product }) {
   function addImage() {
     setImages((p: ImageInput[]) => [
       ...p,
-      { url: "", alt: "", position: p.length },
+      { url: "", alt: null, position: p.length },
     ]);
   }
   function removeImage(i: number) {
@@ -400,7 +405,7 @@ export function EditProductClient({ product }: { product: Product }) {
               <div className="flex gap-2 items-start">
                 <input
                   placeholder="Alt text"
-                  value={img.alt}
+                  value={img.alt || ""}
                   onChange={(e) => updateImage(i, { alt: e.target.value })}
                   className="border rounded px-3 py-2 text-sm flex-1"
                 />

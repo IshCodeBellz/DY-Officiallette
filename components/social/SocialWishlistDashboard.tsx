@@ -65,7 +65,7 @@ export default function SocialWishlistDashboard() {
       }
     } catch (error) {
       console.error("Error:", error);
-      console.error("Failed to load wishlists:", e);
+      console.error("Failed to load wishlists:", error);
     } finally {
       setLoading(false);
     }
@@ -232,7 +232,7 @@ function WishlistCard({
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error("Error:", error);
-      console.error("Failed to copy link:", e);
+      console.error("Failed to copy link:", error);
     }
   }
 

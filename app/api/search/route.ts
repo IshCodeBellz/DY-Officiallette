@@ -211,9 +211,9 @@ export const GET = withRequest(async function GET(req: NextRequest) {
           });
         }
       } catch (error) {
-      console.error("Error:", error);
+        console.error("Error:", error);
         // eslint-disable-next-line no-console
-        console.error("[search:raw-fallback-error]", (e as Error).message);
+        console.error("[search:raw-fallback-error]", (error as Error).message);
       }
     }
     // Fuzzy fallback (very small in-memory pass) if still zero
@@ -281,9 +281,9 @@ export const GET = withRequest(async function GET(req: NextRequest) {
           });
         }
       } catch (error) {
-      console.error("Error:", error);
+        console.error("Error:", error);
         // eslint-disable-next-line no-console
-        console.error("[search:fuzzy-fallback-error]", (e as Error).message);
+        console.error("[search:fuzzy-fallback-error]", (error as Error).message);
       }
     }
   }

@@ -59,7 +59,7 @@ export default function Phase3Dashboard() {
     } catch (error) {
       console.error("Error:", error);
       setError("Network error loading Phase 3 demo");
-      console.error("Phase 3 demo fetch error:", err);
+      console.error("Phase 3 demo fetch error:", error);
     } finally {
       setLoading(false);
     }

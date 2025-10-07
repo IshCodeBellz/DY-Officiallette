@@ -59,7 +59,7 @@ export default function LoginWithCaptchaExample() {
       window.location.href = "/dashboard";
     } catch (error) {
       console.error("Error:", error);
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(error instanceof Error ? error.message : "Login failed");
       resetCaptcha(); // Reset CAPTCHA on error
     } finally {
       setLoading(false);
