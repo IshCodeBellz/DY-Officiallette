@@ -17,9 +17,9 @@
     "diagnose:schema": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/diagnose-schema.ts",
     "postinstall": "prisma generate",
     "deploy:setup": "prisma migrate deploy && prisma generate",
-    "test": "DATABASE_URL=\"postgresql://ishaqbello@localhost:5432/test_db\" NODE_ENV=test jest",
-    "test:serial": "DATABASE_URL=\"postgresql://ishaqbello@localhost:5432/test_db\" NODE_ENV=test JEST_SERIAL=1 jest",
-    "test:coverage": "DATABASE_URL=\"postgresql://ishaqbello@localhost:5432/test_db\" NODE_ENV=test jest --coverage"
+    "test": "NODE_ENV=test jest",
+    "test:serial": "NODE_ENV=test JEST_SERIAL=1 jest",
+    "test:coverage": "NODE_ENV=test jest --coverage"
   },
   "dependencies": {
     "@prisma/client": "5.22.0",
