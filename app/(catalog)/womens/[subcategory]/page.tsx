@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/server/prisma";
+import { formatPriceCents } from "@/lib/money";
 
 interface PageProps {
   params: {
