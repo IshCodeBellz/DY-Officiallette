@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
 import { z } from "zod";
+import { ExtendedSession } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +24,10 @@ const categorySchema = z.object({
 });
 
 async function ensureAdmin() {
-  const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const session = (await getServerSession(
+    authOptions
+  )) as ExtendedSession | null;
+  const uid = session?.user?.id;
   if (!uid) return null;
   const user = await prisma.user.findUnique({ where: { id: uid } });
   if (!user?.isAdmin) return null;
@@ -140,7 +143,7 @@ export const PUT = withRequest(async function PUT(req: NextRequest) {
       );
   }
 
-  const updateData: any = { name };
+  const updateData: Record<string, unknown> = { name };
   if (description !== undefined) updateData.description = description || null;
   if (imageUrl !== undefined) updateData.imageUrl = imageUrl || null;
   if (parentId !== undefined) updateData.parentId = parentId || null;

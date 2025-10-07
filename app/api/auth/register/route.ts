@@ -46,28 +46,30 @@ export async function POST(req: NextRequest) {
       status: "pending_verification",
       message: "Registration received. Please verify via email link.",
     });
-  } catch (e: any) {
+  } catch (error: unknown) {
     // Centralized logging with a stable prefix so we can grep in logs
-    console.error("[REGISTER:error]", e);
+    console.error("[REGISTER:error]", error);
 
     // Map common Prisma / DB issues to clearer diagnostics (only exposed outside production)
     const isProd = process.env.NODE_ENV === "production";
-    let debug: Record<string, any> | undefined;
+    let debug: Record<string, unknown> | undefined;
 
     if (!isProd) {
       // Unique constraint (email already taken but race before findUnique returned)
-      if (e instanceof Prisma.PrismaClientKnownRequestError) {
-        if (e.code === "P2002") {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2002") {
           debug = {
             classification: "unique_constraint",
-            field: e.meta?.target,
+            field: error.meta?.target,
             suggestion:
               "Email already exists. Frontend should handle 409 gracefully.",
           };
         }
       }
       // Look for missing column / schema drift issues (commonly seen when prod DB missing migrations)
-      const msg = (e?.message || "").toLowerCase();
+      const msg = (
+        error instanceof Error ? error.message : String(error)
+      ).toLowerCase();
       if (!debug && /column .*name.* does not exist/.test(msg)) {
         debug = {
           classification: "schema_drift_missing_column",

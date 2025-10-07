@@ -22,6 +22,7 @@ export default async function ShoesPage() {
       },
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Database error in ShoesPage:", error);
     shoesCategory = null;
   }

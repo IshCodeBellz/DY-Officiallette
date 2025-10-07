@@ -25,6 +25,7 @@ export async function GET(
       data: wishlist,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Get shared wishlist API error:", error);
     return NextResponse.json(
       {

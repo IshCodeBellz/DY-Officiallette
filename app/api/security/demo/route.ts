@@ -229,6 +229,7 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Security demo error:", error);
 
     if (error instanceof z.ZodError) {
@@ -336,6 +337,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Security config error:", error);
 
     return NextResponse.json(

@@ -14,6 +14,7 @@ export const dynamic = "force-dynamic";
 import { decrementSizeStock } from "@/lib/server/inventory";
 import { debug } from "@/lib/server/debug";
 import { withRequest } from "@/lib/server/logger";
+import { ExtendedSession } from "@/lib/types";
 
 // Basic Phase 3 draft checkout endpoint:
 // 1. Reads authenticated user's cart
@@ -50,7 +51,7 @@ const payloadSchema = z.object({
 });
 
 export const POST = withRequest(async function POST(req: NextRequest) {
-  let session: any = null;
+  let session: ExtendedSession | null = null;
   let uid: string | undefined;
   const testUser =
     process.env.NODE_ENV === "test" ? req.headers.get("x-test-user") : null;
@@ -58,10 +59,11 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     uid = testUser;
     session = {
       user: { id: testUser, email: "test@example.com", isAdmin: true },
+      expires: "",
     };
   } else {
-    session = await getServerSession(authOptions);
-    uid = (session?.user as any)?.id as string | undefined;
+    session = (await getServerSession(authOptions)) as ExtendedSession | null;
+    uid = session?.user?.id;
   }
   if (!uid) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
@@ -203,7 +205,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       where: {
         userId: uid,
         checkoutIdempotencyKey: idempotencyKey,
-      } as any, // cast due to incremental type mismatch after recent migration
+      } as Record<string, unknown>, // cast due to incremental type mismatch after recent migration
     });
     if (existing) {
       // Mirror shape of normal response (use stored discountCents snapshot)
@@ -497,8 +499,8 @@ export const POST = withRequest(async function POST(req: NextRequest) {
           await sendOrderConfirmation(user, result);
         }
       }
-    } catch (e) {
-      console.error("order confirmation email failed", e);
+    } catch (error) {
+      console.error("order confirmation email failed", error);
     }
   }
   // TODO: invoke payment intent creation (Stripe) here and update order.status => AWAITING_PAYMENT

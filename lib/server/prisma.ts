@@ -4,25 +4,33 @@ import { PrismaClient } from "@prisma/client";
 declare global {
   // eslint-disable-next-line no-var
   var __prisma: PrismaClient | undefined;
+  // eslint-disable-next-line no-var
+  var __prismaDisconnected: boolean | undefined;
+}
+
+interface ExtendedPrismaClient extends PrismaClient {
+  $disconnect: () => Promise<void>;
+  $connect: () => Promise<void>;
 }
 
 export const prisma = global.__prisma || new PrismaClient();
+
 // Track a simple disconnected flag for tests that call prisma.$disconnect()
 if (typeof global !== "undefined") {
   if (!global.__prisma) {
     // attach a disconnected flag
-    (global as any).__prismaDisconnected = false;
-    const origDisconnect = prisma.$disconnect.bind(prisma) as any;
-    prisma.$disconnect = async function (...args: any[]) {
-      (global as any).__prismaDisconnected = true;
-      return (origDisconnect as any)(...args);
-    } as any;
-    const origConnect = prisma.$connect.bind(prisma) as any;
-    prisma.$connect = async function (...args: any[]) {
-      const r = await (origConnect as any)(...args);
-      (global as any).__prismaDisconnected = false;
-      return r;
-    } as any;
+    global.__prismaDisconnected = false;
+    const origDisconnect = prisma.$disconnect.bind(prisma);
+    prisma.$disconnect = async function () {
+      global.__prismaDisconnected = true;
+      return origDisconnect();
+    };
+    const origConnect = prisma.$connect.bind(prisma);
+    prisma.$connect = async function () {
+      const result = await origConnect();
+      global.__prismaDisconnected = false;
+      return result;
+    };
   }
 }
 if (process.env.NODE_ENV !== "production") global.__prisma = prisma;

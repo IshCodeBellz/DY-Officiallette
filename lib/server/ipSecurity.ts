@@ -91,6 +91,7 @@ export class IPSecurityService {
         riskScore,
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("IP analysis error:", error);
 
       // Return safe defaults on error
@@ -134,6 +135,7 @@ export class IPSecurityService {
         timezone: "America/Los_Angeles",
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Geolocation error:", error);
       return null;
     }
@@ -162,6 +164,7 @@ export class IPSecurityService {
 
       return false;
     } catch (error) {
+      console.error("Error:", error);
       console.error("VPN detection error:", error);
       return false;
     }
@@ -177,6 +180,7 @@ export class IPSecurityService {
 
       return false;
     } catch (error) {
+      console.error("Error:", error);
       console.error("Proxy detection error:", error);
       return false;
     }
@@ -192,6 +196,7 @@ export class IPSecurityService {
 
       return false;
     } catch (error) {
+      console.error("Error:", error);
       console.error("Tor detection error:", error);
       return false;
     }
@@ -260,6 +265,7 @@ export class IPSecurityService {
       // For now, return null
       return null;
     } catch (error) {
+      console.error("Error:", error);
       return null;
     }
   }
@@ -366,6 +372,7 @@ export class IPSecurityService {
           ipInfo,
         };
       } catch (error) {
+      console.error("Error:", error);
         console.error("IP security middleware error:", error);
 
         // Allow request on error to avoid blocking legitimate users
@@ -406,6 +413,7 @@ export class IPSecurityService {
         details: { message: "No reputation data available in development" },
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("IP reputation check error:", error);
 
       return {

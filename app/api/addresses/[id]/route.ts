@@ -64,6 +64,7 @@ export async function PUT(
 
     return NextResponse.json(address);
   } catch (error) {
+      console.error("Error:", error);
     console.error("Error updating address:", error);
     return NextResponse.json(
       { error: "Failed to update address" },
@@ -144,6 +145,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Error deleting address:", error);
     return NextResponse.json(
       { error: "Failed to delete address" },

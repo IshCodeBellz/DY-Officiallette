@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useCart, useWishlist } from "@/components/providers/CartProvider";
 import { lineIdFor } from "@/lib/types";
-import { formatPriceCents } from "@/lib/money";
+
 import { useToast } from "@/components/providers/ToastProvider";
 import { ClientPrice } from "@/components/ui/ClientPrice";
 

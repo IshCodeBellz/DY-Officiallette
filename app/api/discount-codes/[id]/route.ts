@@ -31,7 +31,8 @@ export async function PATCH(
       data: updatable,
     });
     return NextResponse.json(updated);
-  } catch (e) {
+  } catch (error) {
+      console.error("Error:", error);
     return new NextResponse("Not Found", { status: 404 });
   }
 }
@@ -46,7 +47,8 @@ export async function DELETE(
   try {
     await prisma.discountCode.delete({ where: { id: params.id } });
     return new NextResponse("", { status: 204 });
-  } catch (e) {
+  } catch (error) {
+      console.error("Error:", error);
     return new NextResponse("Not Found", { status: 404 });
   }
 }

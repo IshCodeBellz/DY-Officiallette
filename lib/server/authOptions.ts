@@ -27,12 +27,12 @@ export const authOptions: NextAuthOptions = {
         }
         const valid = await verifyPassword(password, user.passwordHash);
         if (!valid) return null;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return {
           id: user.id,
           name: user.name || null,
           email: user.email,
           isAdmin: user.isAdmin,
-          emailVerified: user.emailVerified,
         } as any;
       },
     }),

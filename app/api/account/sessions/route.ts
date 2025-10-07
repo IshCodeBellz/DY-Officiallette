@@ -66,6 +66,7 @@ export async function GET() {
 
     return NextResponse.json({ sessions: mockSessions });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Failed to get sessions:", error);
     return NextResponse.json(
       { message: "Internal server error" },
@@ -99,6 +100,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Failed to terminate session:", error);
     return NextResponse.json(
       { message: "Internal server error" },

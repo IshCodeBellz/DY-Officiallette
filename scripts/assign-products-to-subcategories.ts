@@ -208,6 +208,7 @@ async function main() {
       console.log(`   ${oldCategory} → ${newCategory.name}`);
       assigned++;
     } catch (error) {
+      console.error("Error:", error);
       console.error(`❌ Failed to assign "${product.name}":`, error);
       errors++;
     }

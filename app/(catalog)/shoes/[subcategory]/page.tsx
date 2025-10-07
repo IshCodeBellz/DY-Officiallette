@@ -32,7 +32,7 @@ export default async function ShoesSubcategoryPage({
   }
 
   // Build filter conditions
-  const where: any = {
+  const where: Record<string, any> = {
     categoryId: category.id,
     isActive: true,
     deletedAt: null,
@@ -63,7 +63,7 @@ export default async function ShoesSubcategoryPage({
   }
 
   // Build sort order
-  let orderBy: any = { createdAt: "desc" }; // default
+  let orderBy: Record<string, "asc" | "desc"> = { createdAt: "desc" }; // default
   switch (searchParams.sort) {
     case "price-asc":
       orderBy = { priceCents: "asc" };

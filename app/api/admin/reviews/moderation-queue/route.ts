@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ queue });
   } catch (error) {
+      console.error("Error:", error);
     console.error("GET moderation queue error:", error);
     return NextResponse.json(
       { error: "Failed to fetch moderation queue" },
@@ -89,6 +90,7 @@ export async function POST(request: NextRequest) {
       message: result.message,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("POST moderation action error:", error);
     return NextResponse.json(
       { error: "Failed to perform moderation action" },

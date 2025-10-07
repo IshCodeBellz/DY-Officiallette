@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Phase 3 model test error:", error);
     return NextResponse.json(
       {

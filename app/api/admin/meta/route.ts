@@ -3,12 +3,15 @@ import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
+import { ExtendedSession } from "@/lib/types";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export const GET = withRequest(async function GET() {
-  const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const session = (await getServerSession(
+    authOptions
+  )) as ExtendedSession | null;
+  const uid = session?.user?.id;
   if (!uid)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const user = await prisma.user.findUnique({ where: { id: uid } });

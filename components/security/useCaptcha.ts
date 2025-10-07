@@ -59,6 +59,7 @@ export const useCaptcha = (options: UseCaptchaOptions = {}) => {
 
         return data.config;
       } catch (error) {
+      console.error("Error:", error);
         const errorMessage =
           error instanceof Error
             ? error.message
@@ -114,6 +115,7 @@ export const useCaptcha = (options: UseCaptchaOptions = {}) => {
 
         return data;
       } catch (error) {
+      console.error("Error:", error);
         const errorMessage =
           error instanceof Error ? error.message : "Verification failed";
         setState((prev) => ({
@@ -163,6 +165,7 @@ export const useCaptcha = (options: UseCaptchaOptions = {}) => {
 
         return data.required;
       } catch (error) {
+      console.error("Error:", error);
         console.error("Failed to check CAPTCHA requirement:", error);
         return false;
       }

@@ -10,7 +10,7 @@ import {
 import { useCart } from "@/components/providers/CartProvider";
 import { useCurrency } from "@/components/providers/CurrencyProvider";
 import { useSession } from "next-auth/react";
-import { formatPriceCents } from "@/lib/money";
+
 
 const stripePromise =
   typeof window !== "undefined" &&

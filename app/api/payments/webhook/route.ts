@@ -143,8 +143,9 @@ export async function POST(req: NextRequest) {
         });
         if (user) await sendPaymentReceipt(user, order);
       }
-    } catch (e) {
-      console.error("payment receipt email failed", e);
+    } catch (error) {
+      console.error("Error:", error);
+      console.error("Error:", error);
     }
   } else if (status === "failed") {
     if (payment.status !== PaymentStatus.FAILED) {

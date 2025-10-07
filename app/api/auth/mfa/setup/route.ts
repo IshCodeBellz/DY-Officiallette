@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("MFA setup error:", error);
     captureError(error as Error, {
       userId: session?.user?.id,
@@ -77,6 +78,7 @@ export async function GET(request: NextRequest) {
       data: mfaStatus,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("MFA status error:", error);
     captureError(error as Error, {
       userId: session?.user?.id,

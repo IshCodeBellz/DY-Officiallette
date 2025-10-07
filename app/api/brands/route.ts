@@ -61,6 +61,7 @@ export async function GET() {
       total: transformedBrands.length,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Failed to fetch brands:", error);
     return NextResponse.json(
       { error: "Failed to fetch brands" },

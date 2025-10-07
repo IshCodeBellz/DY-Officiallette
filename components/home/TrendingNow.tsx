@@ -71,6 +71,7 @@ export async function TrendingNow() {
       }));
     }
   } catch (error) {
+      console.error("Error:", error);
     console.log("TrendingNow database error:", error);
     // On hard failure also fallback so homepage stays resilient
     try {

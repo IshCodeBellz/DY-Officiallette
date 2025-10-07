@@ -186,6 +186,7 @@ export class CacheService {
         { query: "shoes", count: 48 },
       ].slice(0, limit);
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error fetching trending searches:", error);
       return [];
     }
@@ -213,6 +214,7 @@ export class CacheService {
         });
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error tracking search:", error);
     }
   }
@@ -239,6 +241,7 @@ export class CacheService {
 
         return behaviors;
       } catch (error) {
+      console.error("Error:", error);
         console.error("Error fetching user activity:", error);
         return [];
       }
@@ -312,6 +315,7 @@ export class CacheService {
 
         return recommendations;
       } catch (error) {
+      console.error("Error:", error);
         console.error("Error fetching recommendations:", error);
         return this.getCachedFeaturedProducts(limit);
       }
@@ -327,6 +331,7 @@ export class CacheService {
         where: { productId },
       });
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error fetching product analytics:", error);
       return null;
     }
@@ -385,6 +390,7 @@ export class CacheService {
         });
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error tracking user behavior:", error);
     }
   }

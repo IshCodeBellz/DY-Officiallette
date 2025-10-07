@@ -67,6 +67,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       email: user.email,
     });
   } catch (error) {
+      console.error("Error:", error);
     return createErrorResponse(
       error instanceof Error
         ? error

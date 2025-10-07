@@ -120,6 +120,7 @@ export default function PaymentDetailsPage() {
       setShowAddModal(false);
       alert("Payment method added successfully!");
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error adding payment method:", error);
       alert("Failed to add payment method");
     } finally {
@@ -138,6 +139,7 @@ export default function PaymentDetailsPage() {
       setPaymentMethods((prev) => prev.filter((pm) => pm.id !== id));
       alert("Payment method deleted successfully!");
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error deleting payment method:", error);
       alert("Failed to delete payment method");
     }
@@ -152,6 +154,7 @@ export default function PaymentDetailsPage() {
       );
       alert("Default payment method updated!");
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error updating default payment method:", error);
       alert("Failed to update default payment method");
     }

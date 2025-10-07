@@ -1,6 +1,7 @@
 "use client";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+
 import Search from "../products/search"; // server wrapper -> fine inside client for Suspense boundary
 
 interface FiltersClientProps {

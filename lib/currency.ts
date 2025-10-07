@@ -227,6 +227,7 @@ export class CurrencyService {
       // Default fallback
       return "GB";
     } catch (error) {
+      console.error("Error:", error);
       console.warn("Failed to detect user country:", error);
       return "GB";
     }
@@ -391,6 +392,7 @@ export class CurrencyService {
       );
       this.lastFetchTime = now;
     } catch (error) {
+      console.error("Error:", error);
       console.warn("Failed to update exchange rates:", error);
     }
   }

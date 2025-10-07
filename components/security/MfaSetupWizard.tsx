@@ -54,6 +54,7 @@ export function MfaSetupWizard({
       setSetupData(result.data);
       setStep("setup");
     } catch (error) {
+      console.error("Error:", error);
       push({ message: "Failed to start MFA setup", type: "error" });
       console.error("MFA setup error:", error);
     } finally {
@@ -96,6 +97,7 @@ export function MfaSetupWizard({
       // Notify parent component that setup is complete
       onSetupComplete();
     } catch (error) {
+      console.error("Error:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       console.error("MFA verification error:", error);

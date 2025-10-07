@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useWishlist, useCart } from "@/components/providers/CartProvider";
 import { formatPriceCents } from "@/lib/money";
+
 import Image from "next/image";
 import Link from "next/link";
 

@@ -30,6 +30,7 @@ export async function POST(
         "Helpful vote functionality will be enabled once database is configured",
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Error marking review as helpful:", error);
     return NextResponse.json(
       { error: "Failed to mark review as helpful" },

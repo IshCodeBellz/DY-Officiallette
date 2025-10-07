@@ -35,7 +35,8 @@ async function checkDatabase(): Promise<HealthCheckResult> {
         prisma.user.count().catch(() => 0),
         prisma.order.count().catch(() => 0),
       ]);
-    } catch (e) {
+    } catch (error) {
+      console.error("Error:", error);
       // ignore and keep counts at 0
     }
 
@@ -62,6 +63,7 @@ async function checkDatabase(): Promise<HealthCheckResult> {
       },
     };
   } catch (error) {
+      console.error("Error:", error);
     return {
       component: "database",
       status: "critical",
@@ -107,6 +109,7 @@ async function checkMemory(): Promise<HealthCheckResult> {
       },
     };
   } catch (error) {
+      console.error("Error:", error);
     return {
       component: "memory",
       status: "critical",
@@ -205,6 +208,7 @@ export const GET = withRequest(async function GET(req: NextRequest) {
       headers: { "cache-control": "no-store" },
     });
   } catch (error) {
+      console.error("Error:", error);
     perf.finish("error");
 
     return createErrorResponse(

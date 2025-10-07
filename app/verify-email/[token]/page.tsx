@@ -39,7 +39,8 @@ export default function VerifyEmailPage({ params }: PageProps) {
             setError(data.error || "Verification failed");
           }
         }
-      } catch (e) {
+      } catch (error) {
+      console.error("Error:", error);
         setStatus("error");
         setError("Network error occurred");
       }
@@ -64,7 +65,8 @@ export default function VerifyEmailPage({ params }: PageProps) {
       if (res.ok) {
         setResendSuccess(true);
       }
-    } catch (e) {
+    } catch (error) {
+      console.error("Error:", error);
       // Handle silently
     } finally {
       setResendLoading(false);

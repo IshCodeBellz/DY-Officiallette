@@ -47,6 +47,7 @@ export function withRateLimit(config: RateLimitConfig) {
 
       return response;
     } catch (error) {
+      console.error("Error:", error);
       console.error("Rate limiting middleware error:", error);
       // If rate limiting fails, allow the request to proceed
       return await handler(req);
@@ -125,6 +126,7 @@ export function withMultipleRateLimits(
       // All rate limits passed, proceed with request
       return await handler(req);
     } catch (error) {
+      console.error("Error:", error);
       console.error("Multiple rate limiting middleware error:", error);
       // If rate limiting fails, allow the request to proceed
       return await handler(req);

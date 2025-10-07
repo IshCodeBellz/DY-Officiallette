@@ -45,6 +45,7 @@ export async function GET() {
 
     return NextResponse.json({ settings });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Failed to get session security settings:", error);
     return NextResponse.json(
       { message: "Internal server error" },
@@ -101,6 +102,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Failed to update session security settings:", error);
     return NextResponse.json(
       { message: "Internal server error" },

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { AccountNavigation } from "@/components/account/AccountNavigation";
 import Link from "next/link";
-import clsx from "clsx";
 
 export default function AccountDetailsPage() {
   const { data: session } = useSession();
@@ -115,6 +114,7 @@ export default function AccountDetailsPage() {
         }));
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error loading user data:", error);
     } finally {
       setLoading(false);
@@ -125,7 +125,7 @@ export default function AccountDetailsPage() {
     if (password.length === 0) return { score: 0, text: "", color: "" };
 
     let score = 0;
-    let feedback = [];
+    const feedback = [];
 
     // Length check
     if (password.length >= 8) score += 1;
@@ -225,6 +225,7 @@ export default function AccountDetailsPage() {
         alert(error.error || "Failed to update account information");
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error updating account info:", error);
       alert("Failed to update account information");
     }
@@ -266,6 +267,7 @@ export default function AccountDetailsPage() {
         alert(error.error || "Failed to update password");
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error updating password:", error);
       alert("Failed to update password");
     }
@@ -301,6 +303,7 @@ export default function AccountDetailsPage() {
         alert(error.error || "Failed to update contact preferences");
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error updating contact preferences:", error);
       alert("Failed to update contact preferences");
     }
@@ -876,6 +879,7 @@ export default function AccountDetailsPage() {
                       alert(error.error || "Failed to delete account");
                     }
                   } catch (error) {
+                    console.error("Error:", error);
                     console.error("Error deleting account:", error);
                     alert("Failed to delete account");
                   }

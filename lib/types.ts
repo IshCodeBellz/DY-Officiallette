@@ -49,3 +49,17 @@ export interface WishlistContextValue extends WishlistState {
 export function lineIdFor(productId: string, size?: string) {
   return size ? `${productId}__${size}` : productId;
 }
+
+// NextAuth session types
+export interface SessionUser {
+  id: string;
+  email: string;
+  name?: string;
+  image?: string;
+  isAdmin?: boolean;
+}
+
+export interface ExtendedSession {
+  user: SessionUser;
+  expires: string;
+}

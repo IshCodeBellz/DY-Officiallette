@@ -94,6 +94,7 @@ export function ReviewDisplay({
       // For now, we'll just show a success message
       alert("Thanks for your feedback!");
     } catch (error) {
+      console.error("Error:", error);
       console.error("Vote error:", error);
       alert(error instanceof Error ? error.message : "Failed to vote");
     } finally {
@@ -128,6 +129,7 @@ export function ReviewDisplay({
 
       alert("Review reported. Thank you for helping maintain quality.");
     } catch (error) {
+      console.error("Error:", error);
       console.error("Report error:", error);
       alert(error instanceof Error ? error.message : "Failed to report");
     } finally {

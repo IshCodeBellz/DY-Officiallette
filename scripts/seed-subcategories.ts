@@ -327,6 +327,7 @@ async function seedSubcategories() {
     console.log(`   Main categories: ${mainCategories}`);
     console.log(`   Subcategories: ${subcategories}`);
   } catch (error) {
+      console.error("Error:", error);
     console.error("❌ Error seeding subcategories:", error);
     throw error;
   } finally {

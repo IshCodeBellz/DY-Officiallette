@@ -7,7 +7,19 @@ import FiltersClient from "./FiltersClient";
 import { Suspense } from "react";
 import { ClientPrice } from "@/components/ui/ClientPrice";
 import { formatPriceCents } from "@/lib/money";
+
 import Link from "next/link";
+
+interface AdminProduct {
+  id: string;
+  sku: string;
+  name: string;
+  priceCents: number;
+  deletedAt: Date | null;
+  brand?: { name: string };
+  category?: { name: string };
+  images: { url: string }[];
+}
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +71,10 @@ export default async function AdminProductsPage({
   });
 
   // Calculate stats
-  const totalValue = products.reduce((sum, p: any) => sum + p.priceCents, 0);
+  const totalValue = products.reduce(
+    (sum: number, p: any) => sum + p.priceCents,
+    0
+  );
   const averagePrice = products.length > 0 ? totalValue / products.length : 0;
   const deletedCount = products.filter((p: any) => p.deletedAt).length;
   const activeCount = products.length - deletedCount;

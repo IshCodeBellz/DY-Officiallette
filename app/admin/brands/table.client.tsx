@@ -139,27 +139,36 @@ export default function BrandsClient({ initial }: { initial: Brand[] }) {
         </h3>
         <div className="flex gap-3 items-end">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="brand-name"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Brand Name
             </label>
             <input
+              id="brand-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter brand name"
+              aria-describedby={error ? "brand-error" : undefined}
               onKeyPress={(e) => e.key === "Enter" && createBrand()}
             />
           </div>
           <button
             disabled={loading || !name.trim()}
             onClick={createBrand}
-            className="px-6 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? "Adding..." : "Add Brand"}
           </button>
         </div>
         {error && (
-          <div className="mt-3 text-sm text-red-600 bg-red-50 p-3 rounded-md">
+          <div
+            id="brand-error"
+            className="mt-3 text-sm text-red-600 bg-red-50 p-3 rounded-md"
+            role="alert"
+          >
             {error}
           </div>
         )}
@@ -167,19 +176,50 @@ export default function BrandsClient({ initial }: { initial: Brand[] }) {
 
       {/* Edit Brand Modal */}
       {editingBrand && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-brand-title"
+        >
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+              <h3
+                id="edit-brand-title"
+                className="text-lg font-medium text-gray-900"
+              >
                 Edit Brand: {editingBrand.name}
               </h3>
+              <button
+                onClick={() => setEditingBrand(null)}
+                aria-label="Close dialog"
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
             </div>
             <div className="p-6 space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="edit-brand-name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Brand Name
                 </label>
                 <input
+                  id="edit-brand-name"
                   value={editForm.name}
                   onChange={(e) =>
                     setEditForm({ ...editForm, name: e.target.value })
@@ -190,10 +230,15 @@ export default function BrandsClient({ initial }: { initial: Brand[] }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="edit-logo-url"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Logo URL
                 </label>
                 <input
+                  id="edit-logo-url"
+                  type="url"
                   value={editForm.logoUrl}
                   onChange={(e) =>
                     setEditForm({ ...editForm, logoUrl: e.target.value })

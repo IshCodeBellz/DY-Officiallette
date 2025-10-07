@@ -53,6 +53,7 @@ export async function POST(
       message: result.message,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Report review error:", error);
 
     if (error instanceof z.ZodError) {

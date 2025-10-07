@@ -90,6 +90,7 @@ export async function GET(
       },
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Failed to fetch brand:", error);
     return NextResponse.json(
       { error: "Failed to fetch brand" },

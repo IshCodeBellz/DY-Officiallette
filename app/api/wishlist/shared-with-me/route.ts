@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ wishlists: mockSharedWishlists });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Error fetching shared wishlists:", error);
     return NextResponse.json(
       { error: "Failed to fetch shared wishlists" },

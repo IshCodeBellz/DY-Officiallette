@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
+import { withRequest } from "@/lib/server/logger";
 import { z } from "zod";
+import { ExtendedSession } from "@/lib/types";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const createSchema = z.object({
   code: z
@@ -30,8 +32,10 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.isAdmin)
+  const session = (await getServerSession(
+    authOptions
+  )) as ExtendedSession | null;
+  if (!session?.user?.isAdmin)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = await req.json().catch(() => null);
   const parsed = createSchema.safeParse(body);

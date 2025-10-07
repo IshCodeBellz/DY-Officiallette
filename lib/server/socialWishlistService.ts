@@ -132,6 +132,7 @@ export class SocialWishlistService {
       const transformedWishlist = this.transformWishlist(wishlist);
       return { success: true, wishlist: transformedWishlist };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Create wishlist error:", error);
       return { success: false, error: "Failed to create wishlist" };
     }
@@ -285,6 +286,7 @@ export class SocialWishlistService {
 
       return { success: true, item: transformedItem };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Add to wishlist error:", error);
       return { success: false, error: "Failed to add item to wishlist" };
     }
@@ -327,6 +329,7 @@ export class SocialWishlistService {
 
       return { success: true };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Remove from wishlist error:", error);
       return { success: false, error: "Failed to remove item from wishlist" };
     }
@@ -340,6 +343,7 @@ export class SocialWishlistService {
       const wishlists = await getCachedUserWishlists(userId);
       return wishlists.map((wishlist) => this.transformWishlist(wishlist));
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get user wishlists error:", error);
       return [];
     }
@@ -382,6 +386,7 @@ export class SocialWishlistService {
 
       return this.transformWishlist(wishlist);
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get public wishlist error:", error);
       return null;
     }
@@ -413,6 +418,7 @@ export class SocialWishlistService {
 
       return { success: true };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Follow wishlist error:", error);
       return { success: false, error: "Failed to follow wishlist" };
     }
@@ -457,6 +463,7 @@ export class SocialWishlistService {
 
       return wishlists.map((wishlist) => this.transformWishlist(wishlist));
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get trending wishlists error:", error);
       return [];
     }
@@ -523,6 +530,7 @@ export class SocialWishlistService {
         conversionRate,
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get wishlist analytics error:", error);
       // Return default values on error
       return {
@@ -588,6 +596,7 @@ export class SocialWishlistService {
         failedItems: failedItems.length > 0 ? failedItems : undefined,
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Move to cart error:", error);
       return { success: false, error: "Failed to move items to cart" };
     }
@@ -627,6 +636,7 @@ export class SocialWishlistService {
         timestamp: new Date(),
       });
     } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to track wishlist event:", error);
       // Don't throw - tracking failures shouldn't break wishlist functionality
     }
@@ -680,6 +690,7 @@ export class SocialWishlistService {
         })),
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get recent activity error:", error);
       return {
         wishlists: [],

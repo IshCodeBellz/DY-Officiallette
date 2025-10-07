@@ -206,6 +206,7 @@ export const GET = withRequest(async function GET(req: NextRequest) {
     perf.finish("ok");
     return NextResponse.json(response);
   } catch (error) {
+      console.error("Error:", error);
     perf.finish("error");
     // Return a stable, testable error shape for metrics failures
     try {

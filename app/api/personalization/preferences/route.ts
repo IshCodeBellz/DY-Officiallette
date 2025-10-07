@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
       data: preferences,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("User preferences API error:", error);
     return NextResponse.json(
       {

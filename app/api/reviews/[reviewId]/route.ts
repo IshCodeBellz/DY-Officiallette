@@ -94,6 +94,7 @@ export async function POST(
       { status: 400 }
     );
   } catch (error) {
+      console.error("Error:", error);
     console.error("Review action API error:", error);
     return NextResponse.json(
       {

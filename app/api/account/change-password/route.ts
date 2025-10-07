@@ -3,12 +3,15 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
+import { ExtendedSession } from "@/lib/types";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = (await getServerSession(
+      authOptions
+    )) as ExtendedSession | null;
 
     if (!session?.user) {
       return NextResponse.json(
@@ -17,7 +20,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = (session.user as any).id;
+    const userId = session.user.id;
     const { currentPassword, newPassword } = await request.json();
 
     // Validation
@@ -105,6 +108,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
+    console.error("Error:", error);
     console.error("Password change error:", error);
     return NextResponse.json(
       { error: "Internal server error" },

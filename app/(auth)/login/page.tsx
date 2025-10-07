@@ -5,6 +5,7 @@ import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Shield, AlertCircle } from "lucide-react";
+import { ExtendedSession, SessionUser } from "@/lib/types";
 
 function LoginForm() {
   const router = useRouter();
@@ -56,8 +57,8 @@ function LoginForm() {
         // Successful login without MFA
         setTimeout(async () => {
           const { getSession } = await import("next-auth/react");
-          const s = await getSession();
-          const isAdmin = (s?.user as any)?.isAdmin;
+          const s = (await getSession()) as ExtendedSession | null;
+          const isAdmin = s?.user?.isAdmin;
           if (
             isAdmin &&
             (callbackUrl === "/" || callbackUrl.startsWith("/login"))
@@ -69,7 +70,9 @@ function LoginForm() {
           router.refresh();
         }, 10);
       }
-    } catch (err) {
+    } catch (error) {
+      console.error("Error:", error);
+      console.error("Login error:", error);
       setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);
@@ -77,7 +80,7 @@ function LoginForm() {
   }
 
   // If already logged in and admin, auto-redirect away from login
-  if ((session?.user as any)?.isAdmin) {
+  if ((session as ExtendedSession | null)?.user?.isAdmin) {
     if (typeof window !== "undefined") {
       const target = search.get("callbackUrl");
       if (!target || target === "/" || target.startsWith("/login")) {

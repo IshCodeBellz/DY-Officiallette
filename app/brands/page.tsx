@@ -27,6 +27,7 @@ export default function BrandsPage() {
           setBrands(data.brands || []);
         }
       } catch (error) {
+      console.error("Error:", error);
         console.error("Failed to fetch brands:", error);
       } finally {
         setLoading(false);

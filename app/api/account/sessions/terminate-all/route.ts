@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
       message: "All sessions terminated successfully",
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Failed to terminate all sessions:", error);
     return NextResponse.json(
       { message: "Internal server error" },
