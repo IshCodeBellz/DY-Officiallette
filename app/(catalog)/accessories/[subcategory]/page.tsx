@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { prisma } from "@/lib/server/prisma";
 import { formatPriceCents } from "@/lib/money";
 
@@ -34,7 +35,7 @@ export default async function AccessoriesSubcategoryPage({
   }
 
   // Build filter conditions
-  const where: Record<string, any> = {
+  const where: Record<string, unknown> = {
     categoryId: category.id,
     isActive: true,
     deletedAt: null,
@@ -57,10 +58,12 @@ export default async function AccessoriesSubcategoryPage({
   if (searchParams.priceMin || searchParams.priceMax) {
     where.priceCents = {};
     if (searchParams.priceMin) {
-      where.priceCents.gte = parseInt(searchParams.priceMin) * 100;
+      (where.priceCents as { gte?: number; lte?: number }).gte =
+        parseInt(searchParams.priceMin) * 100;
     }
     if (searchParams.priceMax) {
-      where.priceCents.lte = parseInt(searchParams.priceMax) * 100;
+      (where.priceCents as { gte?: number; lte?: number }).lte =
+        parseInt(searchParams.priceMax) * 100;
     }
   }
 
@@ -107,13 +110,13 @@ export default async function AccessoriesSubcategoryPage({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-8">
-          <a href="/" className="hover:text-gray-700">
+          <Link href="/" className="hover:text-gray-700">
             Home
-          </a>
+          </Link>
           <span>/</span>
-          <a href="/accessories" className="hover:text-gray-700">
+          <Link href="/accessories" className="hover:text-gray-700">
             Accessories
-          </a>
+          </Link>
           <span>/</span>
           <span className="text-gray-900 font-medium">{category.name}</span>
         </nav>

@@ -1,8 +1,6 @@
 "use client";
 import Link from "next/link";
-import { SearchBar } from "./SearchBar";
 import EnhancedSearchBar from "../search/EnhancedSearchBar";
-import { SiteNav } from "./SiteNav";
 import { useCart, useWishlist } from "../providers/CartProvider";
 import { useSession, signOut } from "next-auth/react";
 import { DarkModeToggle } from "./DarkModeToggle";
@@ -58,175 +56,219 @@ export function Header() {
       </a>
       <header className="bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700 sticky top-0 z-40">
         <div className="container mx-auto px-4">
+          {/* Main Header Row */}
           <div className="flex items-center justify-between h-16 gap-4">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/"
-                  className="font-bold text-xl text-neutral-900 dark:text-white tracking-tight"
-                  aria-label="DY Official Home"
-                >
-                  DY
-                </Link>
-              </div>
-              <nav className="hidden md:flex items-center gap-3 ml-auto">
-                <CurrencySelector
-                  variant="minimal"
-                  showLabel={false}
-                  size="sm"
-                />
-                <DarkModeToggle />
-                {session ? (
-                  <div className="flex items-center gap-3 text-sm">
-                    <span
-                      className="text-neutral-700 dark:text-neutral-300 truncate max-w-[120px]"
-                      title={
-                        session.user?.name || session.user?.email || undefined
-                      }
-                    >
-                      {session.user?.name?.split(" ")[0] || session.user?.email}
-                    </span>
-                    {(session.user as any)?.isAdmin && (
-                      <Link
-                        href="/admin"
-                        className="hover:underline font-medium text-neutral-900 dark:text-white whitespace-nowrap"
-                      >
-                        Admin
-                      </Link>
-                    )}
-                    <Link
-                      href="/account"
-                      className="hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
-                    >
-                      My Account
-                    </Link>
-                    <button
-                      onClick={() => {
-                        try {
-                          clearCart();
-                          clearWishlist();
-                          if (typeof window !== "undefined") {
-                            localStorage.removeItem("app.cart.v1");
-                            localStorage.removeItem("app.wishlist.v1");
-                          }
-                        } catch {}
-                        signOut();
-                      }}
-                      className="hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
-                    >
-                      Sign out
-                    </button>
-                  </div>
-                ) : (
-                  <Link
-                    href="/login"
-                    className="text-sm hover:underline text-neutral-900 dark:text-white"
-                  >
-                    Sign in
-                  </Link>
-                )}
-                <Link
-                  href="/saved"
-                  className="relative text-sm hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
-                >
-                  Saved
-                  <span
-                    className={
-                      "absolute -top-2 -right-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center transition-opacity " +
-                      (wishItems.length === 0 ? "opacity-0" : "opacity-100")
-                    }
-                    aria-hidden={wishItems.length === 0}
-                  >
-                    {wishItems.length}
-                  </span>
-                </Link>
-                <Link
-                  href="/social/wishlists"
-                  className="text-sm hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
-                >
-                  Social
-                </Link>
-                <Link
-                  href="/bag"
-                  className="relative text-sm hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
-                >
-                  Bag
-                  <span
-                    className={
-                      "absolute -top-2 -right-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center transition-opacity " +
-                      (totalQuantity === 0 ? "opacity-0" : "opacity-100")
-                    }
-                    aria-hidden={totalQuantity === 0}
-                  >
-                    {totalQuantity}
-                  </span>
-                </Link>
-              </nav>
-              <div className="flex md:hidden items-center gap-2">
-                <DarkModeToggle />
-                <Link
-                  href="/saved"
-                  className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-[11px] text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                  aria-label="Saved items"
-                >
-                  ♥
-                  <span
-                    className={
-                      "absolute -top-1 -right-1 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center " +
-                      (wishItems.length === 0 ? "opacity-0" : "opacity-100")
-                    }
-                    aria-hidden={wishItems.length === 0}
-                  >
-                    {wishItems.length}
-                  </span>
-                </Link>
-                <Link
-                  href="/bag"
-                  className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-[11px] text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                  aria-label="Bag"
-                >
-                  👜
-                  <span
-                    className={
-                      "absolute -top-1 -right-1 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center " +
-                      (totalQuantity === 0 ? "opacity-0" : "opacity-100")
-                    }
-                    aria-hidden={totalQuantity === 0}
-                  >
-                    {totalQuantity}
-                  </span>
-                </Link>
-                <button
-                  onClick={() => setMobileMenuOpen(true)}
-                  aria-label="Open menu"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                >
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="3" y1="6" x2="21" y2="6" />
-                    <line x1="3" y1="12" x2="21" y2="12" />
-                    <line x1="3" y1="18" x2="21" y2="18" />
-                  </svg>
-                </button>
-              </div>
+            {/* Logo */}
+            <div className="flex items-center">
+              <Link
+                href="/"
+                className="font-bold text-xl tracking-tight"
+                aria-label="DY Official Home"
+              >
+                <span className="text-neutral-900 dark:text-white">DY</span>
+                <span className="text-red-600">OFFICIALETTE</span>
+              </Link>
             </div>
 
-            {/* Mobile Search Bar */}
-            <div className="md:hidden pb-3">
+            {/* Desktop Search Bar - Centered */}
+            <div className="hidden md:block flex-1 max-w-2xl mx-8">
               <EnhancedSearchBar />
             </div>
 
-            <div className="overflow-visible">
-              <SiteNav />
+            {/* Right Side - Currency, Auth, Actions */}
+            <nav className="hidden md:flex items-center gap-4">
+              <CurrencySelector variant="minimal" showLabel={false} size="sm" />
+              <DarkModeToggle />
+              {session ? (
+                <div className="flex items-center gap-3 text-sm">
+                  <span
+                    className="text-neutral-700 dark:text-neutral-300 truncate max-w-[120px]"
+                    title={
+                      session.user?.name || session.user?.email || undefined
+                    }
+                  >
+                    {session.user?.name?.split(" ")[0] || session.user?.email}
+                  </span>
+                  {(session.user as any)?.isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="hover:underline font-medium text-neutral-900 dark:text-white whitespace-nowrap"
+                    >
+                      Admin
+                    </Link>
+                  )}
+                  <Link
+                    href="/account"
+                    className="hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
+                  >
+                    My Account
+                  </Link>
+                  <button
+                    onClick={() => {
+                      try {
+                        clearCart();
+                        clearWishlist();
+                        if (typeof window !== "undefined") {
+                          localStorage.removeItem("app.cart.v1");
+                          localStorage.removeItem("app.wishlist.v1");
+                        }
+                      } catch {}
+                      signOut();
+                    }}
+                    className="hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  className="text-sm hover:underline text-neutral-900 dark:text-white"
+                >
+                  Sign in
+                </Link>
+              )}
+              <Link
+                href="/saved"
+                className="relative text-sm hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
+              >
+                Saved
+                <span
+                  className={
+                    "absolute -top-2 -right-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center transition-opacity " +
+                    (wishItems.length === 0 ? "opacity-0" : "opacity-100")
+                  }
+                  aria-hidden={wishItems.length === 0}
+                >
+                  {wishItems.length}
+                </span>
+              </Link>
+              <Link
+                href="/social/wishlists"
+                className="text-sm hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
+              >
+                Social
+              </Link>
+              <Link
+                href="/bag"
+                className="relative text-sm hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
+              >
+                Bag
+                <span
+                  className={
+                    "absolute -top-2 -right-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center transition-opacity " +
+                    (totalQuantity === 0 ? "opacity-0" : "opacity-100")
+                  }
+                  aria-hidden={totalQuantity === 0}
+                >
+                  {totalQuantity}
+                </span>
+              </Link>
+            </nav>
+
+            {/* Mobile Controls */}
+            <div className="flex md:hidden items-center gap-2">
+              <DarkModeToggle />
+              <Link
+                href="/saved"
+                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-[11px] text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                aria-label="Saved items"
+              >
+                ♥
+                <span
+                  className={
+                    "absolute -top-1 -right-1 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center " +
+                    (wishItems.length === 0 ? "opacity-0" : "opacity-100")
+                  }
+                  aria-hidden={wishItems.length === 0}
+                >
+                  {wishItems.length}
+                </span>
+              </Link>
+              <Link
+                href="/bag"
+                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-[11px] text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                aria-label="Bag"
+              >
+                👜
+                <span
+                  className={
+                    "absolute -top-1 -right-1 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center " +
+                    (totalQuantity === 0 ? "opacity-0" : "opacity-100")
+                  }
+                  aria-hidden={totalQuantity === 0}
+                >
+                  {totalQuantity}
+                </span>
+              </Link>
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                aria-label="Open menu"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              </button>
             </div>
+          </div>
+
+          {/* Mobile Search Bar */}
+          <div className="md:hidden pb-3">
+            <EnhancedSearchBar />
+          </div>
+
+          {/* Navigation Row - Desktop Only */}
+          <div className="hidden md:block border-t border-neutral-200 dark:border-neutral-700">
+            <nav className="flex items-center justify-center gap-8 py-3">
+              <Link
+                href="/new-in"
+                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400"
+              >
+                New In
+              </Link>
+              <Link
+                href="/womens"
+                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400"
+              >
+                Women
+              </Link>
+              <Link
+                href="/mens"
+                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400"
+              >
+                Men
+              </Link>
+              <Link
+                href="/shoes"
+                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400"
+              >
+                Shoes
+              </Link>
+              <Link
+                href="/accessories"
+                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400"
+              >
+                Accessories
+              </Link>
+              <Link
+                href="/brands"
+                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400"
+              >
+                Brands
+              </Link>
+            </nav>
           </div>
         </div>
       </header>

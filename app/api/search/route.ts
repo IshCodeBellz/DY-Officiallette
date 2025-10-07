@@ -283,7 +283,10 @@ export const GET = withRequest(async function GET(req: NextRequest) {
       } catch (error) {
         console.error("Error:", error);
         // eslint-disable-next-line no-console
-        console.error("[search:fuzzy-fallback-error]", (error as Error).message);
+        console.error(
+          "[search:fuzzy-fallback-error]",
+          (error as Error).message
+        );
       }
     }
   }

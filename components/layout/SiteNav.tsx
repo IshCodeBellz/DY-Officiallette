@@ -1,26 +1,25 @@
-"use client";
-
 import Link from "next/link";
 
-const navigationItems = [
+const primary = [
+  { href: "/womens-clothing", label: "Women" },
+  { href: "/mens-clothing", label: "Men" },
+  { href: "/sportswear", label: "Sportswear" },
   { href: "/new-in", label: "New In" },
-  { href: "/womens", label: "Women" },
-  { href: "/mens", label: "Men" },
-  { href: "/shoes", label: "Shoes" },
-  { href: "/accessories", label: "Accessories" },
   { href: "/brands", label: "Brands" },
+  { href: "/denim", label: "Denim" },
+  { href: "/footwear", label: "Shoes" },
+  { href: "/accessories", label: "Accessories" },
+  { href: "/dresses", label: "Dresses" },
+  { href: "/outerwear", label: "Outerwear" },
 ];
 
 export function SiteNav() {
   return (
-    <div className="hidden md:block overflow-x-auto overflow-y-visible">
-      <ul className="flex gap-6 text-xs font-semibold tracking-wide uppercase py-2 relative">
-        {navigationItems.map((item) => (
-          <li key={item.href} className="relative">
-            <Link
-              href={item.href}
-              className="hover:text-brand-accent flex items-center gap-1"
-            >
+    <div className="hidden md:block overflow-x-auto">
+      <ul className="flex gap-6 text-xs font-semibold tracking-wide uppercase py-2">
+        {primary.map((item) => (
+          <li key={item.href}>
+            <Link href={item.href} className="hover:text-brand-accent">
               {item.label}
             </Link>
           </li>

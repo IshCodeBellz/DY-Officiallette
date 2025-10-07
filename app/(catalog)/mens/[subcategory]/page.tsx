@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { prisma } from "@/lib/server/prisma";
 import { formatPriceCents } from "@/lib/money";
 
@@ -34,26 +35,18 @@ export default async function MensSubcategoryPage({
   }
 
   // Build filter conditions
-  const where: Record<string, any> = {
+  const where: {
+    categoryId: string;
+    isActive: boolean;
+    gender: string;
+    priceCents?: { gte?: number; lte?: number };
+  } = {
     categoryId: category.id,
     isActive: true,
-    deletedAt: null,
+    gender: "men", // Filter by gender (men specific)
   };
 
-  // Apply filters from search params
-  if (searchParams.gender) {
-    where.gender = searchParams.gender;
-  }
-
-  if (searchParams.brand) {
-    where.brand = {
-      name: {
-        contains: searchParams.brand,
-        mode: "insensitive",
-      },
-    };
-  }
-
+  // Apply price range filter
   if (searchParams.priceMin || searchParams.priceMax) {
     where.priceCents = {};
     if (searchParams.priceMin) {
@@ -106,13 +99,13 @@ export default async function MensSubcategoryPage({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-8">
-          <a href="/" className="hover:text-gray-700">
+          <Link href="/" className="hover:text-gray-700">
             Home
-          </a>
+          </Link>
           <span>/</span>
-          <a href="/mens" className="hover:text-gray-700">
-            Men's
-          </a>
+          <Link href="/mens" className="hover:text-gray-700">
+            Men&apos;s
+          </Link>
           <span>/</span>
           <span className="text-gray-900 font-medium">{category.name}</span>
         </nav>

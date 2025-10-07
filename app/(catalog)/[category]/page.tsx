@@ -47,7 +47,8 @@ export default function CategoryPage({
   const { addItem } = useCart();
   const { push } = useToast();
 
-  // Initialize all hooks before any conditional returns
+  // Initialize all state hooks first
+  const category = params.category.toLowerCase();
   const [size, setSize] = useState<string>("");
   const [brand, setBrand] = useState<string>("");
   const [availableBrands, setAvailableBrands] = useState<
@@ -72,9 +73,6 @@ export default function CategoryPage({
     }>
   >([]);
   const viewedRef = useRef<Set<string>>(new Set());
-
-  const category = params.category.toLowerCase();
-  if (!validCategories.includes(category)) return notFound();
 
   // Detect gender prefix from full pathname (for /women/<sub> or /men/<sub> wrappers) or direct routes
   const [genderFilter, setGenderFilter] = useState<string | undefined>(
@@ -150,7 +148,7 @@ export default function CategoryPage({
 
     loadPriceRange();
     return () => controller.abort();
-  }, [category]); // Only depend on category change
+  }, [category, genderFilter, price]); // Include all dependencies
 
   // Load available brands for this category
   useEffect(() => {
@@ -198,7 +196,7 @@ export default function CategoryPage({
           const data = await res.json();
           // normalize to ensure priceCents present (API already provides priceCents + legacy price)
           setItems(
-            (data.items || []).map((p: any) => ({
+            (data.items || []).map((p: ProductResponse) => ({
               ...p,
               priceCents: p.priceCents ?? Math.round((p.price || 0) * 100),
             }))
@@ -213,7 +211,10 @@ export default function CategoryPage({
     }
     load();
     return () => controller.abort();
-  }, [category, debouncedQuery, brand, size, price, priceRange]);
+  }, [category, debouncedQuery, brand, size, price, priceRange, genderFilter]);
+
+  // Validate category after all hooks
+  if (!validCategories.includes(category)) return notFound();
 
   const isFaceBody = category === "face-body";
   return (
@@ -312,11 +313,18 @@ export default function CategoryPage({
               className="border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1 bg-white dark:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="">All brands</option>
-              {availableBrands.map((b: any) => (
-                <option key={b.slug} value={b.slug}>
-                  {b.name} ({b.productCount})
-                </option>
-              ))}
+              {availableBrands.map(
+                (b: {
+                  id: string;
+                  name: string;
+                  slug?: string;
+                  productCount?: number;
+                }) => (
+                  <option key={b.slug} value={b.slug}>
+                    {b.name} ({b.productCount})
+                  </option>
+                )
+              )}
             </select>
           </div>
         )}

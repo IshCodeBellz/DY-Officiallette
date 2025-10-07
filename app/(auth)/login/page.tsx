@@ -5,7 +5,7 @@ import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Shield, AlertCircle } from "lucide-react";
-import { ExtendedSession, SessionUser } from "@/lib/types";
+import { ExtendedSession } from "@/lib/types";
 
 function LoginForm() {
   const router = useRouter();
@@ -224,7 +224,7 @@ function LoginForm() {
 
       <div className="mt-6 text-center">
         <p className="text-sm text-neutral-600 dark:text-neutral-400">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link
             href="/register"
             className="font-medium text-blue-600 dark:text-blue-400 hover:underline"
