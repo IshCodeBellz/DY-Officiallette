@@ -27,6 +27,7 @@ export function CurrencyNotification() {
           setHasDetected(true);
         }
       } catch (error) {
+      console.error("Error:", error);
         console.warn("Failed to detect currency:", error);
       }
     };

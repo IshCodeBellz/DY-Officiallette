@@ -34,8 +34,9 @@ export default function SecurityClient({
           mfaEnabled: false,
           mfaBackupCodesCount: 0,
         }));
-      } catch (e) {
-        console.error("Failed to fetch security status:", e);
+      } catch (error) {
+      console.error("Error:", error);
+        console.error("Error:", error);
       }
     }
 
@@ -55,8 +56,9 @@ export default function SecurityClient({
       if (res.ok) {
         setEmailVerificationSent(true);
       }
-    } catch (e) {
-      console.error("Failed to send verification email:", e);
+    } catch (error) {
+      console.error("Error:", error);
+      console.error("Error:", error);
     } finally {
       setLoading(false);
     }

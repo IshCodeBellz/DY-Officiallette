@@ -94,6 +94,7 @@ async function cleanupCategories() {
       }
     }
   } catch (error) {
+      console.error("Error:", error);
     console.error("❌ Error during cleanup:", error);
   } finally {
     await prisma.$disconnect();

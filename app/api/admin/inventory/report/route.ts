@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
       data: report,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Get inventory report API error:", error);
     return NextResponse.json(
       {

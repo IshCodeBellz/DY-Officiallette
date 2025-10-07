@@ -210,7 +210,8 @@ export const GET = withRequest(async function GET(req: NextRequest) {
             count: products.length,
           });
         }
-      } catch (e) {
+      } catch (error) {
+      console.error("Error:", error);
         // eslint-disable-next-line no-console
         console.error("[search:raw-fallback-error]", (e as Error).message);
       }
@@ -279,7 +280,8 @@ export const GET = withRequest(async function GET(req: NextRequest) {
             maxDistance,
           });
         }
-      } catch (e) {
+      } catch (error) {
+      console.error("Error:", error);
         // eslint-disable-next-line no-console
         console.error("[search:fuzzy-fallback-error]", (e as Error).message);
       }

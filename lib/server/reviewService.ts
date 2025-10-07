@@ -91,6 +91,7 @@ export class ReviewService {
         };
       });
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get pending reviews error:", error);
       return [];
     }
@@ -122,6 +123,7 @@ export class ReviewService {
         status: review.isPublished ? "pending" : "resolved",
       }));
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get reported content error:", error);
       return [];
     }
@@ -169,6 +171,7 @@ export class ReviewService {
         reviewEngagement,
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get social stats error:", error);
       return {
         pendingReviews: 0,
@@ -268,6 +271,7 @@ export class ReviewService {
         analytics,
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get product reviews error:", error);
       return {
         page: opts.page,
@@ -359,6 +363,7 @@ export class ReviewService {
         recentReviewsTrend,
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get review analytics error:", error);
       return {
         averageRating: 0,
@@ -501,6 +506,7 @@ export class ReviewService {
         },
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Create review error:", error);
       return {
         success: false,
@@ -564,6 +570,7 @@ export class ReviewService {
         newVoteCount: updatedReview.helpfulVotes,
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Vote review helpful error:", error);
       return {
         success: false,
@@ -644,6 +651,7 @@ export class ReviewService {
         message: "Review reported successfully",
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Report review error:", error);
       return {
         success: false,
@@ -725,6 +733,7 @@ export class ReviewService {
         };
       });
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get moderation queue error:", error);
       return [];
     }
@@ -746,6 +755,7 @@ export class ReviewService {
         message: "Review approved successfully",
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Approve review error:", error);
       return {
         success: false,
@@ -769,6 +779,7 @@ export class ReviewService {
         message: "Review rejected successfully",
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Reject review error:", error);
       return {
         success: false,
@@ -788,6 +799,7 @@ export class ReviewService {
         message: "Review deleted successfully",
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Delete review error:", error);
       return {
         success: false,

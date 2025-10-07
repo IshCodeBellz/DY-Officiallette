@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatPriceCents } from "@/lib/money";
+
 import { ClientPrice } from "@/components/ui/ClientPrice";
 import FiltersClient from "./_client/FiltersClient";
 import SortClient from "./_client/SortClient";
@@ -42,7 +42,8 @@ async function getData(params: PageSearchParams) {
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return { items: [], facets: null, total: 0, totalCount: 0 };
     return res.json();
-  } catch (e) {
+  } catch (error) {
+      console.error("Error:", error);
     // Silent fallback; UI will show empty state
     return {
       items: [],

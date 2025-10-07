@@ -31,7 +31,8 @@ export default function MFASetupPage() {
         } else {
           setError("Failed to initialize MFA setup");
         }
-      } catch (e) {
+      } catch (error) {
+      console.error("Error:", error);
         setError("Network error occurred");
       }
     }
@@ -62,7 +63,8 @@ export default function MFASetupPage() {
             : "Verification failed"
         );
       }
-    } catch (e) {
+    } catch (error) {
+      console.error("Error:", error);
       setError("Network error occurred");
     } finally {
       setLoading(false);

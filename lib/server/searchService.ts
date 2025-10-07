@@ -296,6 +296,7 @@ export class SearchService {
         totalPages: Math.ceil(totalCount / limit),
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Search error:", error);
 
       return {
@@ -335,6 +336,7 @@ export class SearchService {
         .filter((s) => s.query.toLowerCase().includes(query.toLowerCase()))
         .slice(0, limit);
     } catch (error) {
+      console.error("Error:", error);
       console.error("Search suggestions error:", error);
       return [];
     }
@@ -359,6 +361,7 @@ export class SearchService {
         "phone case",
       ].slice(0, limit);
     } catch (error) {
+      console.error("Error:", error);
       console.error("Trending searches error:", error);
       return [];
     }
@@ -383,6 +386,7 @@ export class SearchService {
         timestamp: new Date(),
       });
     } catch (error) {
+      console.error("Error:", error);
       console.error("Search logging error:", error);
     }
   }
@@ -580,6 +584,7 @@ export class SearchService {
         clickThroughRate,
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get search analytics error:", error);
       // Fallback to mock data
       return {
@@ -663,6 +668,7 @@ export class SearchService {
 
       return queries;
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get trending queries error:", error);
       // Fallback to mock data
       return [{ query: "No data available", count: 0, trend: 0 }];

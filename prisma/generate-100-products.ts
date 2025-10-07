@@ -536,6 +536,7 @@ async function generateProducts() {
           console.log(`   ✅ Created ${productCount} products...`);
         }
       } catch (error) {
+      console.error("Error:", error);
         console.error(`❌ Failed to create product ${productName}:`, error);
       }
     }
@@ -571,6 +572,7 @@ async function generateProducts() {
         });
         relationCount++;
       } catch (error) {
+      console.error("Error:", error);
         // Ignore duplicate relation errors
       }
     }
@@ -597,6 +599,7 @@ async function main() {
   try {
     await generateProducts();
   } catch (error) {
+      console.error("Error:", error);
     console.error("❌ Error generating products:", error);
     throw error;
   } finally {

@@ -27,7 +27,8 @@ export default function ResetPasswordPage({ params }: PageProps) {
         });
 
         setTokenValid(res.ok);
-      } catch (e) {
+      } catch (error) {
+      console.error("Error:", error);
         setTokenValid(false);
       }
     }
@@ -83,7 +84,8 @@ export default function ResetPasswordPage({ params }: PageProps) {
           router.push("/login?message=password-reset-success");
         }, 3000);
       }
-    } catch (e) {
+    } catch (error) {
+      console.error("Error:", error);
       setError("Network error. Please check your connection.");
     } finally {
       setLoading(false);

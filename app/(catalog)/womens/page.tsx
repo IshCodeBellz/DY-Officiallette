@@ -22,6 +22,7 @@ export default async function WomensPage() {
       },
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Database error in WomensPage:", error);
     womensCategory = null;
   }

@@ -74,6 +74,7 @@ export class InventoryService {
         lastUpdated: variant.updatedAt,
       }));
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get product inventory error:", error);
       return [];
     }
@@ -143,6 +144,7 @@ export class InventoryService {
 
       return { success: true, newStock };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Update stock error:", error);
       return { success: false, error: "Failed to update stock" };
     }
@@ -182,6 +184,7 @@ export class InventoryService {
         daysLeft: variant.stock === 0 ? null : Math.floor(variant.stock / 2), // Rough estimate
       }));
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get stock alerts error:", error);
       return [];
     }
@@ -244,6 +247,7 @@ export class InventoryService {
 
       return all;
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get recent stock movements error:", error);
       return [];
     }
@@ -270,6 +274,7 @@ export class InventoryService {
         threshold: variant.lowStockThreshold,
       }));
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get low stock products error:", error);
       return [];
     }
@@ -312,6 +317,7 @@ export class InventoryService {
         totalValue: Math.round(totalValue),
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get inventory stats error:", error);
       return {
         totalProducts: 0,
@@ -375,6 +381,7 @@ export class InventoryService {
 
       return { success: true, processed, errors };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Bulk update stock error:", error);
       return {
         success: false,
@@ -424,6 +431,7 @@ export class InventoryService {
         createdAt: variant.updatedAt,
       }));
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get low stock alerts error:", error);
       return [];
     }
@@ -469,6 +477,7 @@ export class InventoryService {
         }))
       );
     } catch (error) {
+      console.error("Error:", error);
       console.error("Get stock movements error:", error);
       return [];
     }
@@ -554,6 +563,7 @@ export class InventoryService {
         topMovingProducts,
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Generate inventory report error:", error);
       throw error;
     }

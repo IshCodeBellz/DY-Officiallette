@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ trending: mockTrending });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Error fetching trending searches:", error);
     return NextResponse.json({ trending: [] });
   }

@@ -99,6 +99,7 @@ export class CaptchaService {
           throw new Error(`Unsupported CAPTCHA provider: ${config.provider}`);
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("CAPTCHA verification error:", error);
 
       return {

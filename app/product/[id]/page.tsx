@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import ProductClient from "./ProductClient";
 import { ProductReviews } from "@/components/product/ProductReviews";
-import { formatPriceCents } from "@/lib/money";
+
 import { ClientPrice } from "@/components/ui/ClientPrice";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";

@@ -46,6 +46,7 @@ async function updateSampleBrand() {
       displayOrder: updatedBrand.displayOrder,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Error updating brand:", error);
   } finally {
     await prisma.$disconnect();

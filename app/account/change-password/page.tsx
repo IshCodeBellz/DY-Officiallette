@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
 import { AccountNavigation } from "@/components/account/AccountNavigation";
 import { Eye, EyeOff, CheckCircle, AlertCircle } from "lucide-react";
 
 export default function ChangePasswordPage() {
-  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -23,7 +21,7 @@ export default function ChangePasswordPage() {
     if (password.length === 0) return { score: 0, text: "", color: "" };
 
     let score = 0;
-    let feedback = [];
+    const feedback = [];
 
     // Length check
     if (password.length >= 8) score += 1;
@@ -126,6 +124,7 @@ export default function ChangePasswordPage() {
         setErrors({ submit: error.error || "Failed to update password" });
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error updating password:", error);
       setErrors({ submit: "Failed to update password. Please try again." });
     } finally {

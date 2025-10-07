@@ -4,8 +4,9 @@ import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { ExtendedSession } from "@/lib/types";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const productSchema = z.object({
   sku: z.string().min(3),
@@ -31,8 +32,10 @@ const productSchema = z.object({
 });
 
 export const POST = withRequest(async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const session = (await getServerSession(
+    authOptions
+  )) as ExtendedSession | null;
+  const uid = session?.user?.id;
   if (!uid)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const user = await prisma.user.findUnique({ where: { id: uid } });

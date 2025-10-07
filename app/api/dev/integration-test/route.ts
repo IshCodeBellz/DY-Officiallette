@@ -111,6 +111,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(responseData);
   } catch (error) {
+      console.error("Error:", error);
     console.error("Integration test API error:", error);
     return NextResponse.json(
       {

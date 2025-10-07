@@ -37,6 +37,7 @@ export async function POST(
       newVoteCount: result.newVoteCount,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Vote review error:", error);
     return NextResponse.json(
       { error: "Failed to record vote" },

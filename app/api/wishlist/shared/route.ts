@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ wishlists: formattedWishlists });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Error fetching shared wishlists:", error);
     return NextResponse.json(
       { error: "Failed to fetch wishlists" },
@@ -111,6 +112,7 @@ export async function POST(request: NextRequest) {
       wishlist: formattedWishlist,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Error creating shared wishlist:", error);
     return NextResponse.json(
       { error: "Failed to create wishlist" },

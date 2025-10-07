@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
       data: recommendations,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Recommendations API error:", error);
     return NextResponse.json(
       {
@@ -111,6 +112,7 @@ export async function POST(request: NextRequest) {
       message: "Interaction tracked successfully",
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Track interaction API error:", error);
     return NextResponse.json(
       {

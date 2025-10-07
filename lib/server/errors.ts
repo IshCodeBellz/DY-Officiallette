@@ -168,6 +168,7 @@ export function withErrorHandling<T extends any[], R>(
     try {
       return await handler(...args);
     } catch (error) {
+      console.error("Error:", error);
       if (error instanceof AppError) {
         throw error; // Re-throw AppErrors as-is
       }

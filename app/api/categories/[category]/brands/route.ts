@@ -49,6 +49,7 @@ export async function GET(
 
     return NextResponse.json(brandsWithCount);
   } catch (error) {
+      console.error("Error:", error);
     console.error("Error fetching category brands:", error);
     return NextResponse.json(
       { error: "Failed to fetch brands for category" },

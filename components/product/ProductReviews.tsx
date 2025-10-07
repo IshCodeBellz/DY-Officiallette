@@ -64,6 +64,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
         setPage(pageNum);
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to fetch reviews:", error);
     } finally {
       setLoading(false);

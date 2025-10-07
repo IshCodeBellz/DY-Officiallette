@@ -60,6 +60,7 @@ async function updateDefaultAddresses() {
 
     console.log("\nDefault address update completed!");
   } catch (error) {
+      console.error("Error:", error);
     console.error("Error updating default addresses:", error);
   } finally {
     await prisma.$disconnect();

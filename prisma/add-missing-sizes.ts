@@ -58,6 +58,7 @@ async function addMissingSizeVariants() {
         `✅ Added ${sizes.length} size variants to "${product.name}"`
       );
     } catch (error) {
+      console.error("Error:", error);
       console.error(`❌ Failed to add sizes to "${product.name}":`, error);
     }
   }
@@ -88,6 +89,7 @@ async function main() {
   try {
     await addMissingSizeVariants();
   } catch (error) {
+      console.error("Error:", error);
     console.error("❌ Error adding size variants:", error);
     throw error;
   } finally {

@@ -26,8 +26,9 @@ export default function MFAManagePage() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setMfaData((prev) => ({ ...prev, enabled: false }));
       setShowDisableConfirm(false);
-    } catch (e) {
-      console.error("Failed to disable MFA:", e);
+    } catch (error) {
+      console.error("Error:", error);
+      console.error("Error:", error);
     } finally {
       setLoading(false);
     }
@@ -48,8 +49,9 @@ export default function MFAManagePage() {
         backupCodesUsed: 0,
       }));
       setShowBackupCodes(true);
-    } catch (e) {
-      console.error("Failed to generate backup codes:", e);
+    } catch (error) {
+      console.error("Error:", error);
+      console.error("Error:", error);
     } finally {
       setLoading(false);
     }

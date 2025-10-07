@@ -28,6 +28,7 @@ async function updateLastLogin() {
       );
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Error updating last login:", error);
   } finally {
     await prisma.$disconnect();

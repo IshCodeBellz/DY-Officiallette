@@ -87,6 +87,7 @@ async function main() {
 
     console.log(`✅ Created ${totalInserted} user behavior records`);
   } catch (error) {
+      console.error("Error:", error);
     console.log(
       "ℹ️ UserBehavior model structure may be different, trying alternative approach..."
     );
@@ -98,7 +99,8 @@ async function main() {
       try {
         await prisma.userBehavior.create({ data: behavior });
         individualCount++;
-      } catch (e) {
+      } catch (error) {
+      console.error("Error:", error);
         console.log("Skipping behavior record due to schema mismatch");
         break;
       }
@@ -146,6 +148,7 @@ async function main() {
 
     console.log("✅ Updated product metrics for trending calculation");
   } catch (error) {
+      console.error("Error:", error);
     console.log(
       "ℹ️ ProductMetrics update failed:",
       (error as any)?.message || error

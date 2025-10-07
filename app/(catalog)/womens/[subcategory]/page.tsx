@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/server/prisma";
-import { formatPriceCents } from "@/lib/money";
 
 interface PageProps {
   params: {
@@ -32,7 +31,7 @@ export default async function WomensSubcategoryPage({
   }
 
   // Build filter conditions
-  const where: any = {
+  const where: Record<string, any> = {
     categoryId: category.id,
     isActive: true,
     deletedAt: null,
@@ -63,7 +62,7 @@ export default async function WomensSubcategoryPage({
   }
 
   // Build sort order
-  let orderBy: any = { createdAt: "desc" }; // default
+  let orderBy: Record<string, "asc" | "desc"> = { createdAt: "desc" }; // default
   switch (searchParams.sort) {
     case "price-asc":
       orderBy = { priceCents: "asc" };

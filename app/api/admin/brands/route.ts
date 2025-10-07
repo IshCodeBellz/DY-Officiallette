@@ -4,14 +4,17 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
 import { z } from "zod";
+import { ExtendedSession } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 const brandSchema = z.object({ name: z.string().min(2).max(80) });
 
 async function ensureAdmin() {
-  const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const session = (await getServerSession(
+    authOptions
+  )) as ExtendedSession | null;
+  const uid = session?.user?.id;
   if (!uid) return null;
   const user = await prisma.user.findUnique({ where: { id: uid } });
   if (!user?.isAdmin) return null;
@@ -70,7 +73,7 @@ export const PUT = withRequest(async function PUT(req: NextRequest) {
     displayOrder,
   } = parsed.data;
 
-  const updateData: any = { name };
+  const updateData: Record<string, unknown> = { name };
   if (logoUrl !== undefined) updateData.logoUrl = logoUrl;
   if (backgroundImage !== undefined)
     updateData.backgroundImage = backgroundImage;

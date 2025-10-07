@@ -63,7 +63,8 @@ export default function SocialWishlistDashboard() {
         const sharedData = await sharedRes.json();
         setSharedWithMe(sharedData.wishlists || []);
       }
-    } catch (e) {
+    } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to load wishlists:", e);
     } finally {
       setLoading(false);
@@ -229,7 +230,8 @@ function WishlistCard({
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (e) {
+    } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to copy link:", e);
     }
   }
@@ -376,7 +378,8 @@ function CreateWishlistForm({
         const data = await res.json();
         setError(data.error || "Failed to create wishlist");
       }
-    } catch (e) {
+    } catch (error) {
+      console.error("Error:", error);
       setError("Network error occurred");
     } finally {
       setLoading(false);

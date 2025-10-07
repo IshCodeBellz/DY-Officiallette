@@ -2,9 +2,25 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { useWishlist, useCart } from "@/components/providers/CartProvider";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { lineIdFor } from "@/lib/types";
-import { formatPriceCents } from "@/lib/money";
+
+interface ProductResponse {
+  id: string;
+  name: string;
+  priceCents: number;
+  price?: number;
+  images: Array<{ url: string; alt?: string }>;
+  brand?: { name: string };
+  sizes?: Array<{ label: string; stock: number }>;
+}
+
+interface ProductsAPIResponse {
+  items: ProductResponse[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
 import { useToast } from "@/components/providers/ToastProvider";
 import { ClientPrice } from "@/components/ui/ClientPrice";
 
@@ -100,14 +116,14 @@ export default function CategoryPage({
         });
 
         if (res.ok) {
-          const data = await res.json();
-          const products = (data.items || []).map((p: any) => ({
+          const data: ProductsAPIResponse = await res.json();
+          const products = (data.items || []).map((p: ProductResponse) => ({
             ...p,
             priceCents: p.priceCents ?? Math.round((p.price || 0) * 100),
           }));
 
           if (products.length > 0) {
-            const prices = products.map((p: any) =>
+            const prices = products.map((p: ProductResponse) =>
               Math.round(p.priceCents / 100)
             );
             const minPrice = Math.max(0, Math.min(...prices));
@@ -125,9 +141,10 @@ export default function CategoryPage({
             }
           }
         }
-      } catch (e) {
+      } catch (error) {
+        console.error("Error:", error);
         // Keep default range on error
-        console.warn("Failed to load price range:", e);
+        console.warn("Failed to load price range:", error);
       }
     }
 
@@ -147,7 +164,8 @@ export default function CategoryPage({
           const data = await res.json();
           setAvailableBrands(data || []);
         }
-      } catch (e) {
+      } catch (error) {
+        console.error("Error:", error);
         // Keep empty brands on error
       }
     }
@@ -186,7 +204,8 @@ export default function CategoryPage({
             }))
           );
         }
-      } catch (e) {
+      } catch (error) {
+        console.error("Error:", error);
         /* ignore */
       } finally {
         setLoading(false);
@@ -242,27 +261,35 @@ export default function CategoryPage({
       </header>
       <div className="flex flex-wrap gap-4 items-end text-sm">
         <div className="flex flex-col gap-1">
-          <label className="text-xs uppercase tracking-wide font-semibold">
+          <label
+            htmlFor="product-search"
+            className="text-xs uppercase tracking-wide font-semibold"
+          >
             Search
           </label>
           <input
+            id="product-search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Filter in page"
             disabled={loading}
-            className="border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1 bg-white dark:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1 bg-white dark:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
         {!isFaceBody && (
           <div className="flex flex-col gap-1">
-            <label className="text-xs uppercase tracking-wide font-semibold">
+            <label
+              htmlFor="size-filter"
+              className="text-xs uppercase tracking-wide font-semibold"
+            >
               Size
             </label>
             <select
+              id="size-filter"
               value={size}
               onChange={(e) => setSize(e.target.value)}
               disabled={loading}
-              className="border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1 bg-white dark:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1 bg-white dark:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">All</option>
               {["XS", "S", "M", "L", "XL"].map((s) => (

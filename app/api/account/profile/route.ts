@@ -3,12 +3,15 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { hashPassword } from "@/lib/server/auth";
+import { ExtendedSession } from "@/lib/types";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const session = (await getServerSession(
+    authOptions
+  )) as ExtendedSession | null;
+  const uid = session?.user?.id;
   if (!uid)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
@@ -21,10 +24,11 @@ export async function GET() {
       return NextResponse.json({ error: "user_not_found" }, { status: 404 });
     }
 
-    // Get user preferences separately
+    // Get user preferences separately (if table exists)
     let preferences = null;
     try {
-      preferences = await (prisma as any).userPreferences.findUnique({
+      // Type assertion needed as UserPreferences may not be in schema yet
+      preferences = await (prisma as any).userPreferences?.findUnique({
         where: { userId: uid },
       });
     } catch (error) {
@@ -45,8 +49,10 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const session = (await getServerSession(
+    authOptions
+  )) as ExtendedSession | null;
+  const uid = session?.user?.id;
   if (!uid)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
@@ -57,7 +63,7 @@ export async function POST(req: NextRequest) {
   try {
     // Handle comprehensive profile update
     if (body.action === "update_profile") {
-      const updateData: any = {};
+      const updateData: Record<string, any> = {};
 
       // Handle name field
       if (typeof body.name === "string") {
@@ -76,7 +82,8 @@ export async function POST(req: NextRequest) {
       if (body.dateOfBirth) {
         try {
           updateData.dateOfBirth = new Date(body.dateOfBirth);
-        } catch (e) {
+        } catch (error) {
+          console.error("Error:", error);
           return NextResponse.json(
             { error: "Invalid date of birth format" },
             { status: 400 }
@@ -158,6 +165,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: "invalid_action" }, { status: 400 });
   } catch (error) {
+    console.error("Error:", error);
     console.error("Profile update error:", error);
     return NextResponse.json(
       { error: "internal_server_error" },

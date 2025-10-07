@@ -48,6 +48,7 @@ async function main() {
           console.log(`  → ✅ Fixed password for ${email}`);
         }
       } catch (error) {
+      console.error("Error:", error);
         console.log(`${email}: ❌ ERROR - ${(error as any)?.message || error}`);
       }
     } else {

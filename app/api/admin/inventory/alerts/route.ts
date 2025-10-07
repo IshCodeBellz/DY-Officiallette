@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
       data: alerts,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Get inventory alerts API error:", error);
     return NextResponse.json(
       {

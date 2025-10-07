@@ -88,6 +88,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
+      console.error("Error:", error);
     return createErrorResponse(
       error instanceof Error ? error : new Error("Email verification failed"),
       {

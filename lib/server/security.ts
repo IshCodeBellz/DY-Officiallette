@@ -95,6 +95,7 @@ export class SecurityService {
 
       return event;
     } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to log security event:", error);
       captureError(error as Error, {
         userId: context.userId,
@@ -237,6 +238,7 @@ export class SecurityService {
         });
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to check security alerts:", error);
     }
   }
@@ -295,6 +297,7 @@ export class SecurityService {
         );
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to handle critical alert:", error);
     }
   }
@@ -358,6 +361,7 @@ export class SecurityService {
         details: { deviceId, deviceName: deviceInfo.name },
       });
     } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to trust device:", error);
       throw error;
     }
@@ -377,6 +381,7 @@ export class SecurityService {
         lastSecurityReview: null,
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to get security summary:", error);
       return null;
     }

@@ -49,6 +49,7 @@ export async function GET(
       hasMore: reviews.length === 20,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Error fetching reviews:", error);
     return NextResponse.json(
       { error: "Failed to fetch reviews" },
@@ -148,6 +149,7 @@ export async function POST(
       },
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Error creating review:", error);
     return NextResponse.json(
       { error: "Failed to create review" },

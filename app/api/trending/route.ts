@@ -67,7 +67,8 @@ export async function GET() {
     }
 
     return NextResponse.json({ items });
-  } catch (e) {
+  } catch (error) {
+      console.error("Error:", error);
     // On hard failure also fallback so homepage stays resilient
     try {
       const latest = await prisma.product.findMany({

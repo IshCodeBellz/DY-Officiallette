@@ -21,6 +21,7 @@ async function addSecondFeaturedBrand() {
 
     console.log("Successfully updated Zara:", updatedBrand);
   } catch (error) {
+      console.error("Error:", error);
     console.error("Error updating Zara:", error);
   } finally {
     await prisma.$disconnect();

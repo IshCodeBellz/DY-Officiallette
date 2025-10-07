@@ -44,6 +44,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
           setHasAutoDetected(true);
         }
       } catch (error) {
+      console.error("Error:", error);
         console.warn("Failed to load currency preference:", error);
         setCurrentCurrency("GBP");
       } finally {
@@ -74,6 +75,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
       // Don't save auto-detected currency to localStorage
       // Let user manually confirm their preference
     } catch (error) {
+      console.error("Error:", error);
       console.warn("Failed to auto-detect currency:", error);
       setCurrentCurrency("GBP");
     } finally {

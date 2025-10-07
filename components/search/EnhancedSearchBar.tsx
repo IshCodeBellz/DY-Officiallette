@@ -88,8 +88,8 @@ export default function EnhancedSearchBar() {
           const data = await res.json();
           setSuggestions(data.suggestions || []);
         }
-      } catch (e) {
-        console.error("Failed to load suggestions:", e);
+      } catch (error) {
+        console.error("Failed to load suggestions:", error);
       } finally {
         setLoading(false);
       }
@@ -109,8 +109,8 @@ export default function EnhancedSearchBar() {
       if (saved) {
         setRecentSearches(JSON.parse(saved));
       }
-    } catch (e) {
-      console.error("Failed to load recent searches:", e);
+    } catch (error) {
+      console.error("Failed to load recent searches:", error);
     }
   }
 
@@ -121,8 +121,8 @@ export default function EnhancedSearchBar() {
         const data = await res.json();
         setTrendingSearches(data.trending || []);
       }
-    } catch (e) {
-      console.error("Failed to load trending searches:", e);
+    } catch (error) {
+      console.error("Failed to load trending searches:", error);
     }
   }
 

@@ -79,6 +79,7 @@ export function ReviewForm({
         }
       }, 2000);
     } catch (error) {
+      console.error("Error:", error);
       console.error("Submit review error:", error);
       setError(
         error instanceof Error ? error.message : "Failed to submit review"

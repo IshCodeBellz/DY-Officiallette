@@ -44,6 +44,7 @@ export class IntegrationTestService {
 
       results.databaseConnected = true;
     } catch (error) {
+      console.error("Error:", error);
       errors.push(`Database connectivity error: ${error}`);
       results.databaseConnected = false;
     }
@@ -90,6 +91,7 @@ export class IntegrationTestService {
 
       results.mfaFlowTested = true;
     } catch (error) {
+      console.error("Error:", error);
       errors.push(`MFA flow error: ${error}`);
       results.mfaFlowTested = false;
     }
@@ -161,6 +163,7 @@ export class IntegrationTestService {
 
       results.socialWishlistTested = true;
     } catch (error) {
+      console.error("Error:", error);
       errors.push(`Social wishlist error: ${error}`);
       results.socialWishlistTested = false;
     }
@@ -229,6 +232,7 @@ export class IntegrationTestService {
       results.averageQueryTime =
         (featuredProductsTime + categoriesTime + brandsTime + searchTime) / 4;
     } catch (error) {
+      console.error("Error:", error);
       errors.push(`Caching performance error: ${error}`);
       results.performanceOptimized = false;
     }
@@ -303,6 +307,7 @@ export class IntegrationTestService {
 
       results.analyticsTested = true;
     } catch (error) {
+      console.error("Error:", error);
       errors.push(`Analytics tracking error: ${error}`);
       results.analyticsTested = false;
     }

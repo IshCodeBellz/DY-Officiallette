@@ -149,6 +149,7 @@ export class RateLimitService {
         },
       });
     } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to cleanup expired rate limit entries:", error);
     }
   }

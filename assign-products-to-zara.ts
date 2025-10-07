@@ -37,6 +37,7 @@ async function assignProductsToZara() {
 
     console.log("Successfully assigned products to Zara");
   } catch (error) {
+      console.error("Error:", error);
     console.error("Error:", error);
   } finally {
     await prisma.$disconnect();

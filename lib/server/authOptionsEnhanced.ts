@@ -118,6 +118,7 @@ export const authOptionsEnhanced: NextAuthOptions = {
             emailVerified: user.emailVerified,
           };
         } catch (error) {
+      console.error("Error:", error);
           console.error("Authentication error:", error);
           return null;
         }

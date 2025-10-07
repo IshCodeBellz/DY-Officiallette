@@ -41,21 +41,21 @@ export async function resetDb() {
   if ((global as any).__prismaDisconnected) {
     try {
       await prisma.$connect();
-    } catch (e) {
+    } catch (error) {
+      console.error("Error:", error);
       // ignore - we'll surface errors later
     }
   }
   // Pre-test DB health check: fail fast if DB is unreachable
   try {
     await prisma.$queryRaw`SELECT 1`;
-  } catch (err) {
-    // Print a clear diagnostic and throw so tests fail fast
+  } catch (error) {
     console.error(
       "[TEST DB ERROR] Could not connect to database. Check DATABASE_URL and DB status.",
       "DATABASE_URL:",
       process.env.DATABASE_URL,
       "Error:",
-      err
+      error
     );
 
     // Try to reconnect once before failing
@@ -164,12 +164,12 @@ export async function resetDb() {
         timeout: 30000, // Increase timeout to 30 seconds
       }
     );
-  } catch (err) {
+  } catch (error) {
     console.error(
       "[TEST DB ERROR] Transaction failed during resetDb. Check DB status and logs.",
-      err
+      error
     );
-    throw err;
+    throw error;
   }
 }
 
@@ -285,7 +285,8 @@ export async function createOrderForTest(opts: {
           providerRef: { startsWith: "pi_sim_" },
         },
       });
-    } catch (e) {
+    } catch (error) {
+      console.error("Error:", error);
       // ignore
     }
   }

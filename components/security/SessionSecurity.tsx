@@ -70,7 +70,8 @@ export const SessionSecurity: React.FC<SessionSecurityProps> = ({
       }
 
       setSettings(data.settings || settings);
-    } catch (err) {
+    } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to load session security settings:", err);
       setError("Failed to load settings");
     } finally {
@@ -103,7 +104,8 @@ export const SessionSecurity: React.FC<SessionSecurityProps> = ({
 
       setSettings(updatedSettings);
       setLastSaved(new Date());
-    } catch (err) {
+    } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to save session security settings:", err);
       setError("Failed to save settings");
     } finally {
@@ -145,7 +147,8 @@ export const SessionSecurity: React.FC<SessionSecurityProps> = ({
 
       // Redirect to login
       window.location.href = "/login";
-    } catch (err) {
+    } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to terminate all sessions:", err);
       setError("Failed to terminate all sessions");
     }

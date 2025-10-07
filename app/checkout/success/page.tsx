@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { formatPriceCents } from "@/lib/money";
+
 import { ClientPrice } from "@/components/ui/ClientPrice";
 
 export const dynamic = "force-dynamic";

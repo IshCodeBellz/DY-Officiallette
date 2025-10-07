@@ -275,6 +275,7 @@ export async function GET(request: NextRequest) {
       data: demoResults,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Phase 3 demo error:", error);
     return NextResponse.json(
       {

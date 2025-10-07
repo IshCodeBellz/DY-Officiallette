@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+
+import React, { useState, useEffect, useCallback } from "react";
 import { BASE_CURRENCY } from "@/lib/currency";
 import { useRouter } from "next/navigation";
 
@@ -7,7 +8,7 @@ interface ImageInput {
   id?: string;
   url: string;
   alt?: string;
-  position?: number;
+  position: number;
 }
 interface SizeInput {
   id?: string;
@@ -24,7 +25,20 @@ interface MetaCategory {
   slug: string;
 }
 
-export function EditProductClient({ product }: { product: any }) {
+interface Product {
+  id: string;
+  sku: string;
+  name: string;
+  description: string;
+  priceCents: number;
+  brandId?: string;
+  categoryId?: string;
+  images: ImageInput[];
+  sizeVariants: SizeInput[];
+  deletedAt?: Date | null;
+}
+
+export function EditProductClient({ product }: { product: Product }) {
   const router = useRouter();
   const [sku, setSku] = useState(product.sku || "");
   const [name, setName] = useState(product.name || "");
@@ -80,23 +94,30 @@ export function EditProductClient({ product }: { product: any }) {
 
   // Derived duplicate size detection
   const sizeLabelCollision = (() => {
-    const labels = sizes.map((s) => s.label.trim()).filter(Boolean);
+    const labels = sizes.map((s: SizeInput) => s.label.trim()).filter(Boolean);
     return new Set(labels).size !== labels.length;
   })();
 
   function updateImage(idx: number, patch: Partial<ImageInput>) {
-    setImages((prev) =>
-      prev.map((im, i) => (i === idx ? { ...im, ...patch } : im))
+    setImages((prev: ImageInput[]) =>
+      prev.map((im: ImageInput, i: number) =>
+        i === idx ? { ...im, ...patch } : im
+      )
     );
   }
   function addImage() {
-    setImages((p) => [...p, { url: "", alt: "" }]);
+    setImages((p: ImageInput[]) => [
+      ...p,
+      { url: "", alt: "", position: p.length },
+    ]);
   }
   function removeImage(i: number) {
-    setImages((p) => p.filter((_, idx) => idx !== i));
+    setImages((p: ImageInput[]) =>
+      p.filter((_: ImageInput, idx: number) => idx !== i)
+    );
   }
   function moveImage(i: number, dir: -1 | 1) {
-    setImages((p) => {
+    setImages((p: ImageInput[]) => {
       const arr = [...p];
       const j = i + dir;
       if (j < 0 || j >= arr.length) return p;
@@ -114,7 +135,7 @@ export function EditProductClient({ product }: { product: any }) {
     (index: number) => (e: React.DragEvent) => {
       e.preventDefault();
       if (dragIndex === null || dragIndex === index) return;
-      setImages((p) => {
+      setImages((p: ImageInput[]) => {
         const arr = [...p];
         const [moved] = arr.splice(dragIndex, 1);
         arr.splice(index, 0, moved);
@@ -134,7 +155,7 @@ export function EditProductClient({ product }: { product: any }) {
     if (!product?.id) return;
     const handle = setTimeout(() => {
       // Only send order if at least one image has position different from index
-      const payloadImages = images.map((im, idx) => ({
+      const payloadImages = images.map((im: ImageInput, idx: number) => ({
         url: im.url.trim(),
         alt: im.alt?.trim() || undefined,
         position: idx,
@@ -151,8 +172,11 @@ export function EditProductClient({ product }: { product: any }) {
           categoryId: categoryId || undefined,
           images: payloadImages,
           sizes: sizes
-            .filter((s) => s.label.trim())
-            .map((s) => ({ label: s.label.trim(), stock: s.stock || 0 })),
+            .filter((s: SizeInput) => s.label.trim())
+            .map((s: SizeInput) => ({
+              label: s.label.trim(),
+              stock: s.stock || 0,
+            })),
         }),
       }).catch(() => {});
     }, 900);
@@ -160,15 +184,19 @@ export function EditProductClient({ product }: { product: any }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [images]);
   function updateSize(idx: number, patch: Partial<SizeInput>) {
-    setSizes((prev) =>
-      prev.map((s, i) => (i === idx ? { ...s, ...patch } : s))
+    setSizes((prev: SizeInput[]) =>
+      prev.map((s: SizeInput, i: number) =>
+        i === idx ? { ...s, ...patch } : s
+      )
     );
   }
   function addSize() {
-    setSizes((p) => [...p, { label: "", stock: 0 }]);
+    setSizes((p: SizeInput[]) => [...p, { label: "", stock: 0 }]);
   }
   function removeSize(i: number) {
-    setSizes((p) => p.filter((_, idx) => idx !== i));
+    setSizes((p: SizeInput[]) =>
+      p.filter((_: SizeInput, idx: number) => idx !== i)
+    );
   }
 
   async function onSave(e: React.FormEvent) {

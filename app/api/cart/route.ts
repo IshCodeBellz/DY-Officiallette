@@ -4,8 +4,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { z } from "zod";
+import { ExtendedSession } from "@/lib/types";
 
-export const dynamic = 'force-dynamic';
+interface CartLine {
+  productId: string;
+  size: string | null;
+  qty: number;
+  priceCentsSnapshot: number;
+}
+
+export const dynamic = "force-dynamic";
 
 const lineSchema = z.object({
   productId: z.string(),
@@ -30,16 +38,17 @@ async function getOrCreateCart(userId: string) {
 }
 
 export const GET = withRequest(async function GET() {
-  const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const session = (await getServerSession(
+    authOptions
+  )) as ExtendedSession | null;
+  const uid = session?.user?.id;
   if (!uid) return NextResponse.json({ lines: [] });
   const cart = await prisma.cart.findUnique({
     where: { userId: uid },
     include: { lines: true },
   });
   return NextResponse.json({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    lines: (cart?.lines || []).map((l: any) => ({
+    lines: (cart?.lines || []).map((l: CartLine) => ({
       productId: l.productId,
       size: l.size || undefined,
       qty: l.qty,
@@ -50,8 +59,10 @@ export const GET = withRequest(async function GET() {
 
 // Replace cart
 export const POST = withRequest(async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const session = (await getServerSession(
+    authOptions
+  )) as ExtendedSession | null;
+  const uid = session?.user?.id;
   if (!uid)
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   const body = await req.json().catch(() => null);
@@ -95,8 +106,10 @@ export const POST = withRequest(async function POST(req: NextRequest) {
 
 // Merge cart (accumulate qty)
 export const PATCH = withRequest(async function PATCH(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const session = (await getServerSession(
+    authOptions
+  )) as ExtendedSession | null;
+  const uid = session?.user?.id;
   if (!uid)
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   const body = await req.json().catch(() => null);
@@ -147,9 +160,8 @@ export const PATCH = withRequest(async function PATCH(req: NextRequest) {
     include: { lines: true },
   });
   return NextResponse.json({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     lines:
-      merged?.lines.map((l: any) => ({
+      merged?.lines.map((l: CartLine) => ({
         productId: l.productId,
         size: l.size || undefined,
         qty: l.qty,

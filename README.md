@@ -6,7 +6,8 @@ Modern fashion e‑commerce demo (Next.js 14 + Tailwind). Production‑style arc
 
 <p>
 <a href="#"><img alt="Build" src="https://img.shields.io/badge/build-passing-brightgreen" /></a>
-<a href="#"><img alt="Coverage" src="https://img.shields.io/badge/coverage-~%20tests-green" /></a>
+<a href="#"><img alt="Tests" src="https://img.shields.io/badge/tests-28%20suites-green" /></a>
+<a href="#"><img alt="Health" src="https://img.shields.io/badge/health-87%25-green" /></a>
 <a href="./ARCHITECTURE.md"><img alt="Docs" src="https://img.shields.io/badge/docs-architecture-blue" /></a>
 </p>
 
@@ -75,7 +76,7 @@ See `ARCHITECTURE.md` (deep data models, algorithms, roadmap, activation steps).
 
 ## ⚖️ License / Attribution
 
-Educational project (not affiliated with ASOS). Validate security & compliance before production use.
+Educational project. Validate security & compliance before production use.
 
 ---
 
@@ -205,7 +206,7 @@ Optional error monitoring: set `SENTRY_DSN` and (optionally) `SENTRY_TRACES_SAMP
 
 ## Disclaimer
 
-This is an educational demo, not affiliated with or endorsed by ASOS.
+This is an educational demo, not affiliated with anyone.
 
 ## Admin / Management APIs
 

@@ -72,7 +72,8 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
       }));
 
       setSessions(parsedSessions);
-    } catch (err) {
+    } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to load sessions:", err);
       setError("Failed to load session information");
 
@@ -143,7 +144,8 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
 
       // Remove session from list
       setSessions((prev) => prev.filter((session) => session.id !== sessionId));
-    } catch (err) {
+    } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to terminate session:", err);
       setError("Failed to terminate session");
     } finally {
@@ -180,7 +182,8 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
 
       // Remove other sessions from list
       setSessions((prev) => prev.filter((session) => session.isCurrent));
-    } catch (err) {
+    } catch (error) {
+      console.error("Error:", error);
       console.error("Failed to terminate other sessions:", err);
       setError("Failed to terminate other sessions");
     } finally {

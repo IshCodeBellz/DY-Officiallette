@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
       data: result,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Get reviews API error:", error);
     return NextResponse.json(
       {
@@ -106,6 +107,7 @@ export async function POST(request: NextRequest) {
       data: result.review,
     });
   } catch (error) {
+      console.error("Error:", error);
     console.error("Create review API error:", error);
     return NextResponse.json(
       {

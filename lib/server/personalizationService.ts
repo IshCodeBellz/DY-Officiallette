@@ -119,6 +119,7 @@ export class PersonalizationService {
         strategy,
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("Personalization error:", error);
 
       // Fallback to trending products
@@ -162,6 +163,7 @@ export class PersonalizationService {
         colorPreferences: ["Blue", "Black", "White"],
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("User behavior data error:", error);
       return this.getDefaultBehaviorData();
     }
@@ -203,6 +205,7 @@ export class PersonalizationService {
         ],
       };
     } catch (error) {
+      console.error("Error:", error);
       console.error("User preferences error:", error);
       return this.getDefaultPreferences();
     }
@@ -446,6 +449,7 @@ export class PersonalizationService {
         timestamp: new Date(),
       });
     } catch (error) {
+      console.error("Error:", error);
       console.error("Interaction tracking error:", error);
     }
   }
@@ -470,6 +474,7 @@ export class PersonalizationService {
 
       return searchRecommendations.slice(0, limit);
     } catch (error) {
+      console.error("Error:", error);
       console.error("Recommended searches error:", error);
       return ["t-shirt", "jeans", "sneakers", "dress", "jacket"];
     }

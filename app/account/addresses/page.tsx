@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { AccountNavigation } from "@/components/account/AccountNavigation";
 import Link from "next/link";
-import clsx from "clsx";
 
 interface Address {
   id: string;
@@ -62,6 +61,7 @@ export default function AddressesPage() {
         showNotification("error", "Failed to load addresses");
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error fetching addresses:", error);
       showNotification("error", "Unexpected error loading addresses");
     } finally {
@@ -108,6 +108,7 @@ export default function AddressesPage() {
         showNotification("error", error.error || "Failed to add address");
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error adding address:", error);
       showNotification("error", "Failed to add address");
     } finally {
@@ -162,6 +163,7 @@ export default function AddressesPage() {
         showNotification("error", error.error || "Failed to update address");
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error updating address:", error);
       showNotification("error", "Failed to update address");
     } finally {
@@ -197,6 +199,7 @@ export default function AddressesPage() {
         showNotification("error", error.error || "Failed to delete address");
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error deleting address:", error);
       showNotification("error", "Failed to delete address");
     }
@@ -244,6 +247,7 @@ export default function AddressesPage() {
         );
       }
     } catch (error) {
+      console.error("Error:", error);
       console.error("Error setting default address:", error);
       showNotification("error", "Failed to set default address");
     }

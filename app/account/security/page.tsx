@@ -75,6 +75,7 @@ async function getSecurityData(userId: string): Promise<SecurityData> {
       trustedDevices: 0, // This would need to be implemented in MFAService
     };
   } catch (error) {
+      console.error("Error:", error);
     console.error("Failed to fetch MFA status:", error);
     // Keep default values on error
   }
@@ -113,6 +114,7 @@ export default async function AccountSecurityPage() {
   try {
     securityData = await getSecurityData(uid);
   } catch (error) {
+      console.error("Error:", error);
     console.error("Failed to load security data:", error);
     redirect("/login?callbackUrl=/account/security");
   }

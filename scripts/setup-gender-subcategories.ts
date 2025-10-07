@@ -64,6 +64,7 @@ async function main() {
       console.log(`✅ Created: ${newCategory.name} (${newCategory.slug})`);
       created++;
     } catch (error) {
+      console.error("Error:", error);
       console.error(`❌ Failed to create ${category.name}:`, error);
     }
   }
