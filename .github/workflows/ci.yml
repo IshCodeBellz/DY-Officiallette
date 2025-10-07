@@ -13,7 +13,7 @@ permissions:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     services:
       postgres:
@@ -64,6 +64,12 @@ jobs:
           echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" > .env.local
           echo "NEXTAUTH_SECRET=test-secret-for-ci" >> .env.local
           echo "NEXTAUTH_URL=http://localhost:3000" >> .env.local
+          echo "EMAIL_FROM=test@example.com" >> .env.local
+          echo "RESEND_API_KEY=fake-key-for-ci" >> .env.local
+          echo "STRIPE_SECRET_KEY=sk_test_fake_key_for_ci" >> .env.local
+          echo "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_fake_key_for_ci" >> .env.local
+          echo "NODE_ENV=test" >> .env.local
+          echo "CI=true" >> .env.local
 
       - name: Wait for PostgreSQL
         run: |
@@ -76,10 +82,17 @@ jobs:
         run: |
           echo "Attempting to apply migrations..."
           echo "Current DATABASE_URL: $DATABASE_URL"
-          npx prisma migrate deploy || {
+          
+          # Try migrate deploy first
+          if npx prisma migrate deploy; then
+            echo "Migration deploy successful"
+          else
             echo "Deploy failed, trying to create database schema..."
-            npx prisma db push --skip-generate --force-reset
-          }
+            npx prisma db push --skip-generate --force-reset --accept-data-loss
+          fi
+          
+          # Verify schema is created
+          psql -h localhost -U postgres -d test_db -c "\dt" || echo "Could not list tables"
 
       - name: Seed (optional)
         run: npm run prisma:seed || echo "Seed script optional – continuing"
@@ -94,9 +107,18 @@ jobs:
         run: |
           echo "Testing Prisma connection..."
           npx prisma db execute --stdin <<< "SELECT 1 as test;" || echo "Prisma connection test failed"
+          
+          # Verify key tables exist
+          echo "Checking if tables exist..."
+          psql -h localhost -U postgres -d test_db -c "SELECT tablename FROM pg_tables WHERE schemaname = 'public';" | head -20
 
       - name: Run Tests
-        run: npm test
+        run: |
+          echo "Starting tests with environment:"
+          echo "DATABASE_URL: $DATABASE_URL"
+          echo "NODE_ENV: $NODE_ENV"
+          echo "CI: $CI"
+          npm test
 
       - name: Build
         run: npm run build
