@@ -61,7 +61,7 @@ export default async function CategoriesAdminPage() {
   const activeCategories = categories.filter(
     (category) => category._count.products > 0
   ).length;
-
+  // test
   const mapped = categories
     .map((c) => ({
       id: c.id,
