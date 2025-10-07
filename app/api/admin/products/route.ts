@@ -5,6 +5,8 @@ import { withRequest } from "@/lib/server/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+
 const productSchema = z.object({
   sku: z.string().min(3),
   name: z.string().min(1),

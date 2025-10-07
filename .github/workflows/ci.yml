@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, fix/tests-stability/metrics-health]
   pull_request:
     branches: [main]
 
@@ -20,6 +20,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
           POSTGRES_DB: test_db
         options: >-
           --health-cmd pg_isready
@@ -30,6 +31,8 @@ jobs:
           - 5432:5432
 
     env:
+      CI: true
+      NODE_ENV: test
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
       NEXTAUTH_SECRET: "test-secret-for-ci"
       NEXTAUTH_URL: "http://localhost:3000"
@@ -56,6 +59,12 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
+      - name: Create test environment file
+        run: |
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" > .env.local
+          echo "NEXTAUTH_SECRET=test-secret-for-ci" >> .env.local
+          echo "NEXTAUTH_URL=http://localhost:3000" >> .env.local
+
       - name: Wait for PostgreSQL
         run: |
           until pg_isready -h localhost -p 5432 -U postgres; do
@@ -64,13 +73,30 @@ jobs:
           done
 
       - name: Run Prisma Migrate (PostgreSQL)
-        run: npx prisma migrate deploy || npx prisma migrate dev --name init --skip-generate
+        run: |
+          echo "Attempting to apply migrations..."
+          echo "Current DATABASE_URL: $DATABASE_URL"
+          npx prisma migrate deploy || {
+            echo "Deploy failed, trying to create database schema..."
+            npx prisma db push --skip-generate --force-reset
+          }
 
       - name: Seed (optional)
         run: npm run prisma:seed || echo "Seed script optional – continuing"
 
+      - name: Debug Database Connection
+        run: |
+          echo "DATABASE_URL from env: $DATABASE_URL"
+          cat .env.local || echo "No .env.local file"
+          psql -h localhost -U postgres -d test_db -c "SELECT version();" || echo "Direct psql connection failed"
+
+      - name: Test Prisma Connection
+        run: |
+          echo "Testing Prisma connection..."
+          npx prisma db execute --stdin <<< "SELECT 1 as test;" || echo "Prisma connection test failed"
+
       - name: Run Tests
-        run: npm test --silent
+        run: npm test
 
       - name: Build
         run: npm run build

@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { IntegrationTestService } from "@/lib/server/integrationTestService";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Run integration tests for database, authentication, and performance
  * GET /api/dev/integration-test

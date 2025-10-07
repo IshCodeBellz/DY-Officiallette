@@ -4,6 +4,8 @@ import { withRequest } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 
+export const dynamic = 'force-dynamic';
+
 export const GET = withRequest(async function GET() {
   const session = await getServerSession(authOptions);
   const uid = (session?.user as any)?.id as string | undefined;

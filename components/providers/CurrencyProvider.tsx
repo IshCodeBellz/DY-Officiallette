@@ -12,7 +12,7 @@ interface CurrencyContextType {
   currencies: Currency[];
   isLoading: boolean;
   setCurrency: (currencyCode: string) => void;
-  convertPrice: (usdCents: number) => number;
+  convertPrice: (gbpCents: number) => number;
   formatPrice: (cents: number, targetCurrency?: string) => string;
   autoDetectCurrency: () => Promise<void>;
 }
@@ -81,11 +81,11 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const convertPrice = (usdCents: number): number => {
-    const result = currencyService.convertPrice(usdCents, currentCurrency);
-    if (currentCurrency !== "USD") {
+  const convertPrice = (gbpCents: number): number => {
+    const result = currencyService.convertPrice(gbpCents, currentCurrency);
+    if (currentCurrency !== "GBP") {
       console.log(
-        `Converting ${usdCents} USD cents to ${currentCurrency}: ${result} cents`
+        `Converting ${gbpCents} GBP cents to ${currentCurrency}: ${result} cents`
       );
     }
     return result;

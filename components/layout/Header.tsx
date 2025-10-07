@@ -308,8 +308,8 @@ export function Header() {
                 <div className="space-y-3">
                   {[
                     { href: "/new-in", label: "New In" },
-                    { href: "/womens-clothing", label: "Women" },
-                    { href: "/mens-clothing", label: "Men" },
+                    { href: "/womens", label: "Women" },
+                    { href: "/mens", label: "Men" },
                     { href: "/footwear", label: "Shoes" },
                     { href: "/accessories", label: "Accessories" },
                     { href: "/brands", label: "Brands" },
@@ -332,10 +332,10 @@ export function Header() {
                   </p>
                   <div className="grid grid-cols-2 gap-1.5 text-[13px]">
                     {[
-                      { href: "/dresses", label: "Dresses" },
-                      { href: "/outerwear", label: "Outerwear" },
-                      { href: "/sportswear", label: "Sportswear" },
-                      { href: "/denim", label: "Denim" },
+                      { href: "/women/dresses", label: "Women · Dresses" },
+                      { href: "/women/outerwear", label: "Women · Outerwear" },
+                      { href: "/men/outerwear", label: "Men · Outerwear" },
+                      { href: "/men/denim", label: "Men · Denim" },
                     ].map((item) => (
                       <Link
                         key={item.href}

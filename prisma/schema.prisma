@@ -21,12 +21,21 @@ model Brand {
 }
 
 model Category {
-  id        String    @id @default(cuid())
-  slug      String    @unique
-  name      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  products  Product[]
+  id           String     @id @default(cuid())
+  slug         String     @unique
+  name         String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  description  String?
+  displayOrder Int        @default(0)
+  imageUrl     String?
+  isActive     Boolean    @default(true)
+  parentId     String?
+  parent       Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children     Category[] @relation("CategoryHierarchy")
+  products     Product[]
+
+  @@index([parentId])
 }
 
 model Product {
@@ -51,6 +60,7 @@ model Product {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   deletedAt         DateTime?
+  gender            String?
   cartLines         CartLine[]
   brand             Brand?            @relation(fields: [brandId], references: [id])
   category          Category?         @relation(fields: [categoryId], references: [id])
@@ -71,6 +81,7 @@ model Product {
   @@index([deletedAt])
   @@index([isActive])
   @@index([isFeatured])
+  @@index([gender])
 }
 
 model ProductImage {
@@ -310,9 +321,9 @@ model Address {
   postalCode     String
   country        String
   phone          String?
-  isDefault      Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  isDefault      Boolean  @default(false)
   user           User?    @relation(fields: [userId], references: [id])
   billingOrders  Order[]  @relation("BillingAddress")
   shippingOrders Order[]  @relation("ShippingAddress")

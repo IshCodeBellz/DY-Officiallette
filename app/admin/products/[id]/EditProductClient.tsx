@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { BASE_CURRENCY } from "@/lib/currency";
 import { useRouter } from "next/navigation";
 
 interface ImageInput {
@@ -314,7 +315,7 @@ export function EditProductClient({ product }: { product: any }) {
           </select>
         </div>
         <div className="space-y-1 max-w-xs">
-          <label className="text-sm font-medium">Price (GBP)</label>
+          <label className="text-sm font-medium">Price ({BASE_CURRENCY})</label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <span className="text-gray-500 sm:text-sm">£</span>
@@ -331,7 +332,8 @@ export function EditProductClient({ product }: { product: any }) {
             />
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            Price in British Pounds with proper currency formatting.
+            Stored in {BASE_CURRENCY} minor units (cents) and converted
+            client-side if user selects another currency.
           </p>
         </div>
       </section>

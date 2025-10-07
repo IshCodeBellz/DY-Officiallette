@@ -6,6 +6,8 @@ import { z } from "zod";
 import { getStripe } from "@/lib/server/stripe";
 import { withRequest } from "@/lib/server/logger";
 
+export const dynamic = 'force-dynamic';
+
 // Stub: would call Stripe to create a PaymentIntent. For now, we simulate one.
 // Later replace with: const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' });
 

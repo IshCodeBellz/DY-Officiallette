@@ -9,6 +9,8 @@ import {
 import { z } from "zod";
 import { rateLimit } from "@/lib/server/rateLimit";
 import { buildDraftFromCart, calculateRates } from "@/lib/server/taxShipping";
+
+export const dynamic = "force-dynamic";
 import { decrementSizeStock } from "@/lib/server/inventory";
 import { debug } from "@/lib/server/debug";
 import { withRequest } from "@/lib/server/logger";

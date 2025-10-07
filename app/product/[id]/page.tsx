@@ -4,7 +4,7 @@ import { prisma } from "@/lib/server/prisma";
 import { Suspense } from "react";
 import Link from "next/link";
 import ProductClient from "./ProductClient";
-import ProductReviews from "@/components/product/ProductReviews";
+import { ProductReviews } from "@/components/product/ProductReviews";
 import { formatPriceCents } from "@/lib/money";
 import { ClientPrice } from "@/components/ui/ClientPrice";
 import { getServerSession } from "next-auth";
@@ -357,12 +357,7 @@ export default async function ProductPage({
 
       {/* Product Reviews Section */}
       <div className="lg:col-span-2 mt-16 pt-16 border-t">
-        <ProductReviews
-          productId={product.id}
-          averageRating={averageRating}
-          totalReviews={totalReviews}
-          canReview={canReview}
-        />
+        <ProductReviews productId={product.id} />
       </div>
     </div>
   );

@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { NextResponse } from "next/server";
 
+export const dynamic = 'force-dynamic';
+
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }

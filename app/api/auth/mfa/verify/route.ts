@@ -5,6 +5,8 @@ import { MFAService } from "@/lib/server/mfa";
 import { captureError } from "@/lib/server/errors";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+
 const verifySchema = z.object({
   token: z.string().min(6).max(8), // TOTP codes or backup codes
   action: z.enum(["setup", "login"]).default("setup"),

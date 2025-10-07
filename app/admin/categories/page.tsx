@@ -30,8 +30,12 @@ export default async function CategoriesAdminPage() {
 
   // Fetch categories with product counts
   const categories = await prisma.category.findMany({
-    orderBy: { name: "asc" },
+    orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
     include: {
+      parent: true,
+      children: {
+        orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+      },
       _count: {
         select: {
           products: true,
@@ -40,8 +44,14 @@ export default async function CategoriesAdminPage() {
     },
   });
 
+  // Separate main categories from subcategories
+  const mainCategories = categories.filter((c) => !c.parentId);
+  const subcategories = categories.filter((c) => c.parentId);
+
   // Calculate metrics
   const totalCategories = categories.length;
+  const totalMainCategories = mainCategories.length;
+  const totalSubcategories = subcategories.length;
   const totalProducts = categories.reduce(
     (sum, category) => sum + category._count.products,
     0
@@ -52,12 +62,56 @@ export default async function CategoriesAdminPage() {
     (category) => category._count.products > 0
   ).length;
 
-  const mapped = categories.map((c) => ({
-    id: c.id,
-    name: c.name,
-    slug: c.slug,
-    productCount: c._count.products,
-  }));
+  const mapped = categories
+    .map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      description: c.description,
+      imageUrl: c.imageUrl,
+      parentId: c.parentId,
+      displayOrder: c.displayOrder,
+      isActive: c.isActive,
+      productCount: c._count.products,
+      parent: c.parent,
+      children: c.children,
+    }))
+    .sort((a, b) => {
+      // First, separate main categories from subcategories
+      const aIsMain = !a.parentId;
+      const bIsMain = !b.parentId;
+
+      if (aIsMain && !bIsMain) return -1; // Main categories first
+      if (!aIsMain && bIsMain) return 1; // Subcategories after
+
+      // If both are main categories, sort by display order then name
+      if (aIsMain && bIsMain) {
+        if (a.displayOrder !== b.displayOrder)
+          return a.displayOrder - b.displayOrder;
+        return a.name.localeCompare(b.name);
+      }
+
+      // If both are subcategories, group by parent first
+      if (!aIsMain && !bIsMain) {
+        if (a.parentId !== b.parentId) {
+          // Find parent categories to compare their order
+          const parentA = categories.find((c) => c.id === a.parentId);
+          const parentB = categories.find((c) => c.id === b.parentId);
+          if (parentA && parentB) {
+            if (parentA.displayOrder !== parentB.displayOrder) {
+              return parentA.displayOrder - parentB.displayOrder;
+            }
+            return parentA.name.localeCompare(parentB.name);
+          }
+        }
+        // Same parent, sort by display order then name
+        if (a.displayOrder !== b.displayOrder)
+          return a.displayOrder - b.displayOrder;
+        return a.name.localeCompare(b.name);
+      }
+
+      return 0;
+    });
 
   return (
     <div className="min-h-screen bg-gray-50">

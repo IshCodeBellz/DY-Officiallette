@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/server/authOptions";
 import { SocialWishlistService } from "@/lib/server/socialWishlistService";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+
 const createWishlistSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().optional(),

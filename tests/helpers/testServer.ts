@@ -52,11 +52,23 @@ export async function resetDb() {
     // Print a clear diagnostic and throw so tests fail fast
     console.error(
       "[TEST DB ERROR] Could not connect to database. Check DATABASE_URL and DB status.",
+      "DATABASE_URL:",
+      process.env.DATABASE_URL,
+      "Error:",
       err
     );
-    throw new Error(
-      "[TEST DB ERROR] Could not connect to database. Check DATABASE_URL and DB status."
-    );
+
+    // Try to reconnect once before failing
+    try {
+      await prisma.$connect();
+      await prisma.$queryRaw`SELECT 1`;
+      console.log("[TEST DB] Reconnection successful");
+    } catch (reconnectErr) {
+      console.error("[TEST DB ERROR] Reconnection also failed:", reconnectErr);
+      throw new Error(
+        `[TEST DB ERROR] Could not connect to database. DATABASE_URL: ${process.env.DATABASE_URL}`
+      );
+    }
   }
   let isSqlite = false;
   if (dbUrl.includes("sqlite")) isSqlite = true;

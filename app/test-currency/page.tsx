@@ -9,7 +9,7 @@ export default function TestCurrencyPage() {
     useCurrency();
   const [renderCount, setRenderCount] = useState(0);
 
-  const testAmount = 1000; // $10.00 USD
+  const testAmount = 1000; // £10.00 GBP (base currency)
 
   useEffect(() => {
     setRenderCount((prev) => prev + 1);
@@ -41,10 +41,10 @@ export default function TestCurrencyPage() {
 
         <div>
           <h2 className="text-xl font-semibold mb-4">Test Conversion</h2>
-          <p>Original Amount: $10.00 USD ({testAmount} cents)</p>
+          <p>Original Amount (base): £10.00 GBP ({testAmount} base cents)</p>
           <p>
-            Converted Amount: {convertPrice(testAmount)} cents in{" "}
-            {currentCurrency}
+            Converted Amount in {currentCurrency}: {convertPrice(testAmount)}{" "}
+            cents
           </p>
           <p>
             Formatted Price:{" "}
@@ -74,7 +74,7 @@ export default function TestCurrencyPage() {
               <span className="w-8">{currency.symbol}</span>
               <span className="w-16">Rate: {currency.rate}</span>
               <span>
-                $10 USD = {formatPrice(convertPrice(1000), currency.code)}
+                £10 GBP = {formatPrice(convertPrice(1000), currency.code)}
               </span>
             </div>
           ))}
@@ -87,7 +87,7 @@ export default function TestCurrencyPage() {
               key={amount}
               className="flex items-center gap-4 p-2 border rounded"
             >
-              <span className="w-20">${(amount / 100).toFixed(2)}</span>
+              <span className="w-20">£{(amount / 100).toFixed(2)}</span>
               <span>→</span>
               <span className="w-32">{convertPrice(amount)} cents</span>
               <span>→</span>
@@ -103,11 +103,14 @@ export default function TestCurrencyPage() {
             Manual Calculation Test
           </h2>
           <div className="space-y-2 text-sm">
-            <p>EUR rate: 0.92 (from supported currencies)</p>
-            <p>$10 USD = 1000 cents</p>
-            <p>1000 cents × 0.92 = 920 cents EUR</p>
-            <p>920 cents = €9.20</p>
-            <p>Our result: {formatPrice(convertPrice(1000), "EUR")}</p>
+            <p>
+              Base: GBP. Static table rates are USD→Currency. GBP rate ={" "}
+              {currencies.find((c) => c.code === "GBP")?.rate} (GBP per USD).
+            </p>
+            <p>To convert £10 GBP → EUR:</p>
+            <p>1. GBP→USD: usd = 10 / GBP.rate</p>
+            <p>2. USD→EUR: eur = usd * EUR.rate</p>
+            <p>Result: {formatPrice(convertPrice(1000), "EUR")}</p>
           </div>
         </div>
 
@@ -134,7 +137,7 @@ export default function TestCurrencyPage() {
               );
               console.log("EUR currency object:", SUPPORTED_CURRENCIES.EUR);
               console.log(
-                "1000 USD cents to EUR:",
+                "1000 GBP cents to EUR:",
                 currencyService.convertPrice(1000, "EUR")
               );
               console.log(
@@ -142,17 +145,23 @@ export default function TestCurrencyPage() {
                 currencyService.formatPrice(920, "EUR")
               );
               console.log(
-                "1000 USD cents to GBP:",
+                "1000 GBP cents to GBP:",
                 currencyService.convertPrice(1000, "GBP")
               );
               console.log(
-                "810 GBP cents formatted as GBP:",
-                currencyService.formatPrice(810, "GBP")
+                "1000 GBP cents formatted as GBP:",
+                currencyService.formatPrice(1000, "GBP")
               );
 
               // Test context functions
-              console.log("Context convertPrice(1000):", convertPrice(1000));
-              console.log("Context formatPrice(920):", formatPrice(920));
+              console.log(
+                "Context convertPrice(1000 GBP cents):",
+                convertPrice(1000)
+              );
+              console.log(
+                "Context formatPrice(1000 GBP cents):",
+                formatPrice(1000)
+              );
             }}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
