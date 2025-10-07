@@ -52,10 +52,12 @@ export async function resetDb() {
     // Print a clear diagnostic and throw so tests fail fast
     console.error(
       "[TEST DB ERROR] Could not connect to database. Check DATABASE_URL and DB status.",
-      "DATABASE_URL:", process.env.DATABASE_URL,
-      "Error:", err
+      "DATABASE_URL:",
+      process.env.DATABASE_URL,
+      "Error:",
+      err
     );
-    
+
     // Try to reconnect once before failing
     try {
       await prisma.$connect();
