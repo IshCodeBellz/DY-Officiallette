@@ -34,6 +34,7 @@ jobs:
       CI: true
       NODE_ENV: test
       DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
+      DB_MASKED: "postgresql://postgres:***@localhost:5432/test_db"
       NEXTAUTH_SECRET: "test-secret-for-ci"
       NEXTAUTH_URL: "http://localhost:3000"
       EMAIL_FROM: "test@example.com"
@@ -49,16 +50,6 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
-
-      - name: Cache Prisma
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            node_modules/.prisma
-          key: ${{ runner.os }}-prisma-${{ hashFiles('**/package-lock.json', '**/schema.prisma') }}
-          restore-keys: |
-            ${{ runner.os }}-prisma-
 
       - name: Install dependencies
         run: npm ci
@@ -92,6 +83,8 @@ jobs:
           echo "CI=true" >> .env.local
 
       - name: Wait for PostgreSQL
+        env:
+          PGPASSWORD: postgres
         run: |
           until pg_isready -h localhost -p 5432 -U postgres; do
             echo "Waiting for PostgreSQL..."
@@ -100,40 +93,42 @@ jobs:
 
           # Ensure clean database state
           echo "Ensuring clean database state..."
-          PGPASSWORD=postgres psql -h localhost -U postgres -d test_db -c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;" || echo "Database reset completed"
+          psql -h localhost -U postgres -d test_db -c "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;" || echo "Database reset completed"
 
       - name: Run Prisma Migrate (PostgreSQL)
+        env:
+          PGPASSWORD: postgres
         run: |
           echo "Attempting to apply migrations..."
-          echo "DATABASE_URL: postgresql://postgres:***@localhost:5432/test_db"
+          echo "DATABASE_URL: $DB_MASKED"
 
           # First check if migration directory exists and has migrations
           if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations 2>/dev/null)" ]; then
             echo "Migration files found, attempting migrate deploy..."
-            if npx prisma migrate deploy; then
-              echo "Migration deploy successful"
-            else
-              echo "Deploy failed, trying db push as fallback..."
-              npx prisma db push --skip-generate --force-reset --accept-data-loss
-            fi
+            npx prisma migrate deploy
           else
             echo "No migrations found, using db push to create schema..."
-            npx prisma db push --skip-generate --force-reset --accept-data-loss
+            npx prisma db push --skip-generate
           fi
 
           # Verify schema is created
-          PGPASSWORD=postgres psql -h localhost -U postgres -d test_db -c "\dt" || echo "Could not list tables"
+          echo "Verifying schema creation..."
+          psql -h localhost -U postgres -d test_db -c "\dt" || echo "Could not list tables"
 
       - name: Seed (optional)
         run: npm run prisma:seed || echo "Seed script optional – continuing"
 
       - name: Debug Database Connection
+        env:
+          PGPASSWORD: postgres
         run: |
-          echo "DATABASE_URL: postgresql://postgres:***@localhost:5432/test_db"
+          echo "DATABASE_URL: $DB_MASKED"
           cat .env.local || echo "No .env.local file"
-          PGPASSWORD=postgres psql -h localhost -U postgres -d test_db -c "SELECT version();" || echo "Direct psql connection failed"
+          psql -h localhost -U postgres -d test_db -c "SELECT version();" || echo "Direct psql connection failed"
 
       - name: Test Prisma Connection
+        env:
+          PGPASSWORD: postgres
         run: |
           echo "Testing Prisma connection..."
           if npx prisma db execute --stdin <<< "SELECT 1 as test;"; then
@@ -145,12 +140,12 @@ jobs:
 
           # Verify key tables exist
           echo "Checking if tables exist..."
-          TABLE_COUNT=$(PGPASSWORD=postgres psql -h localhost -U postgres -d test_db -t -c "SELECT COUNT(*) FROM pg_tables WHERE schemaname = 'public';")
+          TABLE_COUNT=$(psql -h localhost -U postgres -d test_db -t -c "SELECT COUNT(*) FROM pg_tables WHERE schemaname = 'public';")
           echo "Found $TABLE_COUNT tables in public schema"
 
           if [ "$TABLE_COUNT" -gt 0 ]; then
             echo "✅ Database schema successfully created"
-            PGPASSWORD=postgres psql -h localhost -U postgres -d test_db -c "SELECT tablename FROM pg_tables WHERE schemaname = 'public';" | head -10
+            psql -h localhost -U postgres -d test_db -c "SELECT tablename FROM pg_tables WHERE schemaname = 'public';" | head -10
           else
             echo "❌ No tables found in database"
             exit 1
@@ -159,15 +154,12 @@ jobs:
       - name: Run Tests
         run: |
           echo "Starting tests with environment:"
-          echo "DATABASE_URL: postgresql://postgres:***@localhost:5432/test_db"
+          echo "DATABASE_URL: $DB_MASKED"
           echo "NODE_ENV: $NODE_ENV"
           echo "CI: $CI"
 
-          # Validate environment before running tests
-          if [ -z "$DATABASE_URL" ]; then
-            echo "❌ DATABASE_URL is not set"
-            exit 1
-          fi
+          # DATABASE_URL is already set in job env, no need to validate
+          # The env variable is available throughout the job
 
           # Run tests with proper error handling
           if npm test; then
