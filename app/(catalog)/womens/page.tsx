@@ -1,22 +1,30 @@
 import { SubcategoriesGrid } from "@/components/layout/SubcategoriesGrid";
 import { prisma } from "@/lib/server/prisma";
 
+export const dynamic = 'force-dynamic';
+
 export default async function WomensPage() {
   // Fetch womens category and its subcategories from database
-  const womensCategory = await prisma.category.findFirst({
-    where: { slug: "womens" },
-    include: {
-      children: {
-        where: { isActive: true },
-        orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
-        include: {
-          _count: {
-            select: { products: true },
+  let womensCategory;
+  try {
+    womensCategory = await prisma.category.findFirst({
+      where: { slug: "womens" },
+      include: {
+        children: {
+          where: { isActive: true },
+          orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+          include: {
+            _count: {
+              select: { products: true },
+            },
           },
         },
       },
-    },
-  });
+    });
+  } catch (error) {
+    console.error("Database error in WomensPage:", error);
+    womensCategory = null;
+  }
 
   const subcategories =
     womensCategory?.children.map((child) => ({

@@ -1,9 +1,13 @@
 import { SubcategoriesGrid } from "@/components/layout/SubcategoriesGrid";
 import { prisma } from "@/lib/server/prisma";
 
+export const dynamic = 'force-dynamic';
+
 export default async function ShoesPage() {
   // Fetch shoes category and its subcategories from database
-  const shoesCategory = await prisma.category.findFirst({
+  let shoesCategory;
+  try {
+    shoesCategory = await prisma.category.findFirst({
     where: { slug: "shoes" },
     include: {
       children: {
@@ -17,6 +21,10 @@ export default async function ShoesPage() {
       },
     },
   });
+  } catch (error) {
+    console.error("Database error in ShoesPage:", error);
+    shoesCategory = null;
+  }
 
   const subcategories =
     shoesCategory?.children.map((child) => ({
