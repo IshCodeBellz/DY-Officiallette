@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 
-const handler = NextAuth(authOptions);
+// Force recompilation
+const handler = NextAuth(authOptionsEnhanced);
 export { handler as GET, handler as POST };
