@@ -17,7 +17,7 @@ Educational fashion e‑commerce demo (formerly "ASOS Clone", now "DYOFFICIALLET
 
 | Area                              | Status                      | Notes                                                                                               |
 | --------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------- |
-| Core Commerce (browse → checkout) | ✅ Production-ready         | 210 products, variants, discounts, order flow verified                                              |
+| Core Commerce (browse → checkout) | ✅ Production-ready         | 111+ products, variants, discounts, order flow verified (expandable to 210+)                        |
 | Admin Suite                       | ✅ 100% coverage            | Products, orders, brands, categories, discounts, inventory, social, analytics                       |
 | Search & Trending                 | ✅ Implemented              | Weighted relevance + time-decay trending, synonyms, facets                                          |
 | Events & Metrics                  | ✅ Active                   | VIEW / DETAIL / WISHLIST / ATC / PURCHASE instrumentation feeding ProductMetrics                    |
