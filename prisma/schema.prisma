@@ -34,6 +34,10 @@ model Category {
   parent       Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children     Category[] @relation("CategoryHierarchy")
   products     Product[]
+  
+  // Analytics Relations
+  categoryAnalytics CategoryAnalytics?
+  analyticsEvents   AnalyticsEvent[]
 
   @@index([parentId])
 }
@@ -75,6 +79,10 @@ model Product {
   wishlistItems     WishlistItem[]
   bundleItems       ProductBundle[]   @relation("BundleItems")
   bundles           ProductBundle[]   @relation("BundleProducts")
+  
+  // Analytics Relations
+  productAnalytics  ProductAnalytics?
+  analyticsEvents   AnalyticsEvent[]
 
   @@index([categoryId])
   @@index([brandId])
@@ -173,6 +181,12 @@ model User {
   preferences             UserPreferences?
   wishlist                Wishlist?
   wishlistFollowers       WishlistFollower[]
+  
+  // Analytics Relations
+  sessions                UserSession[]
+  pageViews               PageView[]
+  analyticsEvents         AnalyticsEvent[]
+  segmentMemberships      CustomerSegment[] @relation("UserSegments")
 }
 
 model UserPreferences {
@@ -710,4 +724,237 @@ model ReviewAnalytics {
   @@index([productId])
   @@index([averageRating])
   @@index([lastReviewAt])
+}
+
+// Advanced Analytics Models for Deeper Insights
+
+model UserSession {
+  id               String    @id @default(cuid())
+  userId           String?   // null for anonymous sessions
+  sessionToken     String    @unique
+  ipAddress        String?
+  userAgent        String?
+  country          String?
+  city             String?
+  deviceType       String?   // mobile, tablet, desktop
+  browser          String?
+  source           String?   // organic, direct, referral, social
+  medium           String?   // search, email, social, etc.
+  campaign         String?   // utm_campaign
+  startTime        DateTime  @default(now())
+  endTime          DateTime?
+  duration         Int?      // in seconds
+  pageViews        Int       @default(0)
+  bounceRate       Boolean   @default(false)
+  conversionValue  Int       @default(0) // in cents
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user             User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  pageViewsRel     PageView[]
+  events           AnalyticsEvent[]
+
+  @@index([userId])
+  @@index([startTime])
+  @@index([source])
+  @@index([deviceType])
+  @@index([conversionValue])
+}
+
+model PageView {
+  id               String      @id @default(cuid())
+  sessionId        String
+  userId           String?
+  path             String
+  title            String?
+  referrer         String?
+  duration         Int?        // time spent on page in seconds
+  scrollDepth      Float?      // percentage of page scrolled
+  exitPage         Boolean     @default(false)
+  timestamp        DateTime    @default(now())
+
+  session          UserSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user             User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId])
+  @@index([path])
+  @@index([timestamp])
+  @@index([duration])
+}
+
+model AnalyticsEvent {
+  id               String      @id @default(cuid())
+  sessionId        String
+  userId           String?
+  eventType        String      // click, scroll, form_submit, purchase, etc.
+  eventCategory    String      // engagement, ecommerce, navigation
+  eventAction      String      // add_to_cart, remove_from_cart, checkout_start
+  eventLabel       String?     // specific product, button name, etc.
+  eventValue       Float?      // monetary value or numeric value
+  productId        String?     // for product-related events
+  categoryId       String?     // for category-related events
+  metadata         String?     // JSON string for additional data
+  timestamp        DateTime    @default(now())
+
+  session          UserSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user             User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  product          Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  category         Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId])
+  @@index([eventType])
+  @@index([eventCategory])
+  @@index([timestamp])
+  @@index([productId])
+  @@index([userId])
+}
+
+model ConversionFunnel {
+  id               String    @id @default(cuid())
+  name             String    // e.g., "Checkout Funnel", "Product Discovery"
+  steps            String    // JSON array of step definitions
+  dateRange        String    // JSON object with start/end dates
+  totalUsers       Int       @default(0)
+  completedUsers   Int       @default(0)
+  conversionRate   Float     @default(0)
+  dropoffData      String    // JSON object with step-by-step dropoff rates
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([name])
+  @@index([conversionRate])
+  @@index([createdAt])
+}
+
+model CohortAnalysis {
+  id               String    @id @default(cuid())
+  cohortPeriod     String    // weekly, monthly
+  cohortDate       DateTime  // start date of cohort
+  cohortSize       Int       // number of users in cohort
+  retentionData    String    // JSON object with retention rates by period
+  revenueData      String?   // JSON object with revenue by period
+  activityData     String?   // JSON object with activity metrics
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([cohortPeriod])
+  @@index([cohortDate])
+  @@index([cohortSize])
+}
+
+model CustomerSegment {
+  id               String    @id @default(cuid())
+  name             String
+  description      String?
+  criteria         String    // JSON object defining segment criteria
+  userCount        Int       @default(0)
+  averageOrderValue Int      @default(0) // in cents
+  totalRevenue     Int       @default(0) // in cents
+  conversionRate   Float     @default(0)
+  lastCalculated   DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  users            User[]    @relation("UserSegments")
+
+  @@index([name])
+  @@index([userCount])
+  @@index([averageOrderValue])
+  @@index([lastCalculated])
+}
+
+model ProductAnalytics {
+  id                    String    @id @default(cuid())
+  productId             String    @unique
+  viewCount             Int       @default(0)
+  uniqueViewCount       Int       @default(0)
+  addToCartCount        Int       @default(0)
+  removeFromCartCount   Int       @default(0)
+  purchaseCount         Int       @default(0)
+  wishlistCount         Int       @default(0)
+  shareCount            Int       @default(0)
+  reviewCount           Int       @default(0)
+  averageRating         Float     @default(0)
+  conversionRate        Float     @default(0) // purchases / views
+  cartAbandonmentRate   Float     @default(0)
+  averageViewDuration   Int       @default(0) // in seconds
+  bounceRate            Float     @default(0)
+  topReferringSources   String?   // JSON array
+  topExitedTo           String?   // JSON array of next pages
+  seasonalityData       String?   // JSON object with seasonal trends
+  priceSensitivityData  String?   // JSON object with price elasticity
+  lastCalculated        DateTime  @default(now())
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  product               Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([conversionRate])
+  @@index([viewCount])
+  @@index([purchaseCount])
+  @@index([lastCalculated])
+}
+
+model CategoryAnalytics {
+  id                    String    @id @default(cuid())
+  categoryId            String    @unique
+  viewCount             Int       @default(0)
+  uniqueViewCount       Int       @default(0)
+  conversionRate        Float     @default(0)
+  averageOrderValue     Int       @default(0) // in cents
+  topProducts           String?   // JSON array of top performing products
+  seasonalityData       String?   // JSON object with seasonal trends
+  customerDemographics  String?   // JSON object with demographic data
+  lastCalculated        DateTime  @default(now())
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  category              Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId])
+  @@index([conversionRate])
+  @@index([viewCount])
+  @@index([lastCalculated])
+}
+
+model SearchAnalytics {
+  id                 String    @id @default(cuid())
+  query              String
+  resultCount        Int       @default(0)
+  clickThroughRate   Float     @default(0)
+  conversionRate     Float     @default(0)
+  noResultsCount     Int       @default(0)
+  avgPosition        Float?    // average position of clicked results
+  searchVolume       Int       @default(1)
+  lastSearched       DateTime  @default(now())
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([query])
+  @@index([searchVolume])
+  @@index([conversionRate])
+  @@index([lastSearched])
+}
+
+model RevenueAnalytics {
+  id                 String    @id @default(cuid())
+  date               DateTime  // daily aggregation
+  totalRevenue       Int       @default(0) // in cents
+  orderCount         Int       @default(0)
+  averageOrderValue  Int       @default(0) // in cents
+  newCustomerRevenue Int       @default(0) // in cents
+  returningCustomerRevenue Int @default(0) // in cents
+  refundAmount       Int       @default(0) // in cents
+  taxAmount          Int       @default(0) // in cents
+  shippingRevenue    Int       @default(0) // in cents
+  discountAmount     Int       @default(0) // in cents
+  topCategories      String?   // JSON array
+  topProducts        String?   // JSON array
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([date])
+  @@index([totalRevenue])
+  @@index([orderCount])
 }

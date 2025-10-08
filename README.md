@@ -16,7 +16,7 @@ Modern fashion e‑commerce demo (Next.js 14 + Tailwind). Production‑style arc
 ## ✨ Highlights
 
 - Next.js App Router (RSC) + Tailwind UI
-- 210 seeded products / 20 brands / size variants
+- 111 seeded products / 7 brands / size variants (expandable to 210+ products)
 - Search relevance + time‑decay trending algorithm
 - Wishlist + cart (local → server sync) & discount engine
 - Admin suite (products, orders, categories, discounts, inventory overview)
@@ -34,7 +34,22 @@ npm run dev
 
 Visit: http://localhost:3000 | Admin: /admin (see demo accounts below)
 
-## 👤 Demo Accounts
+## � Seed Data Options
+
+| Strategy            | Products | Brands | Use Case                |
+| ------------------- | -------- | ------ | ----------------------- |
+| **Basic** (default) | 111      | 7      | Quick development setup |
+| **Comprehensive**   | ~210     | 10+    | Full demo / testing     |
+
+```bash
+# Basic seed (default)
+npm run prisma:seed
+
+# For expanded catalog, run additional product generation:
+# (See prisma/generate-100-products.ts for bulk product creation)
+```
+
+## �👤 Demo Accounts
 
 | Role  | Email                | Password |
 | ----- | -------------------- | -------- |
@@ -53,6 +68,7 @@ Next.js 14, TypeScript, Prisma, NextAuth, Tailwind, Stripe (simulated), Jest.
 - Discount codes (fixed / percent / limits / windows)
 - Trending & recently viewed personalization slices
 - Order lifecycle + metrics instrumentation
+- **Advanced Analytics** - Comprehensive business intelligence dashboard with user behavior tracking, conversion funnels, revenue analytics, and real-time insights
 
 ## 🔍 Search & Trending
 
@@ -61,6 +77,14 @@ Weighted relevance (synonyms/plurals) + event-driven metrics feed a time‑decay
 ## 🛠 Admin Overview
 
 Products, brands, categories, orders, discount codes, basic inventory + social moderation scaffolding.
+
+**Analytics Dashboard** (`/admin/analytics`) - Interactive business intelligence with:
+
+- Revenue trends and KPI tracking
+- User behavior analysis and segmentation
+- Product performance metrics and conversion rates
+- Search analytics and funnel optimization
+- Real-time monitoring and historical insights
 
 ## 🧪 Tests
 
@@ -285,11 +309,13 @@ Grid “+” now opens a size popover if the product has size variants. This ens
 
 ## New Additions (Phase 1 Enhancements)
 
-### Email Provider & Templates
+### Email Provider & Templates ✅ **PRODUCTION READY**
 
-- Unified HTML template with base layout (header, footer, consistent typography).
-- Auto-selects Resend when `RESEND_API_KEY` is present; otherwise logs email payloads to console.
-- Templates: Order Confirmation, Payment Receipt, Password Reset.
+- **Production Provider**: Resend API fully configured with branded domain
+- **Professional Templates**: 5 responsive HTML email templates with DY Officiallette branding
+- **Auto-selection**: Resend when `RESEND_API_KEY` is present; console logging fallback for development
+- **Templates**: Email Verification, Password Reset, Order Confirmation (basic + rich), Payment Receipt
+- **Features**: Line items, delivery details, branded styling, mobile-responsive design
 
 ### Order Timeline / Audit
 

@@ -27,7 +27,7 @@ export function CurrencyNotification() {
           setHasDetected(true);
         }
       } catch (error) {
-      console.error("Error:", error);
+        console.error("Error:", error);
         console.warn("Failed to detect currency:", error);
       }
     };
@@ -86,7 +86,7 @@ export function CurrencyNotification() {
               onClick={handleDismiss}
               className="text-xs text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 px-2 py-1.5 transition-colors"
             >
-              Keep USD
+              Keep {currentCurrency}
             </button>
           </div>
         </div>
