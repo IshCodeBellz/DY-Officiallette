@@ -27,8 +27,8 @@ export async function createPasswordResetToken(email: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const url = `${baseUrl}/auth/reset?token=${encodeURIComponent(token)}`;
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const url = `${baseUrl}/reset-password/${encodeURIComponent(token)}`;
   const mailer = getMailer();
   await mailer.send({
     to: email,
