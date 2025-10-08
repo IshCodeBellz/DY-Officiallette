@@ -1,9 +1,12 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/server/prisma";
+import { PrismaClient } from "@prisma/client";
 
-export async function GET() {
+const prisma = new PrismaClient();
+
+async function debugBrandsAPI() {
   try {
-    // Get all brands with their product counts (only active, non-deleted products)
+    console.log("🔍 Debugging brands API query...");
+
+    // Same query as the API
     const brands = await prisma.brand.findMany({
       select: {
         id: true,
@@ -42,7 +45,14 @@ export async function GET() {
       ],
     });
 
-    // Transform the data to match our interface
+    console.log(`Raw brands query result: ${brands.length} brands`);
+    brands.forEach((brand) => {
+      console.log(
+        `- ${brand.name}: ${brand._count.products} products (Featured: ${brand.isFeatured})`
+      );
+    });
+
+    // Apply the same filter as the API
     const transformedBrands = brands
       .filter((brand) => brand._count.products > 0) // Only include brands with products
       .map((brand) => ({
@@ -56,16 +66,29 @@ export async function GET() {
         productCount: brand._count.products,
       }));
 
-    return NextResponse.json({
-      brands: transformedBrands,
-      total: transformedBrands.length,
+    console.log(`\nFiltered brands: ${transformedBrands.length} brands`);
+    transformedBrands.forEach((brand) => {
+      console.log(
+        `- ${brand.name}: ${brand.productCount} products (Featured: ${brand.isFeatured})`
+      );
     });
-  } catch (error) {
-    console.error("Error:", error);
-    console.error("Failed to fetch brands:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch brands" },
-      { status: 500 }
+
+    console.log("\nAPI Response:");
+    console.log(
+      JSON.stringify(
+        {
+          brands: transformedBrands,
+          total: transformedBrands.length,
+        },
+        null,
+        2
+      )
     );
+  } catch (error) {
+    console.error("❌ Error:", error);
+  } finally {
+    await prisma.$disconnect();
   }
 }
+
+debugBrandsAPI();
