@@ -28,21 +28,41 @@ export default async function CategoriesAdminPage() {
   if (!(session?.user as any)?.isAdmin)
     return <div className="p-6">Unauthorized</div>;
 
-  // Fetch categories with product counts
-  const categories = await prisma.category.findMany({
-    orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
-    include: {
-      parent: true,
-      children: {
-        orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
-      },
-      _count: {
-        select: {
-          products: true,
+  let categories;
+  try {
+    // Fetch categories with product counts
+    categories = await prisma.category.findMany({
+      orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+      include: {
+        parent: true,
+        children: {
+          orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+        },
+        _count: {
+          select: {
+            products: true,
+          },
         },
       },
-    },
-  });
+    });
+  } catch (error) {
+    console.error("Database error:", error);
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <h3 className="text-red-800 font-medium">
+            Database Connection Error
+          </h3>
+          <p className="text-red-600 text-sm mt-1">
+            Unable to connect to database. Please check your configuration.
+          </p>
+          <pre className="text-xs text-red-500 mt-2 overflow-auto">
+            {error instanceof Error ? error.message : String(error)}
+          </pre>
+        </div>
+      </div>
+    );
+  }
 
   // Separate main categories from subcategories
   const mainCategories = categories.filter((c) => !c.parentId);
