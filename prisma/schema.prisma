@@ -489,24 +489,6 @@ model TrustedDevice {
   @@index([trusted])
 }
 
-model SecurityEvent {
-  id        String   @id @default(cuid())
-  userId    String
-  type      String
-  details   String?
-  ipAddress String
-  userAgent String
-  location  String?
-  riskScore Int?
-  timestamp DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([type])
-  @@index([timestamp])
-  @@index([riskScore])
-}
-
 model RateLimitEntry {
   id        String   @id @default(cuid())
   key       String   @unique
@@ -957,4 +939,77 @@ model RevenueAnalytics {
   @@index([date])
   @@index([totalRevenue])
   @@index([orderCount])
+}
+
+// Security Models
+model SecurityEvent {
+  id           String    @id @default(cuid())
+  userId       String?
+  ipAddress    String
+  userAgent    String?
+  eventType    String    // login_attempt, rate_limit_exceeded, suspicious_activity, etc.
+  severity     String    // low, medium, high, critical
+  details      String?   // JSON object with event details
+  location     String?   // geographic location if available
+  blocked      Boolean   @default(false)
+  resolved     Boolean   @default(false)
+  resolvedBy   String?   // admin user ID who resolved
+  resolvedAt   DateTime?
+  timestamp    DateTime  @default(now())
+  
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([eventType])
+  @@index([severity])
+  @@index([timestamp])
+  @@index([ipAddress])
+  @@index([blocked])
+}
+
+model BlockedIP {
+  id          String    @id @default(cuid())
+  ipAddress   String    @unique
+  reason      String    // spam, brute_force, suspicious_activity
+  blockedBy   String    // admin user ID or 'system'
+  blockedAt   DateTime  @default(now())
+  expiresAt   DateTime? // null for permanent blocks
+  isActive    Boolean   @default(true)
+  requestCount Int      @default(0) // number of blocked requests
+  lastAttempt DateTime  @default(now())
+  
+  @@index([ipAddress])
+  @@index([isActive])
+  @@index([expiresAt])
+}
+
+model RateLimitLog {
+  id           String    @id @default(cuid())
+  ipAddress    String
+  endpoint     String    // API endpoint that was rate limited
+  requestCount Int       // number of requests made
+  limit        Int       // the rate limit that was exceeded
+  windowStart  DateTime  // start of the rate limit window
+  windowEnd    DateTime  // end of the rate limit window
+  blocked      Boolean   @default(true)
+  timestamp    DateTime  @default(now())
+  
+  @@index([ipAddress])
+  @@index([endpoint])
+  @@index([timestamp])
+}
+
+model SystemSettings {
+  id           String    @id @default(cuid())
+  category     String    // security, email, payment, general
+  key          String    @unique // setting key
+  value        String    // setting value (JSON for complex types)
+  type         String    @default("string") // string, number, boolean, json
+  description  String?   // human-readable description
+  isPublic     Boolean   @default(false) // can be accessed by frontend
+  modifiedBy   String    // admin user ID who last updated
+  lastModified DateTime  @default(now()) @updatedAt
+  createdAt    DateTime  @default(now())
+  
+  @@index([category])
+  @@index([isPublic])
 }

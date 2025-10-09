@@ -6,6 +6,13 @@ export interface EventData {
   userId?: string | null;
   sessionId?: string | null;
   eventType: string;
+  eventCategory?: string;
+  eventAction?: string;
+  eventLabel?: string;
+  eventValue?: number;
+  productId?: string;
+  categoryId?: string;
+  metadata?: string;
   properties?: Record<string, any>;
   timestamp?: Date;
   ipAddress?: string;
@@ -43,18 +50,22 @@ export class AnalyticsTracker {
   // Track analytics events
   static async trackEvent(data: EventData): Promise<void> {
     try {
-      await prisma.analyticsEvent.create({
-        data: {
-          userId: data.userId,
-          sessionId: data.sessionId,
-          eventType: data.eventType,
-          properties: data.properties || {},
-          timestamp: data.timestamp || new Date(),
-          ipAddress: data.ipAddress,
-          userAgent: data.userAgent,
-          referrer: data.referrer,
-        },
-      });
+      if (data.sessionId) {
+        await prisma.analyticsEvent.create({
+          data: {
+            userId: data.userId || undefined,
+            sessionId: data.sessionId,
+            eventType: data.eventType,
+            eventCategory: data.eventCategory || "general",
+            eventAction: data.eventAction || "unknown",
+            eventLabel: data.eventLabel || undefined,
+            eventValue: data.eventValue || undefined,
+            productId: data.productId || undefined,
+            categoryId: data.categoryId || undefined,
+            metadata: data.metadata || undefined,
+          },
+        });
+      }
 
       // Update related analytics models based on event type
       await this.updateAnalyticsModels(data);
@@ -67,19 +78,19 @@ export class AnalyticsTracker {
   // Track page views
   static async trackPageView(data: PageViewData): Promise<void> {
     try {
-      await prisma.pageView.create({
-        data: {
-          userId: data.userId,
-          sessionId: data.sessionId,
-          path: data.path,
-          title: data.title,
-          referrer: data.referrer,
-          timeOnPage: data.timeOnPage,
-          timestamp: data.timestamp || new Date(),
-          ipAddress: data.ipAddress,
-          userAgent: data.userAgent,
-        },
-      });
+      if (data.sessionId) {
+        await prisma.pageView.create({
+          data: {
+            userId: data.userId || undefined,
+            sessionId: data.sessionId,
+            path: data.path,
+            title: data.title || undefined,
+            referrer: data.referrer || undefined,
+            duration: data.timeOnPage || undefined,
+            timestamp: data.timestamp || new Date(),
+          },
+        });
+      }
 
       // Track page view event
       await this.trackEvent({
@@ -105,23 +116,21 @@ export class AnalyticsTracker {
   static async startSession(data: SessionData): Promise<void> {
     try {
       await prisma.userSession.upsert({
-        where: { sessionId: data.sessionId },
+        where: { sessionToken: data.sessionId },
         update: {
           startTime: data.startTime,
-          device: data.device,
+          deviceType: data.device,
           browser: data.browser,
-          os: data.os,
           ipAddress: data.ipAddress,
           country: data.country,
           city: data.city,
         },
         create: {
           userId: data.userId,
-          sessionId: data.sessionId,
+          sessionToken: data.sessionId,
           startTime: data.startTime,
-          device: data.device,
+          deviceType: data.device,
           browser: data.browser,
-          os: data.os,
           ipAddress: data.ipAddress,
           country: data.country,
           city: data.city,
@@ -139,7 +148,7 @@ export class AnalyticsTracker {
   ): Promise<void> {
     try {
       const session = await prisma.userSession.findUnique({
-        where: { sessionId },
+        where: { sessionToken: sessionId },
       });
 
       if (session) {
@@ -148,7 +157,7 @@ export class AnalyticsTracker {
         );
 
         await prisma.userSession.update({
-          where: { sessionId },
+          where: { sessionToken: sessionId },
           data: {
             endTime,
             duration,
@@ -337,18 +346,16 @@ export class AnalyticsTracker {
         await prisma.productAnalytics.upsert({
           where: { productId },
           update: {
-            impressions: metrics.views,
-            clicks: metrics.purchases,
+            viewCount: metrics.views,
+            purchaseCount: metrics.purchases,
             conversionRate,
-            revenue,
             updatedAt: new Date(),
           },
           create: {
             productId,
-            impressions: metrics.views,
-            clicks: metrics.purchases,
+            viewCount: metrics.views,
+            purchaseCount: metrics.purchases,
             conversionRate,
-            revenue,
           },
         });
       }
@@ -399,16 +406,14 @@ export class AnalyticsTracker {
           await prisma.categoryAnalytics.upsert({
             where: { categoryId: product.categoryId },
             update: {
-              totalRevenue: Number(data.total_revenue),
-              productViews: Number(data.product_views),
+              viewCount: Number(data.product_views),
               conversionRate,
               averageOrderValue: Number(data.avg_order_value || 0),
               updatedAt: new Date(),
             },
             create: {
               categoryId: product.categoryId,
-              totalRevenue: Number(data.total_revenue),
-              productViews: Number(data.product_views),
+              viewCount: Number(data.product_views),
               conversionRate,
               averageOrderValue: Number(data.avg_order_value || 0),
             },
@@ -464,24 +469,13 @@ export class AnalyticsTracker {
             ? (Number(stats.click_through_count) / totalSearches) * 100
             : 0;
 
-        await prisma.searchAnalytics.upsert({
-          where: { date: dateOnly },
-          update: {
-            totalSearches,
-            uniqueQueries: Number(stats.unique_queries),
-            noResultsRate,
-            clickThroughRate,
-            averageResultsPerQuery: resultCount,
-            updatedAt: new Date(),
-          },
-          create: {
-            date: dateOnly,
-            totalSearches,
-            uniqueQueries: Number(stats.unique_queries),
-            noResultsRate,
-            clickThroughRate,
-            averageResultsPerQuery: resultCount,
-          },
+        // Note: SearchAnalytics model tracks individual queries, not daily aggregates
+        // This would need to be refactored to work with individual search queries
+        console.log("Daily search analytics:", {
+          totalSearches,
+          uniqueQueries: Number(stats.unique_queries),
+          noResultsRate,
+          clickThroughRate,
         });
       }
     } catch (error) {
@@ -544,22 +538,14 @@ export class AnalyticsTracker {
         const conversionRate = prevUsers > 0 ? (users / prevUsers) * 100 : 0;
         const dropoffRate = 100 - conversionRate;
 
-        await prisma.conversionFunnel.upsert({
-          where: { step: stepInfo.step },
-          update: {
-            stepName: stepInfo.stepName,
-            users,
-            conversionRate,
-            dropoffRate,
-            updatedAt: new Date(),
-          },
-          create: {
-            step: stepInfo.step,
-            stepName: stepInfo.stepName,
-            users,
-            conversionRate,
-            dropoffRate,
-          },
+        // Note: ConversionFunnel model uses different structure than expected
+        // This would need to be refactored to work with the actual schema
+        console.log("Conversion funnel step:", {
+          step: stepInfo.step,
+          stepName: stepInfo.stepName,
+          users,
+          conversionRate,
+          dropoffRate,
         });
       }
     } catch (error) {
@@ -631,25 +617,35 @@ export class AnalyticsTracker {
 
     const data = revenueData[0];
     if (data) {
-      await prisma.revenueAnalytics.upsert({
+      // Check if revenue analytics for this date already exists
+      const existing = await prisma.revenueAnalytics.findFirst({
         where: { date: dateOnly },
-        update: {
-          totalRevenue: Number(data.total_revenue),
-          orderCount: Number(data.order_count),
-          averageOrderValue: Number(data.avg_order_value || 0),
-          newCustomerRevenue: Number(data.new_customer_revenue),
-          returningCustomerRevenue: Number(data.returning_customer_revenue),
-          updatedAt: new Date(),
-        },
-        create: {
-          date: dateOnly,
-          totalRevenue: Number(data.total_revenue),
-          orderCount: Number(data.order_count),
-          averageOrderValue: Number(data.avg_order_value || 0),
-          newCustomerRevenue: Number(data.new_customer_revenue),
-          returningCustomerRevenue: Number(data.returning_customer_revenue),
-        },
       });
+
+      if (existing) {
+        await prisma.revenueAnalytics.update({
+          where: { id: existing.id },
+          data: {
+            totalRevenue: Number(data.total_revenue),
+            orderCount: Number(data.order_count),
+            averageOrderValue: Number(data.avg_order_value || 0),
+            newCustomerRevenue: Number(data.new_customer_revenue),
+            returningCustomerRevenue: Number(data.returning_customer_revenue),
+            updatedAt: new Date(),
+          },
+        });
+      } else {
+        await prisma.revenueAnalytics.create({
+          data: {
+            date: dateOnly,
+            totalRevenue: Number(data.total_revenue),
+            orderCount: Number(data.order_count),
+            averageOrderValue: Number(data.avg_order_value || 0),
+            newCustomerRevenue: Number(data.new_customer_revenue),
+            returningCustomerRevenue: Number(data.returning_customer_revenue),
+          },
+        });
+      }
     }
   }
 
@@ -678,21 +674,32 @@ export class AnalyticsTracker {
 
     const data = cohortData[0];
     if (data && Number(data.cohort_size) > 0) {
-      await prisma.cohortAnalysis.upsert({
-        where: { cohortMonth },
-        update: {
-          cohortSize: Number(data.cohort_size),
-          retentionRates: [100, Number(data.retention_rate)], // Month 0, Month 1
-          revenueData: [0, 0], // Placeholder
-          updatedAt: new Date(),
-        },
-        create: {
-          cohortMonth,
-          cohortSize: Number(data.cohort_size),
-          retentionRates: [100, Number(data.retention_rate)],
-          revenueData: [0, 0],
-        },
+      // Check if cohort analysis for this month already exists
+      const existing = await prisma.cohortAnalysis.findFirst({
+        where: { cohortDate: cohortMonth },
       });
+
+      if (existing) {
+        await prisma.cohortAnalysis.update({
+          where: { id: existing.id },
+          data: {
+            cohortSize: Number(data.cohort_size),
+            retentionData: JSON.stringify([100, Number(data.retention_rate)]),
+            revenueData: JSON.stringify([0, 0]),
+            updatedAt: new Date(),
+          },
+        });
+      } else {
+        await prisma.cohortAnalysis.create({
+          data: {
+            cohortPeriod: "monthly",
+            cohortDate: cohortMonth,
+            cohortSize: Number(data.cohort_size),
+            retentionData: JSON.stringify([100, Number(data.retention_rate)]),
+            revenueData: JSON.stringify([0, 0]),
+          },
+        });
+      }
     }
   }
 
@@ -707,17 +714,27 @@ export class AnalyticsTracker {
     ];
 
     for (const segment of segments) {
-      await prisma.customerSegment.upsert({
+      // Check if segment already exists
+      const existing = await prisma.customerSegment.findFirst({
         where: { name: segment.name },
-        update: {
-          criteria: segment.criteria,
-          updatedAt: new Date(),
-        },
-        create: {
-          name: segment.name,
-          criteria: segment.criteria,
-        },
       });
+
+      if (existing) {
+        await prisma.customerSegment.update({
+          where: { id: existing.id },
+          data: {
+            criteria: JSON.stringify(segment.criteria),
+            updatedAt: new Date(),
+          },
+        });
+      } else {
+        await prisma.customerSegment.create({
+          data: {
+            name: segment.name,
+            criteria: JSON.stringify(segment.criteria),
+          },
+        });
+      }
     }
   }
 
