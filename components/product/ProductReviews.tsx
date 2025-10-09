@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ReviewDisplay } from "./ReviewDisplay";
 import { ReviewForm } from "./ReviewForm";
 import { useSession } from "next-auth/react";
@@ -41,7 +41,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
     Record<string, number>
   >({});
 
-  const fetchReviews = async (pageNum = 1, reset = false) => {
+  const fetchReviews = useCallback(async (pageNum = 1, reset = false) => {
     try {
       setLoading(true);
       const response = await fetch(
@@ -69,11 +69,11 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId]);
 
   useEffect(() => {
     fetchReviews(1, true);
-  }, [productId]);
+  }, [productId, fetchReviews]);
 
   const handleReviewSubmitted = () => {
     setShowForm(false);

@@ -70,8 +70,6 @@ export default async function CategoriesAdminPage() {
 
   // Calculate metrics
   const totalCategories = categories.length;
-  const totalMainCategories = mainCategories.length;
-  const totalSubcategories = subcategories.length;
   const totalProducts = categories.reduce(
     (sum, category) => sum + category._count.products,
     0

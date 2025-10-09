@@ -88,7 +88,7 @@ export default function SearchFilters() {
       }
     });
     setAppliedFilters(filters);
-  }, [searchParams]);
+  }, [searchParams, filterGroups]);
 
   function updateFilters(groupId: string, optionId: string, checked: boolean) {
     const newFilters = { ...appliedFilters };
