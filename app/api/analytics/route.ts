@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/server/auth";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
 import { captureError, trackPerformance } from "@/lib/server/errors";
@@ -14,7 +14,7 @@ export const GET = withRequest(async function GET(req: NextRequest) {
 
   try {
     // Check authentication and admin authorization
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptionsEnhanced);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -102,12 +102,9 @@ export const GET = withRequest(async function GET(req: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     perf.finish("error");
-    captureError(
-      error instanceof Error ? error : new Error("Analytics endpoint failed"),
-      { route: "/api/analytics", period },
-      "error"
-    );
-
+    captureError(new Error("Analytics API failed"), {
+      route: "/api/analytics",
+    });
     return NextResponse.json(
       {
         error: "analytics_unavailable",
@@ -134,7 +131,7 @@ async function getUserAnalytics(startDate: Date) {
 
       // Session analytics from UserSession model
       prisma.userSession.groupBy({
-        by: ["device", "browser"],
+        by: ["deviceType", "browser"],
         where: { startTime: { gte: startDate } },
         _count: { _all: true },
         _avg: { duration: true },
@@ -161,7 +158,7 @@ async function getUserAnalytics(startDate: Date) {
     newUsers: userStats._count,
     sessions: {
       byDevice: sessionStats.reduce((acc, stat) => {
-        acc[stat.device || "unknown"] = stat._count._all;
+        acc[stat.deviceType || "unknown"] = stat._count._all;
         return acc;
       }, {} as Record<string, number>),
       byBrowser: sessionStats.reduce((acc, stat) => {
@@ -254,8 +251,8 @@ async function getProductAnalytics(startDate: Date) {
       productName: pa.product.name,
       brandName: pa.product.brand?.name || "Unknown",
       conversionRate: pa.conversionRate,
-      revenue: pa.revenue / 100, // Convert cents to dollars
-      impressions: pa.impressions,
+      revenue: pa.purchaseCount || 0, // Use purchase count as proxy
+      impressions: pa.viewCount || 0,
     })),
     topRevenueProducts: topProducts.map((tp) => ({
       productId: tp.product_id,
@@ -334,7 +331,7 @@ async function getConversionAnalytics(startDate: Date) {
     // Conversion funnels
     prisma.conversionFunnel.findMany({
       where: { updatedAt: { gte: startDate } },
-      orderBy: { step: "asc" },
+      orderBy: { conversionRate: "desc" },
     }),
 
     // Page view analytics
@@ -342,7 +339,7 @@ async function getConversionAnalytics(startDate: Date) {
       by: ["path"],
       where: { timestamp: { gte: startDate } },
       _count: { _all: true },
-      _avg: { timeOnPage: true },
+      _avg: { duration: true },
     }),
 
     // Analytics events
@@ -355,17 +352,19 @@ async function getConversionAnalytics(startDate: Date) {
 
   return {
     funnels: conversionFunnels.map((cf) => ({
-      step: cf.step,
-      stepName: cf.stepName,
-      users: cf.users,
+      id: cf.id,
+      name: cf.name,
+      totalUsers: cf.totalUsers,
+      completedUsers: cf.completedUsers,
       conversionRate: cf.conversionRate,
-      dropoffRate: cf.dropoffRate,
+      steps: JSON.parse(cf.steps || "[]"),
+      dropoffData: JSON.parse(cf.dropoffData || "{}"),
     })),
     pageViews: {
       byPath: pageViews.reduce((acc, pv) => {
         acc[pv.path] = {
           views: pv._count._all,
-          avgTimeOnPage: pv._avg.timeOnPage || 0,
+          avgTimeOnPage: pv._avg.duration || 0,
         };
         return acc;
       }, {} as Record<string, { views: number; avgTimeOnPage: number }>),
@@ -384,8 +383,8 @@ async function getSearchAnalytics(startDate: Date) {
   const [searchAnalytics, topQueries] = await Promise.all([
     // Search analytics from new SearchAnalytics model
     prisma.searchAnalytics.findMany({
-      where: { date: { gte: startDate } },
-      orderBy: { date: "desc" },
+      where: { lastSearched: { gte: startDate } },
+      orderBy: { lastSearched: "desc" },
     }),
 
     // Top search queries
@@ -413,12 +412,12 @@ async function getSearchAnalytics(startDate: Date) {
 
   return {
     analytics: searchAnalytics.map((sa) => ({
-      date: sa.date.toISOString().split("T")[0],
-      totalSearches: sa.totalSearches,
-      uniqueQueries: sa.uniqueQueries,
-      noResultsRate: sa.noResultsRate,
+      date: sa.lastSearched.toISOString().split("T")[0],
+      totalSearches: sa.searchVolume,
+      uniqueQueries: 1, // Each record represents unique query
+      noResultsRate: sa.noResultsCount / sa.searchVolume,
       clickThroughRate: sa.clickThroughRate,
-      averageResultsPerQuery: sa.averageResultsPerQuery,
+      averageResultsPerQuery: sa.resultCount,
     })),
     topQueries: topQueries.map((tq) => ({
       query: tq.search_query,
@@ -437,7 +436,7 @@ async function getCategoryAnalytics(startDate: Date) {
         category: { select: { name: true } },
       },
       where: { updatedAt: { gte: startDate } },
-      orderBy: { totalRevenue: "desc" },
+      orderBy: { averageOrderValue: "desc" },
     }),
 
     // Category revenue breakdown
@@ -470,8 +469,8 @@ async function getCategoryAnalytics(startDate: Date) {
     analytics: categoryAnalytics.map((ca) => ({
       categoryId: ca.categoryId,
       categoryName: ca.category.name,
-      totalRevenue: ca.totalRevenue / 100,
-      productViews: ca.productViews,
+      totalRevenue: ca.averageOrderValue / 100,
+      productViews: ca.viewCount,
       conversionRate: ca.conversionRate,
       averageOrderValue: ca.averageOrderValue / 100,
     })),
@@ -488,15 +487,15 @@ async function getCategoryAnalytics(startDate: Date) {
 // Cohort Analysis Functions
 async function getCohortAnalysis(startDate: Date) {
   const cohortData = await prisma.cohortAnalysis.findMany({
-    where: { cohortMonth: { gte: startDate } },
-    orderBy: { cohortMonth: "desc" },
+    where: { cohortDate: { gte: startDate } },
+    orderBy: { cohortDate: "desc" },
   });
 
   return cohortData.map((cd) => ({
-    cohortMonth: cd.cohortMonth.toISOString().split("T")[0],
+    cohortMonth: cd.cohortDate.toISOString().split("T")[0],
     cohortSize: cd.cohortSize,
-    retentionRates: cd.retentionRates,
-    revenueData: cd.revenueData,
+    retentionRates: JSON.parse(cd.retentionData || "[]"),
+    revenueData: JSON.parse(cd.revenueData || "{}"),
   }));
 }
 

@@ -416,23 +416,3 @@ const ActionLink = ({ href, text }: { href: string; text: string }) => (
     {text}
   </Link>
 );
-
-function StatCard({
-  label,
-  value,
-  href,
-}: {
-  label: string;
-  value: number;
-  href?: string;
-}) {
-  const content = (
-    <div className="rounded border p-4 bg-white/60 hover:bg-white transition flex flex-col gap-1">
-      <span className="text-[11px] uppercase tracking-wide text-neutral-500 font-medium">
-        {label}
-      </span>
-      <span className="text-2xl font-semibold">{value}</span>
-    </div>
-  );
-  return href ? <Link href={href}>{content}</Link> : content;
-}

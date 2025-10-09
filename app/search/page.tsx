@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ClientPrice } from "@/components/ui/ClientPrice";
 import FiltersClient from "./_client/FiltersClient";
 import SortClient from "./_client/SortClient";
-import SearchFilters from "@/components/search/SearchFilters";
+
 import { headers } from "next/headers";
 
 interface PageSearchParams {

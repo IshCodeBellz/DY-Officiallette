@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   Shield,
   Smartphone,
-  Key,
   History,
   Settings,
   CheckCircle,
@@ -13,10 +12,8 @@ import {
   Clock,
   MapPin,
   RefreshCw,
-  ArrowLeft,
   Monitor,
 } from "lucide-react";
-import { toast } from "react-hot-toast";
 import { useToast } from "@/components/providers/ToastProvider";
 import { MfaSetupWizard } from "./MfaSetupWizard";
 import { BackupCodesDisplay } from "./BackupCodesDisplay";

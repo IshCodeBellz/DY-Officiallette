@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/server/prisma";
+import { SecurityService } from "@/lib/server/securityService";
 import Link from "next/link";
 
 export const revalidate = 30; // More frequent updates for security
@@ -14,42 +15,12 @@ export default async function SecurityPage() {
   const user = await prisma.user.findUnique({ where: { id: uid } });
   if (!user?.isAdmin) redirect("/");
 
-  // Mock security data - in production, this would query security tables
-  const securityStats = {
-    blockedIPs: 234,
-    rateLimitViolations: 567,
-    mfaUsers: 1234,
-    captchaRequests: 5678,
-    securityAlerts: 23,
-    suspiciousActivity: 45,
-  };
-
-  const recentSecurityEvents = [
-    {
-      timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 min ago
-      type: "rate_limit_exceeded",
-      severity: "medium",
-      ip: "192.168.1.100",
-      user: "john.doe@example.com",
-      details: "API rate limit exceeded (150/100 requests/min)",
-    },
-    {
-      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 min ago
-      type: "suspicious_login",
-      severity: "high",
-      ip: "203.0.113.42",
-      user: "suspicious.user@example.com",
-      details: "Login from high-risk country (Risk Score: 85)",
-    },
-    {
-      timestamp: new Date(Date.now() - 1000 * 60 * 45), // 45 min ago
-      type: "mfa_setup",
-      severity: "low",
-      ip: "10.0.0.1",
-      user: "alice.smith@example.com",
-      details: "User enabled MFA authentication",
-    },
-  ];
+  // Real security data from SecurityService
+  const [securityStats, recentSecurityEvents, blockedIPs] = await Promise.all([
+    SecurityService.getSecurityStats(),
+    SecurityService.getRecentSecurityEvents(10),
+    SecurityService.getBlockedIPs(5),
+  ]);
 
   const topThreats = [
     { threat: "Brute Force Attacks", count: 156, trend: "+12%" },
@@ -107,11 +78,11 @@ export default async function SecurityPage() {
           trend="Total active"
         />
         <StatCard
-          title="CAPTCHA Requests"
-          value={securityStats.captchaRequests.toLocaleString()}
-          subtitle="Bot protection"
+          title="Recent Events"
+          value={securityStats.recentEvents.toString()}
+          subtitle="Last hour"
           color="blue"
-          trend="Today"
+          trend="Hourly"
         />
         <StatCard
           title="Security Alerts"
@@ -158,7 +129,7 @@ export default async function SecurityPage() {
                   </td>
                   <td className="py-3 px-4">
                     <span className="px-2 py-1 text-xs rounded bg-neutral-100 text-neutral-800">
-                      {event.type.replace(/_/g, " ")}
+                      {event.eventType.replace(/_/g, " ")}
                     </span>
                   </td>
                   <td className="py-3 px-4">
@@ -174,10 +145,16 @@ export default async function SecurityPage() {
                       {event.severity}
                     </span>
                   </td>
-                  <td className="py-3 px-4 font-mono text-sm">{event.ip}</td>
-                  <td className="py-3 px-4 text-sm">{event.user}</td>
+                  <td className="py-3 px-4 font-mono text-sm">
+                    {event.ipAddress}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    {event.user?.email || "Unknown"}
+                  </td>
                   <td className="py-3 px-4 text-sm max-w-xs truncate">
-                    {event.details}
+                    {typeof event.details === "string"
+                      ? event.details
+                      : JSON.stringify(event.details)}
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex gap-2">

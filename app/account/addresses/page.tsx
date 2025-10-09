@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { AccountNavigation } from "@/components/account/AccountNavigation";
-import Link from "next/link";
 
 interface Address {
   id: string;
@@ -43,14 +42,7 @@ export default function AddressesPage() {
     phone: "",
   });
 
-  // Fetch addresses from database
-  useEffect(() => {
-    if (session?.user) {
-      fetchAddresses();
-    }
-  }, [session]);
-
-  const fetchAddresses = async () => {
+  const fetchAddresses = useCallback(async () => {
     try {
       const response = await fetch("/api/addresses");
       if (response.ok) {
@@ -67,7 +59,14 @@ export default function AddressesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Fetch addresses from database
+  useEffect(() => {
+    if (session?.user) {
+      fetchAddresses();
+    }
+  }, [session, fetchAddresses]);
 
   const showNotification = (type: "success" | "error", message: string) => {
     const id = Date.now();

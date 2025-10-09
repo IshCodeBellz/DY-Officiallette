@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { AccountNavigation } from "@/components/account/AccountNavigation";
 import Link from "next/link";
@@ -47,31 +47,7 @@ export default function AccountDetailsPage() {
     "December",
   ];
 
-  // Load user data from database
-  useEffect(() => {
-    if (session?.user) {
-      loadUserData();
-    }
-  }, [session]);
-
-  // Handle hash navigation with smooth scrolling
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (hash) {
-      // Small delay to ensure the page is fully rendered
-      setTimeout(() => {
-        const element = document.getElementById(hash.slice(1));
-        if (element) {
-          element.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }
-      }, 100);
-    }
-  }, []);
-
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     try {
       const response = await fetch("/api/account/profile");
       if (response.ok) {
@@ -119,7 +95,31 @@ export default function AccountDetailsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Load user data from database
+  useEffect(() => {
+    if (session?.user) {
+      loadUserData();
+    }
+  }, [session, loadUserData]);
+
+  // Handle hash navigation with smooth scrolling
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      // Small delay to ensure the page is fully rendered
+      setTimeout(() => {
+        const element = document.getElementById(hash.slice(1));
+        if (element) {
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      }, 100);
+    }
+  }, []);
 
   const getPasswordStrength = (password: string) => {
     if (password.length === 0) return { score: 0, text: "", color: "" };

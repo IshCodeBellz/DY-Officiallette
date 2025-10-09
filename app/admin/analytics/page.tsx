@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import AnalyticsDashboard from "@/components/admin/analytics/AnalyticsDashboard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { RefreshCw } from "lucide-react";
 
 async function getBasicAnalytics() {

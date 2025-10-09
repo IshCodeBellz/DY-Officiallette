@@ -1,10 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
 
 export default function MFAManagePage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
   const [backupCodes, setBackupCodes] = useState<string[]>([]);

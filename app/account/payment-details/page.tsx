@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { AccountNavigation } from "@/components/account/AccountNavigation";
-import Link from "next/link";
-import { CreditCard, Plus, Trash2, Edit } from "lucide-react";
+import { CreditCard, Plus, Trash2 } from "lucide-react";
 
 interface PaymentMethod {
   id: string;

@@ -74,7 +74,7 @@ async function processBasicAnalytics(date: Date) {
     updatedProducts: 0,
     processedOrders: 0,
     processedUsers: 0,
-    errors: [],
+    errors: [] as string[],
   };
 
   try {

@@ -1,4 +1,4 @@
-import { currencyService, BASE_CURRENCY } from "./currency";
+import { currencyService } from "./currency";
 
 export function formatPriceCents(
   cents: number,

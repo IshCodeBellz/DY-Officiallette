@@ -4,8 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/server/prisma";
 // Search is now rendered inside client Filters component
 import FiltersClient from "./FiltersClient";
-import { Suspense } from "react";
-import { ClientPrice } from "@/components/ui/ClientPrice";
+
 import { formatPriceCents } from "@/lib/money";
 
 import Link from "next/link";
