@@ -23,10 +23,10 @@ export default function DiscountCodesClient({ initial }: Props) {
   const [codes, setCodes] = useState<DiscountCode[]>(initial);
   const [creating, startCreate] = useTransition();
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
 
   async function handleCreate(formData: FormData) {
-    const payload: any = Object.fromEntries(formData.entries());
+    const payload: Record<string, string | number | undefined> =
+      Object.fromEntries(formData.entries()) as Record<string, string>;
     // Normalize empty strings to undefined
     for (const k of Object.keys(payload))
       if (payload[k] === "") payload[k] = undefined;
@@ -58,7 +58,8 @@ export default function DiscountCodesClient({ initial }: Props) {
 
   async function handleSave(id: string, form: HTMLFormElement) {
     const formData = new FormData(form);
-    const payload: any = Object.fromEntries(formData.entries());
+    const payload: Record<string, string | number | undefined> =
+      Object.fromEntries(formData.entries()) as Record<string, string>;
     for (const k of Object.keys(payload))
       if (payload[k] === "") payload[k] = undefined;
     if (payload.kind === "FIXED") {

@@ -59,7 +59,7 @@ export async function getUserCart(userId: string): Promise<CartItem[]> {
   if (memoryFallback) return mem.get(userId)?.items || [];
   try {
     const lines = await getCartLines(userId);
-    return await toCartItems(lines as any);
+    return await toCartItems(lines);
   } catch {
     memoryFallback = true;
     return mem.get(userId)?.items || [];
@@ -110,7 +110,7 @@ export async function mergeUserCart(userId: string, incoming: CartItem[]) {
         priceCentsSnapshot: i.priceCents,
       }))
     );
-    return await toCartItems(merged as any);
+    return await toCartItems(merged);
   } catch {
     memoryFallback = true;
     return mergeUserCart(userId, incoming); // retry in fallback

@@ -11,7 +11,6 @@ import { useCart } from "@/components/providers/CartProvider";
 import { useCurrency } from "@/components/providers/CurrencyProvider";
 import { useSession } from "next-auth/react";
 
-
 const stripePromise =
   typeof window !== "undefined" &&
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
@@ -149,7 +148,7 @@ export default function CheckoutClient() {
       });
       if (!checkoutRes.ok) {
         const text = await checkoutRes.text();
-        let data: any = {};
+        let data: { error?: string } = {};
         try {
           data = JSON.parse(text);
         } catch {}
@@ -168,7 +167,7 @@ export default function CheckoutClient() {
       });
       if (!piRes.ok) {
         const text = await piRes.text();
-        let data: any = {};
+        let data: { error?: string } = {};
         try {
           data = JSON.parse(text);
         } catch {}
@@ -188,8 +187,8 @@ export default function CheckoutClient() {
         totalCents: checkoutData.totalCents,
       });
       setStep("payment");
-    } catch (err: any) {
-      setError(err.message || "Error");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error");
     } finally {
       setLoading(false);
     }
@@ -272,8 +271,8 @@ export default function CheckoutClient() {
               }
               clear();
               setStep("success");
-            } catch (e: any) {
-              setError(e.message || "Simulate failed");
+            } catch (e) {
+              setError(e instanceof Error ? e.message : "Simulate failed");
             } finally {
               setLoading(false);
             }

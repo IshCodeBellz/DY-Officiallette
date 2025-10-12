@@ -2,30 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
-import { withRequest } from "@/lib/server/logger";
-import {
-  OrderStatus,
-  OrderTransitions,
-  canTransition,
-  isOrderStatus,
-} from "@/lib/status";
+import { OrderTransitions, isOrderStatus } from "@/lib/status";
 
 export const dynamic = "force-dynamic";
 
-export const POST = withRequest(async function POST(
+export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   // Test harness bypass (mirrors pattern used in checkout & payment intent endpoints)
-  let session: any = await getServerSession(authOptions);
+  let session = await getServerSession(authOptions);
   const testUser =
     process.env.NODE_ENV === "test" ? req.headers.get("x-test-user") : null;
   if (testUser) {
     session = {
-      user: { id: testUser, email: "test@example.com", isAdmin: true },
+      user: {
+        id: testUser,
+        email: "test@example.com",
+        isAdmin: true,
+        emailVerified: true,
+      },
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     };
   }
-  if (!(session?.user as any)?.isAdmin)
+  if (!session?.user?.isAdmin)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   // Accept both traditional form submission (existing admin UI) and JSON (tests)
@@ -55,7 +55,7 @@ export const POST = withRequest(async function POST(
   }
   await prisma.$transaction(async (tx) => {
     await tx.order.update({ where: { id: order.id }, data: { status } });
-    await (tx as any).orderEvent.create({
+    await tx.orderEvent.create({
       data: {
         orderId: order.id,
         kind: "STATUS_CHANGE",
@@ -65,4 +65,4 @@ export const POST = withRequest(async function POST(
     });
   });
   return NextResponse.redirect(new URL("/admin/orders", req.url));
-});
+}

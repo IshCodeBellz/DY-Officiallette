@@ -86,7 +86,6 @@ export class SearchService {
         priceMax,
         colors = [],
         sizes = [],
-        rating,
         inStock,
         featured,
         sortBy = "relevance",
@@ -97,7 +96,7 @@ export class SearchService {
       const offset = (page - 1) * limit;
 
       // Build search conditions
-      const where: any = {
+      const where: Record<string, unknown> = {
         isActive: true,
         deletedAt: null,
       };
@@ -123,9 +122,10 @@ export class SearchService {
 
       // Price range filter
       if (priceMin !== undefined || priceMax !== undefined) {
-        where.priceCents = {};
-        if (priceMin !== undefined) where.priceCents.gte = priceMin * 100;
-        if (priceMax !== undefined) where.priceCents.lte = priceMax * 100;
+        const priceFilter: Record<string, number> = {};
+        if (priceMin !== undefined) priceFilter.gte = priceMin * 100;
+        if (priceMax !== undefined) priceFilter.lte = priceMax * 100;
+        where.priceCents = priceFilter;
       }
 
       // Featured filter
@@ -166,7 +166,6 @@ export class SearchService {
       }
 
       // Build sort order
-      const orderBy = this.buildSortOrder(sortBy);
 
       // For now, return mock data since Prisma models aren't synced
       const mockProducts: ProductSearchResult[] = [

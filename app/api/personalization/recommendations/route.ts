@@ -3,7 +3,7 @@ import { PersonalizationService } from "@/lib/server/personalizationService";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,7 +21,15 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get("limit") || "12"), 50);
-    const strategy = (searchParams.get("strategy") as any) || "hybrid";
+    const strategyParam = searchParams.get("strategy") || "hybrid";
+    const strategy = [
+      "collaborative",
+      "content",
+      "hybrid",
+      "trending",
+    ].includes(strategyParam)
+      ? (strategyParam as "collaborative" | "content" | "hybrid" | "trending")
+      : "hybrid";
     const categoryId = searchParams.get("categoryId") || undefined;
     const excludeIds =
       searchParams.get("exclude")?.split(",").filter(Boolean) || [];
@@ -42,7 +50,7 @@ export async function GET(request: NextRequest) {
       data: recommendations,
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Recommendations API error:", error);
     return NextResponse.json(
       {
@@ -112,7 +120,7 @@ export async function POST(request: NextRequest) {
       message: "Interaction tracked successfully",
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Track interaction API error:", error);
     return NextResponse.json(
       {

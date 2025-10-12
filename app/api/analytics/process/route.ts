@@ -185,7 +185,7 @@ async function processBasicAnalytics(date: Date) {
 }
 
 // GET /api/analytics/process - Get processing status (for debugging)
-export const GET = withRequest(async function GET(req: NextRequest) {
+export const GET = withRequest(async function GET() {
   const start = Date.now();
   const perf = trackPerformance("analytics_process_status", {
     route: "/api/analytics/process",

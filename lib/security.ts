@@ -70,7 +70,7 @@ export interface SecurityEvent {
   id: string;
   userId: string;
   type: SecurityEventType;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   ipAddress: string;
   userAgent: string;
   timestamp: Date;

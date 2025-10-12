@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/server/authOptions";
 import { MFAService } from "@/lib/server/mfa";
-import { captureError } from "@/lib/server/errors";
 import { z } from "zod";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const regenerateSchema = z.object({
   confirmationToken: z.string().min(6), // Require MFA token to regenerate
@@ -68,7 +67,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Backup codes regeneration error:", error);
 
     if (error instanceof z.ZodError) {

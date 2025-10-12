@@ -5,7 +5,17 @@ import { PrismaClient } from "@prisma/client";
 // For Postgres we use a RETURNING clause (future ready; still safe in SQLite path).
 
 export async function decrementSizeStock(
-  tx: PrismaClient,
+  tx:
+    | PrismaClient
+    | Omit<
+        PrismaClient,
+        | "$connect"
+        | "$disconnect"
+        | "$on"
+        | "$transaction"
+        | "$use"
+        | "$extends"
+      >,
   sizeVariantId: string,
   qty: number
 ): Promise<boolean> {
@@ -15,6 +25,8 @@ export async function decrementSizeStock(
     dbUrl.startsWith("postgres://") || dbUrl.startsWith("postgresql://");
   if (isPostgres) {
     // Postgres dialect (RETURNING) — use $executeRawUnsafe, which returns number of rows affected.
+    // Using any here is necessary due to Prisma transaction typing limitations with raw SQL
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const affected = await (tx as any).$executeRawUnsafe(
       `UPDATE "SizeVariant" SET "stock" = "stock" - $1 WHERE "id" = $2 AND "stock" >= $1`,
       qty,
@@ -23,6 +35,8 @@ export async function decrementSizeStock(
     return !!affected;
   }
   // SQLite path — use positional parameters.
+  // Using any here is necessary due to Prisma transaction typing limitations with raw SQL
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const affected = await (tx as any).$executeRawUnsafe(
     `UPDATE SizeVariant SET stock = stock - ? WHERE id = ? AND stock >= ?`,
     qty,

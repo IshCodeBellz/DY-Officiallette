@@ -9,7 +9,7 @@ export const revalidate = 300; // 5 minutes
 
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = session?.user?.id;
   if (!uid) redirect("/login?callbackUrl=/admin/settings");
 
   const user = await prisma.user.findUnique({ where: { id: uid } });

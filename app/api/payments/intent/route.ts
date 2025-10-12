@@ -6,7 +6,7 @@ import { z } from "zod";
 import { getStripe } from "@/lib/server/stripe";
 import { withRequest } from "@/lib/server/logger";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 // Stub: would call Stripe to create a PaymentIntent. For now, we simulate one.
 // Later replace with: const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' });
@@ -21,7 +21,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     uid = testUser;
   } else {
     const session = await getServerSession(authOptions);
-    uid = (session?.user as any)?.id as string | undefined;
+    uid = session?.user?.id;
   }
   if (!uid) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
@@ -103,7 +103,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
         paymentIntentId: pi.id,
         reused: true,
       });
-    } catch (_) {
+    } catch {
       // existing placeholder (likely simulated) – create real intent then UPDATE record instead of creating duplicate
       const intent = await stripe.paymentIntents.create({
         amount: order.totalCents,

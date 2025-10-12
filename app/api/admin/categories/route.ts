@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
-import { withRequest } from "@/lib/server/logger";
+import { withRequest, warn } from "@/lib/server/logger";
 import { z } from "zod";
 import { ExtendedSession } from "@/lib/types";
 
@@ -54,7 +54,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const parsed = categorySchema.safeParse(body);
   if (!parsed.success) {
-    console.error("Category validation failed:", parsed.error.issues);
+    warn("Category validation failed", { issues: parsed.error.issues });
     return NextResponse.json(
       {
         error: "invalid_payload",

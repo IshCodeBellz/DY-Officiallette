@@ -197,7 +197,7 @@ export class ReviewService {
       const offset = (opts.page - 1) * opts.limit;
 
       // Build where clause
-      const whereClause: any = {
+      const whereClause: Record<string, any> = {
         productId,
         isPublished: true,
       };
@@ -211,7 +211,7 @@ export class ReviewService {
       }
 
       // Build order by clause
-      let orderBy: any = {};
+      let orderBy: Record<string, "asc" | "desc"> = {};
       switch (opts.sortBy) {
         case "newest":
           orderBy = { createdAt: "desc" };

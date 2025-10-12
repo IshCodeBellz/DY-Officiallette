@@ -1,21 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
-import { withRequest } from "@/lib/server/logger";
-import { OrderStatus, PaymentStatus } from "@/lib/status";
-import {
-  captureError,
-  createErrorResponse,
-  trackPerformance,
-} from "@/lib/server/errors";
+import { PaymentStatus } from "@/lib/status";
+import { captureError, trackPerformance } from "@/lib/server/errors";
+
+// Global test flag interface
+declare global {
+  // eslint-disable-next-line no-var
+  var __prismaDisconnected: boolean | undefined;
+}
 
 // GET /api/metrics - System health and business metrics endpoint
-export const GET = withRequest(async function GET(req: NextRequest) {
+export async function GET() {
   const start = Date.now();
   const perf = trackPerformance("metrics_endpoint", { route: "/api/metrics" });
 
   try {
     // If tests or other code have explicitly disconnected Prisma, treat as unavailable
-    if ((global as any).__prismaDisconnected) {
+    if (global.__prismaDisconnected) {
       throw new Error("prisma_disconnected");
     }
     // Parallel queries for efficiency
@@ -206,7 +207,6 @@ export const GET = withRequest(async function GET(req: NextRequest) {
     perf.finish("ok");
     return NextResponse.json(response);
   } catch (error) {
-      console.error("Error:", error);
     perf.finish("error");
     // Return a stable, testable error shape for metrics failures
     try {
@@ -215,7 +215,7 @@ export const GET = withRequest(async function GET(req: NextRequest) {
         { route: "/api/metrics", operation: "get_metrics" },
         "error"
       );
-    } catch (_) {
+    } catch {
       // swallow capture errors in tests
     }
 
@@ -250,4 +250,4 @@ export const GET = withRequest(async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-});
+}

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { toast } from "react-hot-toast";
 import { useToast } from "@/components/providers/ToastProvider";
 import {
   Loader2,
@@ -162,7 +161,7 @@ export function MfaSetupWizard({
         <div className="space-y-6">
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-              What you'll need:
+              What you&apos;ll need:
             </h3>
             <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
               <li>• A smartphone or tablet</li>
@@ -185,7 +184,8 @@ export function MfaSetupWizard({
                   Scan QR Code
                 </p>
                 <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Use your authenticator app to scan the QR code we'll show you
+                  Use your authenticator app to scan the QR code we&apos;ll show
+                  you
                 </p>
               </div>
             </div>
@@ -269,7 +269,7 @@ export function MfaSetupWizard({
               <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
               <div>
                 <p className="font-medium text-yellow-800 dark:text-yellow-200">
-                  Can't scan the QR code?
+                  Can&apos;t scan the QR code?
                 </p>
                 <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
                   Manually enter this secret key in your authenticator app:

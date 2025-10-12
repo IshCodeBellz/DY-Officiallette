@@ -2,7 +2,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { redirect } from "next/navigation";
-import { SecuritySettings } from "@/components/security/SecuritySettings";
 import { AccountNavigation } from "@/components/account/AccountNavigation";
 import { SecurityPageClient } from "@/components/security/SecurityPageClient";
 
@@ -54,17 +53,6 @@ async function getSecurityData(userId: string): Promise<SecurityData> {
   };
 
   try {
-    const mfaResponse = await fetch(
-      `${
-        process.env.NEXTAUTH_URL || "http://localhost:3000"
-      }/api/auth/mfa/setup`,
-      {
-        headers: {
-          Cookie: "", // Server-side fetch won't have session cookies automatically
-        },
-      }
-    );
-
     // For server-side, we'll use the MFAService directly
     const { MFAService } = await import("@/lib/server/mfa");
     const mfaData = await MFAService.getMFAStatus(userId);
@@ -74,9 +62,7 @@ async function getSecurityData(userId: string): Promise<SecurityData> {
       hasBackupCodes: (mfaData.backupCodesRemaining || 0) > 0,
       trustedDevices: 0, // This would need to be implemented in MFAService
     };
-  } catch (error) {
-      console.error("Error:", error);
-    console.error("Failed to fetch MFA status:", error);
+  } catch {
     // Keep default values on error
   }
 
@@ -103,7 +89,7 @@ async function getSecurityData(userId: string): Promise<SecurityData> {
 
 export default async function AccountSecurityPage() {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = (session?.user as { id: string })?.id;
 
   if (!uid) {
     redirect("/login?callbackUrl=/account/security");
@@ -113,9 +99,7 @@ export default async function AccountSecurityPage() {
 
   try {
     securityData = await getSecurityData(uid);
-  } catch (error) {
-      console.error("Error:", error);
-    console.error("Failed to load security data:", error);
+  } catch {
     redirect("/login?callbackUrl=/account/security");
   }
 

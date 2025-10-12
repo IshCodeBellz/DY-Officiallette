@@ -4,12 +4,12 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 // GET /api/orders - list current user's orders (most recent first)
 export const GET = withRequest(async function GET() {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = session?.user?.id;
   if (!uid) return NextResponse.json({ orders: [] });
   const orders = await prisma.order.findMany({
     where: { userId: uid },

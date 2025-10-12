@@ -34,9 +34,8 @@ export default function SecurityClient({
           mfaEnabled: false,
           mfaBackupCodesCount: 0,
         }));
-      } catch (error) {
-      console.error("Error:", error);
-        console.error("Error:", error);
+      } catch {
+        // Error handling done by UI feedback
       }
     }
 
@@ -56,9 +55,8 @@ export default function SecurityClient({
       if (res.ok) {
         setEmailVerificationSent(true);
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error:", error);
+    } catch {
+      // Error handling done by UI feedback
     } finally {
       setLoading(false);
     }

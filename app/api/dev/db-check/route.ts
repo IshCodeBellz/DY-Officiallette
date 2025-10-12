@@ -47,11 +47,11 @@ export async function GET() {
       hatLike,
       sample: randomSample,
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json(
       {
         ok: false,
-        error: e?.message || String(e),
+        error: e instanceof Error ? e.message : String(e),
         databaseUrl: process.env.DATABASE_URL,
       },
       { status: 500 }

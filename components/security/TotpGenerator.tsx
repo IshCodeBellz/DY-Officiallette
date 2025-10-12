@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Smartphone, RefreshCw, Copy, AlertCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -22,7 +22,7 @@ export function TotpGenerator({
   const { push } = useToast();
 
   // Simulate TOTP code generation (in real implementation, this would use the speakeasy library)
-  const generateTotpCode = () => {
+  const generateTotpCode = useCallback(() => {
     if (!secret) return "";
 
     // This is a mock implementation for display purposes
@@ -30,7 +30,7 @@ export function TotpGenerator({
     const timestamp = Math.floor(Date.now() / 1000 / 30);
     const mockCode = String(timestamp).slice(-6).padStart(6, "0");
     return mockCode;
-  };
+  }, [secret]);
 
   useEffect(() => {
     if (!secret) return;
@@ -62,7 +62,7 @@ export function TotpGenerator({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [secret, timeRemaining, onCodeGenerated]);
+  }, [secret, timeRemaining, onCodeGenerated, generateTotpCode]);
 
   const copyCode = () => {
     if (currentCode) {

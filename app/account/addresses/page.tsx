@@ -49,12 +49,9 @@ export default function AddressesPage() {
         const data = await response.json();
         setAddresses(data);
       } else {
-        console.error("Failed to fetch addresses");
         showNotification("error", "Failed to load addresses");
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error fetching addresses:", error);
+    } catch {
       showNotification("error", "Unexpected error loading addresses");
     } finally {
       setLoading(false);
@@ -106,9 +103,7 @@ export default function AddressesPage() {
         const error = await response.json();
         showNotification("error", error.error || "Failed to add address");
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error adding address:", error);
+    } catch {
       showNotification("error", "Failed to add address");
     } finally {
       setSubmitting(false);
@@ -161,9 +156,7 @@ export default function AddressesPage() {
         const error = await response.json();
         showNotification("error", error.error || "Failed to update address");
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error updating address:", error);
+    } catch {
       showNotification("error", "Failed to update address");
     } finally {
       setSubmitting(false);
@@ -197,9 +190,7 @@ export default function AddressesPage() {
         const error = await response.json();
         showNotification("error", error.error || "Failed to delete address");
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error deleting address:", error);
+    } catch {
       showNotification("error", "Failed to delete address");
     }
   };
@@ -245,9 +236,7 @@ export default function AddressesPage() {
           error.error || "Failed to set default address"
         );
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error setting default address:", error);
+    } catch {
       showNotification("error", "Failed to set default address");
     }
   };

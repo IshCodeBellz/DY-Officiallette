@@ -26,28 +26,35 @@ export default async function ProductPage({
       sizeVariants: true,
       category: true,
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   })) as any; // Temporary type assertion while Prisma client is being regenerated
 
   if (!product) return notFound();
 
   // Mock data for reviews - we'll implement the real queries later
-  const averageRating = 4.2;
-  const totalReviews = 156;
-  const canReview = !!session;
+  // const averageRating = 4.2;
+  // const totalReviews = 156;
+  // const canReview = !!session?.user?.id;
 
   const fromParam =
     typeof searchParams?.from === "string" ? searchParams?.from : undefined;
   const backCategorySlug = fromParam || product.category?.slug;
   // Pre-shape lightweight client payload
-  const clientProduct = {
-    id: product.id,
-    name: product.name,
-    priceCents: product.priceCents,
-    image: product.images[0]?.url || "",
-    description: product.description,
-    sizes: product.sizeVariants.map((s: any) => s.label),
-    images: product.images.map((i: any) => i.url),
-  };
+  interface ProductImage {
+    id: string;
+    url: string;
+    alt?: string | null;
+  }
+
+  // const structuredData = {
+  //   name: product.name,
+  //   sku: product.sku,
+  //   priceCents: product.priceCents,
+  //   image: product.images[0]?.url || "",
+  //   description: product.description,
+  //   sizes: product.sizeVariants.map((s: SizeVariant) => s.label),
+  //   images: product.images.map((i: ProductImage) => i.url),
+  // };
 
   return (
     <div className="container mx-auto px-4 py-10 grid gap-12 lg:grid-cols-2">
@@ -61,7 +68,7 @@ export default async function ProductPage({
             name: product.name,
             description: product.description,
             sku: product.sku,
-            image: product.images.map((im: any) => im.url),
+            image: product.images.map((im: ProductImage) => im.url),
             offers: {
               "@type": "Offer",
               priceCurrency: "USD",
@@ -104,7 +111,7 @@ export default async function ProductPage({
             className="flex flex-col gap-2 w-16 overflow-y-auto max-h-[80vh] pr-1 [-webkit-overflow-scrolling:touch]"
             id="thumbs"
           >
-            {product.images.map((im: any, idx: number) => (
+            {product.images.map((im: ProductImage, idx: number) => (
               <a
                 key={im.id}
                 href={`#image-${idx}`}
@@ -129,7 +136,7 @@ export default async function ProductPage({
             tabIndex={0}
             aria-label="Product image gallery"
           >
-            {product.images.map((im: any, idx: number) => (
+            {product.images.map((im: ProductImage, idx: number) => (
               <div
                 key={im.id}
                 id={`image-${idx}`}
@@ -261,7 +268,7 @@ export default async function ProductPage({
               className="relative aspect-[3/4] md:aspect-[5/4]"
               id="zoom-slides"
             >
-              {product.images.map((im: any, idx: number) => (
+              {product.images.map((im: ProductImage, idx: number) => (
                 <div
                   key={im.id}
                   data-zoom-index={idx}
@@ -347,7 +354,7 @@ export default async function ProductPage({
           {product.description}
         </p>
         <Suspense>
-          <ProductClient product={clientProduct} />
+          <ProductClient product={product} />
         </Suspense>
         <div className="text-xs text-neutral-500 space-y-2">
           <p>Free delivery and returns (Ts&Cs apply).</p>

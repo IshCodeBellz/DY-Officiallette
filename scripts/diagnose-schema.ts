@@ -84,7 +84,16 @@ async function fetchDbColumns(model: string): Promise<Set<string>> {
 async function main() {
   const schemaPath = path.resolve(process.cwd(), "prisma", "schema.prisma");
   const specs = parsePrismaSchema(schemaPath);
-  const report: any[] = [];
+
+  interface SchemaReport {
+    model: string;
+    expectedCount: number;
+    dbCount: number;
+    missing: string[];
+    extra: string[];
+  }
+
+  const report: SchemaReport[] = [];
   for (const spec of specs) {
     const dbCols = await fetchDbColumns(spec.name);
     // Filter expected columns to likely real columns (remove relation-only heuristic: those starting lowercase but not present maybe)

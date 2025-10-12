@@ -8,17 +8,17 @@ export function LiveRegion() {
   const [msg, setMsg] = useState("");
   const timer = useRef<number | null>(null);
   useEffect(() => {
-    function on(e: Event) {
+    const on = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (typeof detail === "string") {
         setMsg(detail);
         if (timer.current) window.clearTimeout(timer.current);
         timer.current = window.setTimeout(() => setMsg(""), 3000);
       }
-    }
-    window.addEventListener("announce", on as any);
+    };
+    window.addEventListener("announce", on);
     return () => {
-      window.removeEventListener("announce", on as any);
+      window.removeEventListener("announce", on);
       if (timer.current) window.clearTimeout(timer.current);
     };
   }, []);

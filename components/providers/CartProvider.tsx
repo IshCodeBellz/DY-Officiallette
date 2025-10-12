@@ -17,6 +17,17 @@ import type {
 } from "@/lib/types";
 import { lineIdFor } from "@/lib/types";
 
+interface WishlistApiItem {
+  productId: string;
+  size?: string;
+  product?: {
+    name?: string;
+    priceCents?: number;
+    images?: Array<{ url?: string }>;
+    sizes?: string[];
+  };
+}
+
 // Keys for localStorage
 const CART_KEY = "app.cart.v1";
 const WISHLIST_KEY = "app.wishlist.v1";
@@ -147,14 +158,16 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data.items)) {
-            const serverItems: WishlistItem[] = data.items.map((it: any) => ({
-              id: lineIdFor(it.productId, it.size || undefined),
-              productId: it.productId,
-              name: it.product?.name || "",
-              priceCents: it.product?.priceCents || 0,
-              image: it.product?.images?.[0]?.url || "/placeholder.svg",
-              size: it.size || undefined,
-            }));
+            const serverItems: WishlistItem[] = data.items.map(
+              (it: WishlistApiItem) => ({
+                id: lineIdFor(it.productId, it.size || undefined),
+                productId: it.productId,
+                name: it.product?.name || "",
+                priceCents: it.product?.priceCents || 0,
+                image: it.product?.images?.[0]?.url || "/placeholder.svg",
+                size: it.size || undefined,
+              })
+            );
             // Simple merge: union preferring local (avoid duplicates)
             setItems((prev) => {
               const map = new Map<string, WishlistItem>();

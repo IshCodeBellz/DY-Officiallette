@@ -3,18 +3,18 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { NextResponse } from "next/server";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.isAdmin)
+  if (!session?.user?.isAdmin)
     return new NextResponse("Unauthorized", { status: 401 });
   const data = await req.json();
   // Allow partial update of mutable fields
-  const updatable: any = {};
+  const updatable: Record<string, unknown> = {};
   for (const key of [
     "valueCents",
     "percent",
@@ -32,7 +32,7 @@ export async function PATCH(
     });
     return NextResponse.json(updated);
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     return new NextResponse("Not Found", { status: 404 });
   }
 }
@@ -42,13 +42,13 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.isAdmin)
+  if (!session?.user?.isAdmin)
     return new NextResponse("Unauthorized", { status: 401 });
   try {
     await prisma.discountCode.delete({ where: { id: params.id } });
     return new NextResponse("", { status: 204 });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     return new NextResponse("Not Found", { status: 404 });
   }
 }

@@ -6,7 +6,6 @@ import {
   Check,
   X,
   Trash2,
-  AlertTriangle,
   Star,
   RefreshCw,
   Filter,
@@ -228,7 +227,9 @@ export function ReviewModeration() {
           <Filter className="w-4 h-4 text-gray-400" />
           <select
             value={filter}
-            onChange={(e) => setFilter(e.target.value as any)}
+            onChange={(e) =>
+              setFilter(e.target.value as "all" | "pending" | "reported")
+            }
             className="border border-gray-300 rounded-md px-3 py-1 text-sm"
           >
             <option value="all">All Reviews</option>

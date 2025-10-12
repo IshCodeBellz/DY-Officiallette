@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { ReviewService } from "@/lib/server/reviewService";
 import { SocialWishlistService } from "@/lib/server/socialWishlistService";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     console.log("🚀 Phase 4 Social Commerce Features Demo");
 
@@ -205,7 +205,7 @@ export async function GET(request: NextRequest) {
       data: phase4Results,
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Phase 4 demo error:", error);
     return NextResponse.json(
       {

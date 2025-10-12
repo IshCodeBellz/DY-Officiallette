@@ -1,15 +1,18 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import Image from "next/image";
 
 // Simple debounce function
-function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
+function debounce<TArgs extends unknown[], TReturn>(
+  func: (...args: TArgs) => TReturn,
+  wait: number
+): (...args: TArgs) => void {
   let timeout: NodeJS.Timeout;
-  return ((...args: any[]) => {
+  return (...args: TArgs) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
-  }) as T;
+  };
 }
 
 interface SearchSuggestion {
@@ -70,6 +73,7 @@ export default function EnhancedSearchBar() {
 
   // Debounced search suggestions
   const debouncedGetSuggestions = useCallback(
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     debounce(async (searchQuery: string) => {
       if (!searchQuery.trim()) {
         setSuggestions([]);
@@ -292,9 +296,11 @@ export default function EnhancedSearchBar() {
                   }`}
                 >
                   {suggestion.imageUrl && (
-                    <img
+                    <Image
                       src={suggestion.imageUrl}
                       alt=""
+                      width={40}
+                      height={40}
                       className="w-10 h-10 rounded object-cover flex-shrink-0"
                     />
                   )}
@@ -449,7 +455,7 @@ export default function EnhancedSearchBar() {
                       d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                     />
                   </svg>
-                  Search for "{query}"
+                  Search for &quot;{query}&quot;
                 </button>
               </div>
             )}

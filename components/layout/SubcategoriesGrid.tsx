@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 interface SubcategoryCard {
   name: string;
@@ -66,9 +67,11 @@ export function SubcategoriesGrid({
               >
                 {/* Background Image */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={subcategory.image}
                   alt={subcategory.name}
+                  width={400}
+                  height={500}
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
 

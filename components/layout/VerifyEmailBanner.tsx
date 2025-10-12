@@ -5,7 +5,7 @@ import { useState } from "react";
 
 export function VerifyEmailBanner() {
   const { data: session } = useSession();
-  const emailVerified = (session?.user as any)?.emailVerified;
+  const emailVerified = session?.user?.emailVerified;
   const userEmail = session?.user?.email;
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);

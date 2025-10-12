@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
+import { error as logError } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -31,8 +32,9 @@ export async function GET() {
 
     return NextResponse.json(user.addresses);
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Error fetching addresses:", error);
+    logError("Error fetching addresses", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Failed to fetch addresses" },
       { status: 500 }
@@ -90,8 +92,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(address, { status: 201 });
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Error creating address:", error);
+    logError("Error creating address", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Failed to create address" },
       { status: 500 }

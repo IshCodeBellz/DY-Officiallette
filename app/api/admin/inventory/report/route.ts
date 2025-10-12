@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { InventoryService } from "@/lib/server/inventoryService";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -26,9 +26,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: report,
     });
-  } catch (error) {
-      console.error("Error:", error);
-    console.error("Get inventory report API error:", error);
+  } catch {
     return NextResponse.json(
       {
         success: false,

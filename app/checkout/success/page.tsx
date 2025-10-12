@@ -14,7 +14,7 @@ export default async function CheckoutSuccessPage({
   searchParams: { orderId?: string };
 }) {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = session?.user?.id;
   const orderId = searchParams.orderId;
   if (!orderId || !uid) return notFound();
   const order = await prisma.order.findFirst({

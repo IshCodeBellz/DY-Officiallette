@@ -3,18 +3,30 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useCart, useWishlist } from "@/components/providers/CartProvider";
 import { lineIdFor } from "@/lib/types";
-
+import Image from "next/image";
 import { useToast } from "@/components/providers/ToastProvider";
 import { ClientPrice } from "@/components/ui/ClientPrice";
 
 // "New In" shows the latest products by createdAt desc (reuses /api/products ordering)
 // Provides simple client pagination (page param to API) and basic search.
 
+interface Product {
+  id: string;
+  name: string;
+  priceCents: number;
+  price?: number;
+  image: string;
+  images: { url: string }[];
+  category?: { name: string };
+  brand?: { name: string };
+  sizes: string[];
+}
+
 export default function NewInPage() {
   const { toggle, has } = useWishlist();
   const { addItem } = useCart();
   const { push } = useToast();
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(24);
@@ -36,9 +48,16 @@ export default function NewInPage() {
         if (res.ok) {
           const data = await res.json();
           setItems(
-            (data.items || []).map((p: any) => ({
-              ...p,
+            (data.items || []).map((p: Partial<Product>) => ({
+              id: p.id || "",
+              name: p.name || "",
               priceCents: p.priceCents ?? Math.round((p.price || 0) * 100),
+              price: p.price,
+              image: p.image || "",
+              images: p.images || [],
+              category: p.category,
+              brand: p.brand,
+              sizes: p.sizes || [],
             }))
           );
           setTotal(data.total || 0);
@@ -146,9 +165,11 @@ export default function NewInPage() {
                 >
                   <Link href={`/product/${p.id}`} className="absolute inset-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={p.image}
                       alt={p.name}
+                      width={400}
+                      height={500}
                       className="object-cover w-full h-full group-hover:scale-105 transition-transform"
                     />
                   </Link>

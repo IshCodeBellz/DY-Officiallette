@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
+import { error as logError } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -72,8 +73,9 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Error setting default address:", error);
+    logError("Error setting default address", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Failed to set default address" },
       { status: 500 }

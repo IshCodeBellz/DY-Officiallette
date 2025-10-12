@@ -1,6 +1,6 @@
 "use client";
 import { useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import Search from "../products/search"; // server wrapper -> fine inside client for Suspense boundary
 
@@ -20,7 +20,6 @@ export default function FiltersClient({
   initialIncludeDeleted,
 }: FiltersClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const updateParam = useCallback(
     (key: string, value: string | null) => {

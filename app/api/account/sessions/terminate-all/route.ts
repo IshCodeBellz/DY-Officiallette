@@ -1,13 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
-import { PrismaClient } from "@prisma/client";
+import { error as logError } from "@/lib/server/logger";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-const prisma = new PrismaClient();
-
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -32,8 +30,9 @@ export async function POST(request: NextRequest) {
       message: "All sessions terminated successfully",
     });
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Failed to terminate all sessions:", error);
+    logError("Failed to terminate all sessions", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }

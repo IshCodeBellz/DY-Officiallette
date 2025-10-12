@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/server/prisma";
 import { formatPriceCents } from "@/lib/money";
 
@@ -131,10 +132,11 @@ export default async function MensSubcategoryPage({
               >
                 <div className="aspect-square bg-gray-100 relative overflow-hidden">
                   {product.images[0] ? (
-                    <img
+                    <Image
                       src={product.images[0].url}
                       alt={product.images[0].alt || product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400">

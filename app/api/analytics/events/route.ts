@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withRequest } from "@/lib/server/logger";
 import {
   trackEvent,
   trackPageView,
@@ -10,7 +9,7 @@ import {
 import { captureError, trackPerformance } from "@/lib/server/errors";
 
 // POST /api/analytics/events - Track analytics events
-export const POST = withRequest(async function POST(req: NextRequest) {
+export async function POST(req: NextRequest) {
   const start = Date.now();
   const perf = trackPerformance("analytics_events_endpoint", {
     route: "/api/analytics/events",
@@ -39,7 +38,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     let errorCount = 0;
 
     for (const batch of eventBatches) {
-      const batchPromises = batch.map(async (event: any) => {
+      const batchPromises = batch.map(async (event) => {
         try {
           const clientIP =
             req.headers.get("x-forwarded-for") ||
@@ -150,10 +149,10 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-});
+}
 
 // GET /api/analytics/events - Get recent events (for debugging/admin)
-export const GET = withRequest(async function GET(req: NextRequest) {
+export async function GET(req: NextRequest) {
   const start = Date.now();
   const perf = trackPerformance("analytics_events_get", {
     route: "/api/analytics/events",
@@ -167,7 +166,7 @@ export const GET = withRequest(async function GET(req: NextRequest) {
     const sessionId = searchParams.get("sessionId");
     const since = searchParams.get("since");
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (eventType) where.eventType = eventType;
     if (userId) where.userId = userId;
@@ -220,4 +219,4 @@ export const GET = withRequest(async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-});
+}

@@ -22,9 +22,6 @@ export default function PaymentDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<PaymentMethod | null>(
-    null
-  );
   const [submitting, setSubmitting] = useState(false);
   const [newPayment, setNewPayment] = useState({
     type: "card" as const,
@@ -118,9 +115,7 @@ export default function PaymentDetailsPage() {
       resetForm();
       setShowAddModal(false);
       alert("Payment method added successfully!");
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error adding payment method:", error);
+    } catch {
       alert("Failed to add payment method");
     } finally {
       setSubmitting(false);
@@ -137,9 +132,7 @@ export default function PaymentDetailsPage() {
       await new Promise((resolve) => setTimeout(resolve, 500));
       setPaymentMethods((prev) => prev.filter((pm) => pm.id !== id));
       alert("Payment method deleted successfully!");
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error deleting payment method:", error);
+    } catch {
       alert("Failed to delete payment method");
     }
   };
@@ -152,9 +145,7 @@ export default function PaymentDetailsPage() {
         prev.map((pm) => ({ ...pm, isDefault: pm.id === id }))
       );
       alert("Default payment method updated!");
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error updating default payment method:", error);
+    } catch {
       alert("Failed to update default payment method");
     }
   };
@@ -169,7 +160,6 @@ export default function PaymentDetailsPage() {
       holderName: "",
       isDefault: false,
     });
-    setEditingPayment(null);
   };
 
   const months = Array.from({ length: 12 }, (_, i) => {

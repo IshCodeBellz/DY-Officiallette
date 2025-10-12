@@ -3,6 +3,7 @@
 import { useCurrency } from "@/components/providers/CurrencyProvider";
 import { CurrencySelector } from "@/components/ui/CurrencySelector";
 import { useEffect, useState } from "react";
+import { currencyService, SUPPORTED_CURRENCIES } from "@/lib/currency";
 
 export default function TestCurrencyPage() {
   const { currentCurrency, convertPrice, formatPrice, currencies, isLoading } =
@@ -13,7 +14,7 @@ export default function TestCurrencyPage() {
 
   useEffect(() => {
     setRenderCount((prev) => prev + 1);
-  });
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -127,10 +128,7 @@ export default function TestCurrencyPage() {
               );
 
               // Test direct service calls
-              const {
-                currencyService,
-                SUPPORTED_CURRENCIES,
-              } = require("@/lib/currency");
+              // Using imported currencyService and SUPPORTED_CURRENCIES
               console.log(
                 "Supported currencies:",
                 Object.keys(SUPPORTED_CURRENCIES)

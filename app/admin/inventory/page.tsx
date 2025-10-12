@@ -9,7 +9,7 @@ export const revalidate = 30; // More frequent updates for inventory
 
 export default async function InventoryPage() {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = (session?.user as { id: string })?.id;
   if (!uid) redirect("/login?callbackUrl=/admin/inventory");
 
   const user = await prisma.user.findUnique({ where: { id: uid } });

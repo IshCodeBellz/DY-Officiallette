@@ -8,7 +8,7 @@ export const revalidate = 300; // 5 minutes
 
 export default async function UserAnalyticsPage() {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = session?.user?.id;
   if (!uid) redirect("/login?callbackUrl=/admin/users/analytics");
 
   const user = await prisma.user.findUnique({ where: { id: uid } });
@@ -23,8 +23,8 @@ export default async function UserAnalyticsPage() {
   const [
     totalUsers,
     activeUsers,
-    newUsersToday,
-    totalBehaviors,
+    newUsersToday, // totalBehaviors - not used in current UI
+    ,
     viewBehaviors,
     searchBehaviors,
     purchaseBehaviors,

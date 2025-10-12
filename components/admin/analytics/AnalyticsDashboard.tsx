@@ -23,16 +23,9 @@ import {
 } from "recharts";
 import {
   TrendingUp,
-  TrendingDown,
   Users,
   ShoppingCart,
   DollarSign,
-  Eye,
-  Search,
-  Package,
-  Activity,
-  Calendar,
-  Download,
   RefreshCw,
 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -51,7 +44,7 @@ interface AnalyticsData {
     segments: Array<{
       name: string;
       userCount: number;
-      criteria: any;
+      criteria: Record<string, unknown>;
     }>;
   };
   product: {
@@ -172,7 +165,7 @@ export default function AnalyticsDashboard({
     if (!initialData) {
       fetchAnalytics();
     }
-  }, [period, initialData]);
+  }, [period, initialData, fetchAnalytics]);
 
   const handleRefresh = () => {
     fetchAnalytics(true);

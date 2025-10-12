@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const brandId = searchParams.get("brand") || undefined;
 
     const session = await getServerSession(authOptions);
-    const userId = (session?.user as any)?.id;
+    const userId = session?.user?.id;
 
     if (!query || query.length < 2) {
       return NextResponse.json({
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Search suggestions API error:", error);
     return NextResponse.json(
       {

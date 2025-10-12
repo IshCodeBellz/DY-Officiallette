@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   Shield,
@@ -94,7 +94,7 @@ export function SecuritySettings({
     loadSecurityData();
   }, [initialMfaStatus]);
 
-  const loadSecurityData = async () => {
+  const loadSecurityData = useCallback(async () => {
     setLoading(true);
     try {
       // Load MFA status
@@ -162,7 +162,7 @@ export function SecuritySettings({
     } finally {
       setLoading(false);
     }
-  };
+  }, [push]);
 
   const handleMfaSetupComplete = () => {
     setShowMfaSetup(false);
@@ -312,7 +312,16 @@ export function SecuritySettings({
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() =>
+                  setActiveTab(
+                    tab.id as
+                      | "overview"
+                      | "mfa"
+                      | "devices"
+                      | "sessions"
+                      | "activity"
+                  )
+                }
                 className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
                     ? "border-blue-500 text-blue-600 dark:text-blue-400"

@@ -100,7 +100,7 @@ export const GET = withRequest(async function GET(req: NextRequest) {
 
     perf.finish("ok");
     return NextResponse.json(response);
-  } catch (error) {
+  } catch {
     perf.finish("error");
     captureError(new Error("Analytics API failed"), {
       route: "/api/analytics",

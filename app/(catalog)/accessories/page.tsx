@@ -21,9 +21,7 @@ export default async function AccessoriesPage() {
         },
       },
     });
-  } catch (error) {
-      console.error("Error:", error);
-    console.error("Database error in AccessoriesPage:", error);
+  } catch {
     accessoriesCategory = null;
   }
 

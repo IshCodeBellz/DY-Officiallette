@@ -27,8 +27,8 @@ export const GET = withRequest(async function GET(req: NextRequest) {
         priceCents: i.product.priceCents,
         sku: i.product.sku,
         images: i.product.images,
-        sizes: (i.product as any).sizeVariants
-          ? (i.product as any).sizeVariants.map((sv: any) => sv.label)
+        sizes: i.product.sizeVariants
+          ? i.product.sizeVariants.map((sv) => sv.label)
           : [],
       },
     })),
@@ -73,17 +73,19 @@ export const POST = withRequest(async function POST(req: NextRequest) {
         create: { wishlistId: wishlist.id, productId, size },
       });
     } else {
-      await tx.wishlistItem.upsert({
+      // Handle null size case - upsert doesn't work well with null in composite keys
+      const existing = await tx.wishlistItem.findFirst({
         where: {
-          wishlistId_productId_size: {
-            wishlistId: wishlist.id,
-            productId,
-            size: null as any,
-          },
+          wishlistId: wishlist.id,
+          productId,
+          size: null,
         },
-        update: {},
-        create: { wishlistId: wishlist.id, productId, size: null },
       });
+      if (!existing) {
+        await tx.wishlistItem.create({
+          data: { wishlistId: wishlist.id, productId, size: null },
+        });
+      }
     }
     await tx.$executeRawUnsafe(
       `INSERT INTO ProductMetrics (productId, views, detailViews, wishlists, addToCart, purchases, updatedAt)
@@ -122,15 +124,19 @@ export const DELETE = withRequest(async function DELETE(req: NextRequest) {
         },
       });
     } else {
-      await prisma.wishlistItem.delete({
+      // Handle null size case - find the item first, then delete
+      const existing = await prisma.wishlistItem.findFirst({
         where: {
-          wishlistId_productId_size: {
-            wishlistId: wishlist.id,
-            productId,
-            size: null as any,
-          },
+          wishlistId: wishlist.id,
+          productId,
+          size: null,
         },
       });
+      if (existing) {
+        await prisma.wishlistItem.delete({
+          where: { id: existing.id },
+        });
+      }
     }
   } catch {
     // ignore if not exists

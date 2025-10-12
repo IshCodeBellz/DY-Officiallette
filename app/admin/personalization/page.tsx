@@ -9,7 +9,7 @@ export const revalidate = 60;
 
 export default async function PersonalizationPage() {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = (session?.user as { id: string })?.id;
   if (!uid) redirect("/login?callbackUrl=/admin/personalization");
 
   const user = await prisma.user.findUnique({ where: { id: uid } });

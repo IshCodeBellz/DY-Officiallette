@@ -3,7 +3,7 @@ import { ReviewService } from "@/lib/server/reviewService";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
-    const sortBy = (searchParams.get("sortBy") as any) || "newest";
+    const sortBy = searchParams.get("sortBy") || "newest";
     const verified = searchParams.get("verified") === "true" ? true : undefined;
     const minRating = searchParams.get("minRating")
       ? parseInt(searchParams.get("minRating")!)
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       data: result,
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Get reviews API error:", error);
     return NextResponse.json(
       {
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
       data: result.review,
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Create review API error:", error);
     return NextResponse.json(
       {

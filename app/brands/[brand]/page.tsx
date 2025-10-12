@@ -1,11 +1,11 @@
 "use client";
-import { notFound } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useWishlist, useCart } from "@/components/providers/CartProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { ClientPrice } from "@/components/ui/ClientPrice";
 import { lineIdFor } from "@/lib/types";
+import Image from "next/image";
 
 interface Product {
   id: string;
@@ -48,7 +48,7 @@ export default function BrandPage({ params }: { params: { brand: string } }) {
           setBrand(data.brand);
         }
       } catch (error) {
-      console.error("Error:", error);
+        console.error("Error:", error);
         console.error("Failed to fetch brand:", error);
         setNotFound(true);
       } finally {
@@ -75,7 +75,8 @@ export default function BrandPage({ params }: { params: { brand: string } }) {
         <div className="text-center py-16">
           <h1 className="text-2xl font-bold mb-4">Brand Not Found</h1>
           <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-            The brand you're looking for doesn't exist or has no products.
+            The brand you&apos;re looking for doesn&apos;t exist or has no
+            products.
           </p>
           <Link
             href="/brands"
@@ -138,10 +139,12 @@ export default function BrandPage({ params }: { params: { brand: string } }) {
                 className="absolute inset-0"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={product.image || "/placeholder.svg"}
-                  alt={product.name}
+                  width={400}
+                  height={500}
                   className="object-cover w-full h-full group-hover:scale-105 transition-transform"
+                  alt={product.name}
                 />
               </Link>
 
@@ -278,7 +281,7 @@ export default function BrandPage({ params }: { params: { brand: string } }) {
         <div className="text-center py-16">
           <h2 className="text-xl font-semibold mb-4">No Products Available</h2>
           <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-            This brand doesn't have any products available right now.
+            This brand doesn&apos;t have any products available right now.
           </p>
           <Link
             href="/brands"

@@ -26,7 +26,7 @@ export function CartSync() {
 
   // Initial merge / hydration
   useEffect(() => {
-    if (!(session?.user as any)?.id) return;
+    if (!session?.user?.id) return;
     if (initialSynced.current) return;
     initialSynced.current = true;
     (async () => {
@@ -122,11 +122,11 @@ export function CartSync() {
         // ignore errors
       }
     })();
-  }, [(session?.user as any)?.id]);
+  }, [session?.user?.id, addItem, clear, items]);
 
   // Debounced sync on subsequent changes
   useEffect(() => {
-    if (!(session?.user as any)?.id) return;
+    if (!session?.user?.id) return;
     if (!initialSynced.current) return;
     const controller = new AbortController();
     const timer = setTimeout(() => {
@@ -147,7 +147,7 @@ export function CartSync() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [items, (session?.user as any)?.id]);
+  }, [items, session?.user?.id]);
 
   return null;
 }

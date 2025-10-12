@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/server/authOptions";
 import { MFAService } from "@/lib/server/mfa";
 import { captureError } from "@/lib/server/errors";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 /**
  * Setup MFA for the authenticated user
  * POST /api/auth/mfa/setup
  */
-export async function POST(request: NextRequest) {
+export async function POST() {
   let session;
   try {
     session = await getServerSession(authOptions);
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("MFA setup error:", error);
     captureError(error as Error, {
       userId: session?.user?.id,
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
  * Get MFA status for the authenticated user
  * GET /api/auth/mfa/setup
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   let session;
   try {
     session = await getServerSession(authOptions);
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
       data: mfaStatus,
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("MFA status error:", error);
     captureError(error as Error, {
       userId: session?.user?.id,

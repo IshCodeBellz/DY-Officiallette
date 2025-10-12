@@ -17,7 +17,8 @@ export async function GET(req: NextRequest) {
     Math.max(1, parseInt(searchParams.get("pageSize") || "24"))
   );
 
-  const where: any = {
+  // Using unknown for dynamic Prisma where conditions
+  const where: Record<string, unknown> = {
     priceCents: { gte: Math.round(min * 100), lte: Math.round(max * 100) },
     // Only show active, non-deleted products
     isActive: true,
@@ -73,15 +74,15 @@ export async function GET(req: NextRequest) {
         sizeVariants: { select: { label: true }, take: 20 },
       },
     });
-    const map = new Map(products.map((p: any) => [p.id, p]));
+    const map = new Map(products.map((p) => [p.id, p]));
     return NextResponse.json({
       total: products.length,
       page: 1,
       pageSize: products.length,
       items: ids
         .map((id) => map.get(id))
-        .filter(Boolean)
-        .map((p: any) => ({
+        .filter((p): p is NonNullable<typeof p> => Boolean(p))
+        .map((p) => ({
           id: p.id,
           name: p.name,
           priceCents: p.priceCents,
@@ -90,7 +91,7 @@ export async function GET(req: NextRequest) {
           brand: p.brand?.name,
           category: p.category?.slug,
           sizes: Array.isArray(p.sizeVariants)
-            ? p.sizeVariants.map((s: any) => s.label)
+            ? p.sizeVariants.map((s) => s.label)
             : undefined,
         })),
     });
@@ -117,7 +118,7 @@ export async function GET(req: NextRequest) {
     total,
     page,
     pageSize,
-    items: products.map((p: any) => ({
+    items: products.map((p) => ({
       id: p.id,
       name: p.name,
       priceCents: p.priceCents,
@@ -126,7 +127,7 @@ export async function GET(req: NextRequest) {
       brand: p.brand?.name,
       category: p.category?.slug,
       sizes: Array.isArray(p.sizeVariants)
-        ? p.sizeVariants.map((s: any) => s.label)
+        ? p.sizeVariants.map((s) => s.label)
         : undefined,
     })),
   });

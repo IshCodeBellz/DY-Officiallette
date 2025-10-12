@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export default async function DiscountCodesAdminPage() {
   const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.isAdmin)
+  if (!(session?.user as { isAdmin: boolean })?.isAdmin)
     return <div className="p-6">Unauthorized</div>;
   const codes = await prisma.discountCode.findMany({
     orderBy: { createdAt: "desc" },

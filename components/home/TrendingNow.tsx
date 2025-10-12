@@ -6,11 +6,26 @@ import { ClientPrice } from "@/components/ui/ClientPrice";
 // Basic trending scoring with time decay
 const HALF_LIFE_HOURS = 72;
 
+interface TrendingItem {
+  id: string;
+  name: string;
+  priceCents: number;
+  image: string;
+  createdAt?: Date;
+  views?: number;
+  detailViews?: number;
+  wishlists?: number;
+  addToCart?: number;
+  purchases?: number;
+  score?: number;
+  fallback?: boolean;
+}
+
 export async function TrendingNow() {
-  let items: any[] = [];
+  let items: TrendingItem[] = [];
   try {
     // Raw SQL for scoring (PostgreSQL) - directly from database
-    const rawItems: any[] = await prisma.$queryRawUnsafe(`
+    const rawItems: TrendingItem[] = await prisma.$queryRawUnsafe(`
       SELECT
         p.id,
         p.name,
@@ -71,7 +86,7 @@ export async function TrendingNow() {
       }));
     }
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.log("TrendingNow database error:", error);
     // On hard failure also fallback so homepage stays resilient
     try {
@@ -114,7 +129,7 @@ export async function TrendingNow() {
         </span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {items.map((p: any, i: number) => (
+        {items.map((p, i: number) => (
           <Link
             key={p.id}
             href={`/product/${p.id}`}

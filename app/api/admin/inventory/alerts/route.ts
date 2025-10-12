@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { InventoryService } from "@/lib/server/inventoryService";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
+import { error as logError } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -30,8 +31,9 @@ export async function GET(request: NextRequest) {
       data: alerts,
     });
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Get inventory alerts API error:", error);
+    logError("Get inventory alerts API error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       {
         success: false,

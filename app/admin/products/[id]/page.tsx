@@ -13,7 +13,7 @@ export default async function AdminEditProductPage({
   params: { id: string };
 }) {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = session?.user?.id;
   if (!uid) redirect(`/login?callbackUrl=/admin/products/${params.id}`);
   const user = await prisma.user.findUnique({ where: { id: uid } });
   if (!user?.isAdmin) redirect("/");

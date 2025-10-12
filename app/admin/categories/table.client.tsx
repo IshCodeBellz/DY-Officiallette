@@ -68,7 +68,6 @@ export default function CategoriesClient({ initial }: { initial: Category[] }) {
   const [isActive, setIsActive] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editName, setEditName] = useState("");
   const [editSlug, setEditSlug] = useState("");
@@ -158,7 +157,6 @@ export default function CategoriesClient({ initial }: { initial: Category[] }) {
 
   function startEdit(category: Category) {
     setEditingCategory(category);
-    setEditingId(category.id);
     setEditName(category.name);
     setEditSlug(category.slug);
     setEditDescription(category.description || "");
@@ -170,7 +168,6 @@ export default function CategoriesClient({ initial }: { initial: Category[] }) {
 
   function cancelEdit() {
     setEditingCategory(null);
-    setEditingId(null);
     setEditName("");
     setEditSlug("");
     setEditDescription("");

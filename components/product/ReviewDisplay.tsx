@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Star, ThumbsUp, Flag, ChevronDown, ChevronUp } from "lucide-react";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 // Simple time ago function to avoid external dependency
 const timeAgo = (date: Date) => {
   const now = new Date();
@@ -300,10 +301,12 @@ export function ReviewDisplay({
               {review.images && review.images.length > 0 && (
                 <div className="flex space-x-2 mb-4">
                   {review.images.map((image, index) => (
-                    <img
+                    <Image
                       key={index}
                       src={image}
                       alt={`Review image ${index + 1}`}
+                      width={64}
+                      height={64}
                       className="w-16 h-16 object-cover rounded-md border"
                     />
                   ))}

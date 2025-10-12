@@ -26,7 +26,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       status: "PAYMENT_PENDING",
     },
   });
-  await (prisma as any).orderEvent.create({
+  await prisma.orderEvent.create({
     data: {
       orderId: order.id,
       kind: "PAYMENT_UPDATE",

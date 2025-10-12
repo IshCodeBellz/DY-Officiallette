@@ -106,9 +106,7 @@ function MFAVerificationContent() {
       } else if (result?.ok) {
         router.push(callbackUrl);
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("MFA verification error:", error);
+    } catch {
       setError("Network error occurred");
     } finally {
       setLoading(false);
@@ -130,9 +128,7 @@ function MFAVerificationContent() {
       } else {
         setError("Failed to resend code");
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("MFA resend error:", error);
+    } catch {
       setError("Network error occurred");
     }
   }

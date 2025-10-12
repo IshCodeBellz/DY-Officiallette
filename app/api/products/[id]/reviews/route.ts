@@ -3,8 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { z } from "zod";
+import { error as logError } from "@/lib/server/logger";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const createReviewSchema = z.object({
   rating: z.number().min(1).max(5),
@@ -49,8 +50,9 @@ export async function GET(
       hasMore: reviews.length === 20,
     });
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Error fetching reviews:", error);
+    logError("Error fetching reviews", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Failed to fetch reviews" },
       { status: 500 }
@@ -64,7 +66,7 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    const userId = (session?.user as any)?.id;
+    const userId = session?.user?.id;
 
     if (!userId) {
       return NextResponse.json(
@@ -149,8 +151,9 @@ export async function POST(
       },
     });
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Error creating review:", error);
+    logError("Error creating review", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Failed to create review" },
       { status: 500 }

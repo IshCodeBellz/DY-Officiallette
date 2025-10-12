@@ -44,7 +44,7 @@ export interface CLVData {
   totalOrders: number;
   totalSpent: number;
   predictedLTV: number;
-  lastOrderDate: Date;
+  lastOrderDate: Date | null;
   daysSinceLastOrder: number;
   segment: string;
 }
@@ -189,11 +189,84 @@ export interface PerformanceMetrics {
   databaseQueryTime: number;
 }
 
+// Raw database query result types
+interface CustomerSegmentRaw {
+  segment: string;
+  user_count: bigint;
+  avg_order_value: number;
+  avg_purchase_frequency: number;
+  avg_lifetime_value: number;
+}
+
+interface CLVDataRaw {
+  id: string;
+  email: string;
+  registration_date: Date;
+  total_orders: bigint;
+  total_spent: bigint;
+  predicted_ltv: number;
+  last_order_date: Date | null;
+  days_since_last_order: number | null;
+  segment: string;
+}
+
+interface CohortDataRaw {
+  cohort_month: Date;
+  cohort_size: bigint;
+  period_number: number;
+  customers: bigint;
+  revenue: bigint;
+  retention_rate: number;
+}
+
+interface ProductPerformanceRaw {
+  product_id: string;
+  product_name: string;
+  brand_name: string | null;
+  category_name: string | null;
+  views: bigint;
+  conversions: bigint;
+  conversion_rate: number;
+  revenue: bigint;
+  estimated_profit: bigint;
+  margin_percent: number;
+  inventory_turns: bigint;
+  return_rate: number;
+  review_score: number;
+  trend_score: bigint;
+}
+
+interface CategoryInsightsRaw {
+  category_id: string;
+  category_name: string;
+  product_count: bigint;
+  total_revenue: bigint;
+  avg_order_value: bigint;
+  total_views: bigint;
+  conversion_value: number;
+}
+
+interface ConversionFunnelRaw {
+  stage: string;
+  users: bigint;
+  average_time_spent: number;
+}
+
+interface RevenueByCategoryRaw {
+  category: string;
+  revenue: bigint;
+}
+
+interface RevenueGrowthRaw {
+  period: Date;
+  revenue: bigint;
+}
+
 export class AdvancedAnalyticsService {
   // Customer Insights
   static getCustomerSegmentation = cache(
     async (): Promise<CustomerSegment[]> => {
-      const segments = await prisma.$queryRaw<any[]>`
+      const segments = await prisma.$queryRaw<CustomerSegmentRaw[]>`
       WITH customer_stats AS (
         SELECT 
           u.id,
@@ -243,7 +316,7 @@ export class AdvancedAnalyticsService {
 
   static getCustomerLifetimeValue = cache(
     async (limit = 100): Promise<CLVData[]> => {
-      const clvData = await prisma.$queryRaw<any[]>`
+      const clvData = await prisma.$queryRaw<CLVDataRaw[]>`
       WITH customer_metrics AS (
         SELECT 
           u.id,
@@ -292,7 +365,7 @@ export class AdvancedAnalyticsService {
   );
 
   static getCohortAnalysis = cache(async (): Promise<CohortData[]> => {
-    const cohorts = await prisma.$queryRaw<any[]>`
+    const cohorts = await prisma.$queryRaw<CohortDataRaw[]>`
       WITH monthly_cohorts AS (
         SELECT 
           u.id,
@@ -327,7 +400,19 @@ export class AdvancedAnalyticsService {
     `;
 
     // Group by cohort month
-    const cohortMap = new Map<string, any>();
+    const cohortMap = new Map<
+      string,
+      {
+        cohortMonth: string;
+        cohortSize: number;
+        periods: Array<{
+          period: number;
+          customers: number;
+          retentionRate: number;
+          revenue: number;
+        }>;
+      }
+    >();
 
     cohorts.forEach((row) => {
       const monthKey = row.cohort_month.toISOString().substring(0, 7);
@@ -354,7 +439,7 @@ export class AdvancedAnalyticsService {
   // Product Intelligence
   static getProductPerformance = cache(
     async (limit = 50): Promise<ProductPerformanceData[]> => {
-      const performance = await prisma.$queryRaw<any[]>`
+      const performance = await prisma.$queryRaw<ProductPerformanceRaw[]>`
       SELECT 
         p.id as product_id,
         p.name as product_name,
@@ -413,7 +498,7 @@ export class AdvancedAnalyticsService {
   );
 
   static getCategoryInsights = cache(async (): Promise<CategoryInsights[]> => {
-    const insights = await prisma.$queryRaw<any[]>`
+    const insights = await prisma.$queryRaw<CategoryInsightsRaw[]>`
       WITH category_metrics AS (
         SELECT 
           c.id as category_id,
@@ -474,7 +559,7 @@ export class AdvancedAnalyticsService {
         FROM "Order" o 
         WHERE o.status = 'COMPLETED'
       `,
-      prisma.$queryRaw<any[]>`
+      prisma.$queryRaw<RevenueByCategoryRaw[]>`
         SELECT 
           c.name as category,
           COALESCE(SUM(oi."priceCents" * oi.quantity), 0) as revenue
@@ -485,7 +570,7 @@ export class AdvancedAnalyticsService {
         GROUP BY c.id, c.name
         ORDER BY revenue DESC
       `,
-      prisma.$queryRaw<any[]>`
+      prisma.$queryRaw<RevenueGrowthRaw[]>`
         SELECT 
           DATE_TRUNC('month', o."createdAt") as period,
           SUM(o."totalCents") as revenue
@@ -523,7 +608,7 @@ export class AdvancedAnalyticsService {
 
   // Search & Conversion Analytics
   static getConversionFunnels = cache(async (): Promise<ConversionFunnel[]> => {
-    const funnelData = await prisma.$queryRaw<any[]>`
+    const funnelData = await prisma.$queryRaw<ConversionFunnelRaw[]>`
       WITH funnel_stats AS (
         SELECT 
           'Browse' as stage,

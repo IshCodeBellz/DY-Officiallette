@@ -123,9 +123,7 @@ export default function ChangePasswordPage() {
         const error = await response.json();
         setErrors({ submit: error.error || "Failed to update password" });
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error updating password:", error);
+    } catch {
       setErrors({ submit: "Failed to update password. Please try again." });
     } finally {
       setLoading(false);
@@ -427,7 +425,7 @@ export default function ChangePasswordPage() {
                 <span className="text-blue-600 dark:text-blue-400 mt-0.5">
                   •
                 </span>
-                Don't reuse passwords from other accounts
+                Don&apos;t reuse passwords from other accounts
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 dark:text-blue-400 mt-0.5">

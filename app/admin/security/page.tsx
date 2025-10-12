@@ -9,17 +9,17 @@ export const revalidate = 30; // More frequent updates for security
 
 export default async function SecurityPage() {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = (session?.user as { id: string })?.id;
   if (!uid) redirect("/login?callbackUrl=/admin/security");
 
   const user = await prisma.user.findUnique({ where: { id: uid } });
   if (!user?.isAdmin) redirect("/");
 
   // Real security data from SecurityService
-  const [securityStats, recentSecurityEvents, blockedIPs] = await Promise.all([
+  const [securityStats, recentSecurityEvents] = await Promise.all([
     SecurityService.getSecurityStats(),
-    SecurityService.getRecentSecurityEvents(10),
-    SecurityService.getBlockedIPs(5),
+    SecurityService.getRecentSecurityEvents(),
+    // Note: Blocked IPs functionality not yet implemented in UI
   ]);
 
   const topThreats = [

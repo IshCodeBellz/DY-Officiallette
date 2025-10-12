@@ -110,11 +110,6 @@ export class SecurityService {
   static async isNewDevice(context: SecurityEventContext): Promise<boolean> {
     if (!context.userId) return true;
 
-    const deviceId = generateDeviceFingerprint(
-      context.userAgent,
-      context.ipAddress
-    );
-
     // Check if device exists (commented out due to Prisma client issues)
     /*
     const existingDevice = await prisma.trustedDevice.findFirst({
@@ -370,7 +365,7 @@ export class SecurityService {
   /**
    * Get security summary for a user
    */
-  static async getUserSecuritySummary(userId: string) {
+  static async getUserSecuritySummary() {
     try {
       // This would fetch from database in production
       return {
