@@ -7,7 +7,8 @@ import SortClient from "./_client/SortClient";
 
 import { headers } from "next/headers";
 
-interface PageSearchParams {
+interface PageSearchParams
+  extends Record<string, string | string[] | undefined> {
   q?: string;
   category?: string;
   brand?: string;
@@ -34,7 +35,10 @@ export const dynamic = "force-dynamic";
 async function getData(params: PageSearchParams) {
   const sp = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => {
-    if (v) sp.set(k, v);
+    if (v) {
+      const value = Array.isArray(v) ? v.join(",") : v;
+      sp.set(k, value);
+    }
   });
   sp.set("facets", "1");
   sp.set("limit", "60");
@@ -79,7 +83,10 @@ export default async function SearchPage({
   function pageHref(p: number) {
     const sp = new URLSearchParams();
     Object.entries(searchParams).forEach(([k, v]) => {
-      if (v && k !== "page") sp.set(k, v);
+      if (v && k !== "page") {
+        const value = Array.isArray(v) ? v.join(",") : v;
+        sp.set(k, value);
+      }
     });
     if (p > 1) sp.set("page", String(p));
     return `/search?${sp.toString()}`;
@@ -97,7 +104,16 @@ export default async function SearchPage({
             </p>
           </div>
           {data.facets && (
-            <FiltersClient facets={data.facets} active={searchParams} />
+            <FiltersClient
+              facets={data.facets}
+              active={
+                Object.fromEntries(
+                  Object.entries(searchParams).filter(
+                    ([, v]) => v !== undefined
+                  )
+                ) as Record<string, string | string[]>
+              }
+            />
           )}
         </aside>
         <main className="flex-1 space-y-4 min-w-0">
