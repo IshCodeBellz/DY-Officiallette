@@ -7,8 +7,6 @@ import ProductClient from "./ProductClient";
 import { ProductReviews } from "@/components/product/ProductReviews";
 
 import { ClientPrice } from "@/components/ui/ClientPrice";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
 
 export default async function ProductPage({
   params,
@@ -17,7 +15,7 @@ export default async function ProductPage({
   params: { id: string };
   searchParams?: Record<string, string | string[] | undefined>;
 }) {
-  const session = await getServerSession(authOptions);
+  // const session = await getServerSession(authOptions);
 
   const product = (await prisma.product.findUnique({
     where: { id: params.id },

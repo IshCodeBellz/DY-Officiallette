@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Smartphone, RefreshCw, Copy, AlertCircle } from "lucide-react";
-import { toast } from "react-hot-toast";
 import { useToast } from "@/components/providers/ToastProvider";
 
 interface TotpGeneratorProps {

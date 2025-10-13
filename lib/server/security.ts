@@ -17,7 +17,7 @@ export interface SecurityEventContext {
   ipAddress: string;
   userAgent: string;
   endpoint?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   location?: string;
 }
 

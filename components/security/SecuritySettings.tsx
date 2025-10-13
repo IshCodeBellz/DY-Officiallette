@@ -77,7 +77,7 @@ export function SecuritySettings({
   const [loading, setLoading] = useState(true);
   const [showMfaSetup, setShowMfaSetup] = useState(false);
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
-  const [usedBackupCodes, setUsedBackupCodes] = useState<string[]>([]);
+  const [_usedBackupCodes] = useState<string[]>([]);
   const { push } = useToast();
 
   useEffect(() => {
@@ -92,6 +92,7 @@ export function SecuritySettings({
       });
     }
     loadSecurityData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMfaStatus]);
 
   const loadSecurityData = useCallback(async () => {
@@ -474,7 +475,7 @@ export function SecuritySettings({
                 {backupCodes.length > 0 && (
                   <BackupCodesDisplay
                     codes={backupCodes}
-                    usedCodes={usedBackupCodes}
+                    usedCodes={_usedBackupCodes}
                     onRegenerateRequest={handleRegenerateBackupCodes}
                   />
                 )}

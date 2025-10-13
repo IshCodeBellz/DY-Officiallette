@@ -13,7 +13,7 @@ export function MfaStatusCards({
   userEmailVerified,
   userLastLogin,
 }: MfaStatusCardsProps) {
-  const [mfaEnabled, setMfaEnabled] = useState(initialMfaEnabled);
+  const [mfaEnabled] = useState(initialMfaEnabled);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -128,7 +128,7 @@ export function MfaStatusCards({
 // Export a function to update MFA status from parent
 export function useMfaStatusUpdate() {
   return {
-    updateMfaStatus: (enabled: boolean) => {
+    updateMfaStatus: () => {
       // This would be handled by the parent component's state
       // We'll pass this as a callback to the SecuritySettings component
     },

@@ -29,7 +29,7 @@ export class RateLimitService {
     config: RateLimitConfig
   ): Promise<RateLimitResult> {
     const now = new Date();
-    const windowStart = new Date(now.getTime() - config.windowMs);
+    const _windowStart = new Date(now.getTime() - config.windowMs);
 
     // Clean up expired entries first
     await this.cleanupExpiredEntries();

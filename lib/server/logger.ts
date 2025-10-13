@@ -49,10 +49,12 @@ interface ResponseLike {
   status?: number;
 }
 
-// Simplified wrapper for Next.js route handlers - using any for compatibility
-export function withRequest(handler: (...args: any[]) => Promise<any>): any {
+// Simplified wrapper for Next.js route handlers - using unknown for compatibility
+export function withRequest(
+  handler: (...args: unknown[]) => Promise<unknown>
+): unknown {
   // Wrap a Next.js route handler to add a request id & latency logging
-  return async function wrapped(this: unknown, ...args: any[]) {
+  return async function wrapped(this: unknown, ...args: unknown[]) {
     const start = Date.now();
     const req = args[0] as RequestLike;
     const rid = req?.headers?.get?.("x-request-id") || randomUUID();

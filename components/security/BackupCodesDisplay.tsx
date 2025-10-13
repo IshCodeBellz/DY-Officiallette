@@ -10,7 +10,6 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { toast } from "react-hot-toast";
 import { useToast } from "@/components/providers/ToastProvider";
 
 interface BackupCodesDisplayProps {
