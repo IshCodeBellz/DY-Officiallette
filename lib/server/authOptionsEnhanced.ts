@@ -188,7 +188,7 @@ export const authOptionsEnhanced: NextAuthOptions = {
     maxAge: 24 * 60 * 60, // 24 hours
   },
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account: _account }) {
       if (user) {
         const extendedUser = user as ExtendedUser;
         token.id = extendedUser.id;
@@ -222,11 +222,16 @@ export const authOptionsEnhanced: NextAuthOptions = {
     error: "/login",
   },
   events: {
-    async signIn({ user, account, profile, isNewUser }) {
+    async signIn({
+      user,
+      account: _account,
+      profile: _profile,
+      isNewUser: _isNewUser,
+    }) {
       // Log successful sign-in event
       console.log(`User signed in: ${user.email}`);
     },
-    async signOut({ session, token }) {
+    async signOut({ session, token: _token }) {
       // Log sign-out event
       if (session?.user?.email) {
         console.log(`User signed out: ${session.user.email}`);

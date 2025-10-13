@@ -6,12 +6,9 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle,
-  Settings,
   LogOut,
   RefreshCw,
   Lock,
-  Unlock,
-  MapPin,
   Monitor,
 } from "lucide-react";
 
@@ -53,6 +50,7 @@ export const SessionSecurity: React.FC<SessionSecurityProps> = ({
 
   useEffect(() => {
     loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadSettings = async () => {

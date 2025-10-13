@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Check, X, AlertCircle } from "lucide-react";
 
 interface PasswordStrengthIndicatorProps {
@@ -35,39 +35,42 @@ export const PasswordStrengthIndicator: React.FC<
     criteria: [],
   });
 
-  const criteria: Omit<StrengthCriteria, "met">[] = [
-    {
-      id: "length",
-      label: "At least 8 characters",
-      regex: /.{8,}/,
-    },
-    {
-      id: "lowercase",
-      label: "Contains lowercase letter",
-      regex: /[a-z]/,
-    },
-    {
-      id: "uppercase",
-      label: "Contains uppercase letter",
-      regex: /[A-Z]/,
-    },
-    {
-      id: "number",
-      label: "Contains number",
-      regex: /\d/,
-    },
-    {
-      id: "special",
-      label: "Contains special character",
-      regex: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/,
-    },
-    {
-      id: "noCommon",
-      label: "Not a common password",
-      regex:
-        /^(?!.*(?:password|123456|qwerty|admin|letmein|welcome|monkey|dragon)).*$/i,
-    },
-  ];
+  const criteria = useMemo<Omit<StrengthCriteria, "met">[]>(
+    () => [
+      {
+        id: "length",
+        label: "At least 8 characters",
+        regex: /.{8,}/,
+      },
+      {
+        id: "lowercase",
+        label: "Contains lowercase letter",
+        regex: /[a-z]/,
+      },
+      {
+        id: "uppercase",
+        label: "Contains uppercase letter",
+        regex: /[A-Z]/,
+      },
+      {
+        id: "number",
+        label: "Contains number",
+        regex: /\d/,
+      },
+      {
+        id: "special",
+        label: "Contains special character",
+        regex: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\?]/,
+      },
+      {
+        id: "noCommon",
+        label: "Not a common password",
+        regex:
+          /^(?!.*(?:password|123456|qwerty|admin|letmein|welcome|monkey|dragon)).*$/i,
+      },
+    ],
+    []
+  );
 
   useEffect(() => {
     if (!password) {
@@ -130,7 +133,7 @@ export const PasswordStrengthIndicator: React.FC<
       ...strengthData,
       criteria: evaluatedCriteria,
     });
-  }, [password]);
+  }, [password, criteria]);
 
   const getProgressWidth = () => {
     if (strength.score === 0) return "0%";

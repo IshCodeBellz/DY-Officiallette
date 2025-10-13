@@ -2,23 +2,6 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import Image from "next/image";
-
-interface WishlistItem {
-  id: string;
-  productId: string;
-  addedAt: string;
-  product: {
-    id: string;
-    name: string;
-    price: number;
-    salePrice?: number;
-    images: string[];
-    slug: string;
-    brand: string;
-    inStock: boolean;
-  };
-}
 
 interface SharedWishlist {
   id: string;

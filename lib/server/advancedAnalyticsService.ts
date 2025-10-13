@@ -1,6 +1,5 @@
 // Advanced Analytics Service - Comprehensive data models for deeper insights
 import { prisma } from "@/lib/server/prisma";
-import { Prisma } from "@prisma/client";
 import { cache } from "react";
 
 export interface AdvancedAnalyticsData {

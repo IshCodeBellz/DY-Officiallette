@@ -8,11 +8,6 @@ declare global {
   var __prismaDisconnected: boolean | undefined;
 }
 
-interface ExtendedPrismaClient extends PrismaClient {
-  $disconnect: () => Promise<void>;
-  $connect: () => Promise<void>;
-}
-
 export const prisma = global.__prisma || new PrismaClient();
 
 // Track a simple disconnected flag for tests that call prisma.$disconnect()

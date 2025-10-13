@@ -1,6 +1,5 @@
 // Analytics Event Tracking Service - Collects and processes analytics data
 import { prisma } from "@/lib/server/prisma";
-import { Prisma } from "@prisma/client";
 
 export interface EventData {
   userId?: string | null;
@@ -342,7 +341,8 @@ export class AnalyticsTracker {
           WHERE oi."productId" = ${productId} AND o.status = 'COMPLETED'
         `;
 
-        const revenue = Number(revenueData[0]?.revenue || 0);
+        const _revenue = Number(revenueData[0]?.revenue || 0);
+        // Revenue calculation for future use
 
         await prisma.productAnalytics.upsert({
           where: { productId },
@@ -429,9 +429,10 @@ export class AnalyticsTracker {
   // Update search analytics
   private static async updateSearchAnalytics(
     date: Date,
-    query: string,
-    resultCount: number
+    _query: string,
+    _resultCount: number
   ): Promise<void> {
+    // Query and result count for future analytics implementation
     try {
       const dateOnly = new Date(
         date.getFullYear(),

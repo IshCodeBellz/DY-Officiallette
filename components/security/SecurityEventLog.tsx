@@ -73,6 +73,7 @@ export const SecurityEventLog: React.FC<SecurityEventLogProps> = ({
 
   useEffect(() => {
     applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [events, filters, sortBy]);
 
   const loadSecurityEvents = async () => {

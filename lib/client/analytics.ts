@@ -195,8 +195,6 @@ class ClientAnalytics implements IAnalytics {
     this.eventQueue = [];
 
     try {
-      const method = sync ? "sendBeacon" : "fetch";
-
       if (sync && navigator.sendBeacon) {
         // Use sendBeacon for synchronous requests (like page unload)
         navigator.sendBeacon(

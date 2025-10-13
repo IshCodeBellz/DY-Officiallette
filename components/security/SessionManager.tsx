@@ -10,9 +10,7 @@ import {
   Clock,
   Shield,
   AlertTriangle,
-  X,
   RefreshCw,
-  MoreVertical,
   LogOut,
 } from "lucide-react";
 
@@ -221,12 +219,6 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
       default:
         return <Globe className="w-5 h-5" />;
     }
-  };
-
-  const getRiskColor = (riskScore: number) => {
-    if (riskScore < 30) return "text-green-600 dark:text-green-400";
-    if (riskScore < 70) return "text-yellow-600 dark:text-yellow-400";
-    return "text-red-600 dark:text-red-400";
   };
 
   const getRiskBadge = (riskScore: number) => {

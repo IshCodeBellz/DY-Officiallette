@@ -28,7 +28,7 @@ import {
   DollarSign,
   RefreshCw,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface AnalyticsData {
   user: {
@@ -137,29 +137,31 @@ export default function AnalyticsDashboard({
   const [period, setPeriod] = useState("30d");
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAnalytics = async (includeRealtime = false) => {
-    try {
-      setRefreshing(true);
-      setError(null);
+  const fetchAnalytics = useCallback(
+    async (includeRealtime = false) => {
+      try {
+        setRefreshing(true);
+        setError(null);
 
-      const response = await fetch(
-        `/api/analytics?period=${period}&realtime=${includeRealtime}`
-      );
+        const response = await fetch(
+          `/api/analytics?period=${period}&realtime=${includeRealtime}`
+        );
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch analytics: ${response.statusText}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch analytics: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setData(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-
-      const result = await response.json();
-      setData(result.analytics);
-    } catch (err) {
-      console.error("Error fetching analytics:", err);
-      setError(err instanceof Error ? err.message : "Failed to load analytics");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+    },
+    [period, setData, setLoading, setRefreshing, setError]
+  );
 
   useEffect(() => {
     if (!initialData) {

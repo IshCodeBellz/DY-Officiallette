@@ -91,6 +91,7 @@ export const CaptchaWidget: React.FC<CaptchaProps> = ({
         }
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteKey, provider]);
 
   const loadCaptchaScript = async () => {

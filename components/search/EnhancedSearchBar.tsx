@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -71,10 +71,9 @@ export default function EnhancedSearchBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Debounced search suggestions
-  const debouncedGetSuggestions = useCallback(
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    debounce(async (searchQuery: string) => {
+  // Search suggestions function
+  const getSuggestions = useCallback(
+    async (searchQuery: string) => {
       if (!searchQuery.trim()) {
         setSuggestions([]);
         setShowHistory(true);
@@ -97,8 +96,14 @@ export default function EnhancedSearchBar() {
       } finally {
         setLoading(false);
       }
-    }, 300),
-    []
+    },
+    [setSuggestions, setShowHistory, setLoading]
+  );
+
+  // Debounced search suggestions
+  const debouncedGetSuggestions = useMemo(
+    () => debounce(getSuggestions, 300),
+    [getSuggestions]
   );
 
   // Load suggestions when query changes

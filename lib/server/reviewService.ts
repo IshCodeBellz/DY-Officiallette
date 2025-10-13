@@ -197,7 +197,7 @@ export class ReviewService {
       const offset = (opts.page - 1) * opts.limit;
 
       // Build where clause
-      const whereClause: Record<string, any> = {
+      const whereClause: Record<string, unknown> = {
         productId,
         isPublished: true,
       };

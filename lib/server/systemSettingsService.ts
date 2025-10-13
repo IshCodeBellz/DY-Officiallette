@@ -100,7 +100,7 @@ export class SystemSettingsService {
   }
 
   // Get setting value with type conversion
-  static async getSettingValue<T = any>(
+  static async getSettingValue<T = unknown>(
     key: string,
     defaultValue?: T
   ): Promise<T> {

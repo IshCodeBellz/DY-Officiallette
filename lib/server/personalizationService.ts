@@ -1,5 +1,3 @@
-import { prisma } from "./prisma";
-
 export interface UserBehaviorData {
   views: number;
   purchases: number;
@@ -140,7 +138,7 @@ export class PersonalizationService {
   /**
    * Get user behavior analytics
    */
-  static async getUserBehaviorData(userId: string): Promise<UserBehaviorData> {
+  static async getUserBehaviorData(_userId: string): Promise<UserBehaviorData> {
     try {
       // Mock behavior data since UserBehavior model not synced yet
       return {
@@ -215,10 +213,10 @@ export class PersonalizationService {
    * Collaborative filtering recommendations
    */
   private static async getCollaborativeRecommendations(
-    userId: string,
-    userBehavior: UserBehaviorData,
-    limit: number,
-    excludeIds: string[]
+    _userId: string,
+    _userBehavior: UserBehaviorData,
+    _limit: number,
+    _excludeIds: string[]
   ): Promise<{
     products: RecommendedProduct[];
     reasons: Array<{ type: string; message: string; confidence: number }>;
@@ -256,10 +254,10 @@ export class PersonalizationService {
    * Content-based recommendations
    */
   private static async getContentBasedRecommendations(
-    preferences: PersonalizationPreferences,
-    limit: number,
-    excludeIds: string[],
-    categoryId?: string
+    _preferences: PersonalizationPreferences,
+    _limit: number,
+    _excludeIds: string[],
+    _categoryId?: string
   ): Promise<{
     products: RecommendedProduct[];
     reasons: Array<{ type: string; message: string; confidence: number }>;
@@ -298,9 +296,9 @@ export class PersonalizationService {
    * Trending recommendations with personalization
    */
   private static async getTrendingRecommendations(
-    preferences: PersonalizationPreferences,
-    limit: number,
-    excludeIds: string[]
+    _preferences: PersonalizationPreferences,
+    _limit: number,
+    _excludeIds: string[]
   ): Promise<{
     products: RecommendedProduct[];
     reasons: Array<{ type: string; message: string; confidence: number }>;

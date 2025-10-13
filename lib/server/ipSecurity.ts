@@ -372,7 +372,7 @@ export class IPSecurityService {
           ipInfo,
         };
       } catch (error) {
-      console.error("Error:", error);
+        console.error("Error:", error);
         console.error("IP security middleware error:", error);
 
         // Allow request on error to avoid blocking legitimate users
@@ -397,7 +397,7 @@ export class IPSecurityService {
   static async getIPReputation(ip: string): Promise<{
     reputation: "good" | "suspicious" | "malicious" | "unknown";
     sources: string[];
-    details: Record<string, any>;
+    details: Record<string, unknown>;
   }> {
     try {
       // In production, check against:

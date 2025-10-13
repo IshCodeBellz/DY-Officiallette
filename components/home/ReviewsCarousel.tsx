@@ -116,11 +116,6 @@ export function ReviewsCarousel({
     setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
   };
 
-  const getVisibleReviews = () => {
-    const startIndex = currentSlide * 2;
-    return reviews.slice(startIndex, startIndex + 2);
-  };
-
   const renderStars = (rating: number) => {
     return (
       <div className="flex items-center gap-1">
