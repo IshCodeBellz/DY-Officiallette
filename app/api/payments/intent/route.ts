@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptions } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import { z } from "zod";
 import { getStripe } from "@/lib/server/stripe";

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import { ExtendedSession } from "@/lib/types";
 
@@ -11,7 +11,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   const session = (await getServerSession(
-    authOptions
+    authOptionsEnhanced
   )) as ExtendedSession | null;
   const uid = session?.user?.id;
   if (!uid)

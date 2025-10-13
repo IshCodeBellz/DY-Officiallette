@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import { redirect } from "next/navigation";
 import { EditProductClient } from "./EditProductClient";
@@ -12,7 +12,7 @@ export default async function AdminEditProductPage({
 }: {
   params: { id: string };
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptionsEnhanced);
   const uid = session?.user?.id;
   if (!uid) redirect(`/login?callbackUrl=/admin/products/${params.id}`);
   const user = await prisma.user.findUnique({ where: { id: uid } });

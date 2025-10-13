@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { PersonalizationService } from "@/lib/server/personalizationService";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptions } from "@/lib/server/authOptionsEnhanced";
 
 export const dynamic = "force-dynamic";
 

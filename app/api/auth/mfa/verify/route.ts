@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptions } from "@/lib/server/authOptionsEnhanced";
 import { MFAService } from "@/lib/server/mfa";
 import { z } from "zod";
 

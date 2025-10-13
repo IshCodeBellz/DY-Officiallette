@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import Link from "next/link";
 
@@ -21,7 +21,7 @@ export default async function AdminOrdersPage({
 }: {
   searchParams?: { status?: string };
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptionsEnhanced);
   const isAdmin = (session?.user as { isAdmin: boolean })?.isAdmin;
   if (!isAdmin) return <div className="p-6">Unauthorized</div>;
   const status =

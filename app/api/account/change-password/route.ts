@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptions } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";

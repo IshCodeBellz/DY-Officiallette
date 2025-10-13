@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import { ClientPrice } from "@/components/ui/ClientPrice";
 import type { Prisma } from "@prisma/client";
@@ -11,7 +11,7 @@ import RestoreProductButton from "./restoreButton";
 export const revalidate = 60;
 
 export default async function AdminHomePage() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptionsEnhanced);
   const uid = (session?.user as { id: string })?.id;
   if (!uid) redirect("/login?callbackUrl=/admin");
   const user = await prisma.user.findUnique({ where: { id: uid } });
@@ -139,6 +139,7 @@ export default async function AdminHomePage() {
               <ActionLink href="/admin/products" text="Manage Products" />
               <ActionLink href="/admin/brands" text="Manage Brands" />
               <ActionLink href="/admin/categories" text="Manage Categories" />
+              <ActionLink href="/admin/cms" text="Content Management" />
               <ActionLink href="/admin/reviews" text="Review Moderation" />
               <ActionLink href="/admin/analytics" text="Search Analytics" />
               <ActionLink
