@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { RecentlyViewed } from "../components/home/RecentlyViewed";
 import { TrendingNow } from "../components/home/TrendingNow";
+import { ReviewsCarousel } from "../components/home/ReviewsCarousel";
 
 export default function HomePage() {
   return (
@@ -133,6 +134,9 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+
+      {/* Customer Reviews Carousel */}
+      <ReviewsCarousel />
     </div>
   );
 }
