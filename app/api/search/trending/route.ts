@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Mock trending searches - will be replaced with real data once analytics are configured
     const mockTrending = [
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ trending: mockTrending });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Error fetching trending searches:", error);
     return NextResponse.json({ trending: [] });
   }

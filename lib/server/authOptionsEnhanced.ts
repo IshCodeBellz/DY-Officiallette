@@ -1,6 +1,7 @@
 import { NextAuthOptions, User as NextAuthUser } from "next-auth";
 // import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { NextRequest } from "next/server";
 import { prisma } from "./prisma";
 import { compare } from "bcryptjs";
 import { SecurityService } from "./security";
@@ -70,7 +71,7 @@ export const authOptionsEnhanced: NextAuthOptions = {
             if (req) {
               await SecurityService.logSecurityEvent(
                 SecurityEventType.SUSPICIOUS_LOGIN,
-                SecurityService.extractSecurityContext(req as any)
+                SecurityService.extractSecurityContext(req as NextRequest)
               );
             }
             return null;
@@ -119,7 +120,10 @@ export const authOptionsEnhanced: NextAuthOptions = {
             if (req) {
               await SecurityService.logSecurityEvent(
                 SecurityEventType.SUSPICIOUS_LOGIN,
-                SecurityService.extractSecurityContext(req as any, user.id)
+                SecurityService.extractSecurityContext(
+                  req as NextRequest,
+                  user.id
+                )
               );
             }
 
@@ -153,7 +157,10 @@ export const authOptionsEnhanced: NextAuthOptions = {
           if (req) {
             await SecurityService.logSecurityEvent(
               SecurityEventType.MFA_VERIFICATION_SUCCESS,
-              SecurityService.extractSecurityContext(req as any, user.id)
+              SecurityService.extractSecurityContext(
+                req as NextRequest,
+                user.id
+              )
             );
           }
 

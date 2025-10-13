@@ -22,8 +22,8 @@ export async function GET(
     description: product.description,
     priceCents: product.priceCents,
     price: product.priceCents / 100, // legacy
-    images: product.images.map((im: any) => ({ url: im.url, alt: im.alt })),
-    sizes: product.sizeVariants.map((s: any) => ({
+    images: product.images.map((im) => ({ url: im.url, alt: im.alt })),
+    sizes: product.sizeVariants.map((s) => ({
       label: s.label,
       stock: s.stock,
     })),

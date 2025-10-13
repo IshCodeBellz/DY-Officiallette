@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
-import { withRequest } from "@/lib/server/logger";
 import { sendPaymentReceipt } from "@/lib/server/mailer";
 import { OrderStatus, PaymentStatus, OrderEventKind } from "@/lib/status";
 import { getStripe } from "@/lib/server/stripe";
 import Stripe from "stripe";
+
+interface WebhookBody {
+  paymentIntentId?: string;
+  payment_intent_id?: string;
+  id?: string;
+  status?: string;
+  state?: string;
+}
 
 // Handles both simulated (no Stripe key) and real Stripe webhook events.
 export async function POST(req: NextRequest) {
@@ -25,9 +32,10 @@ export async function POST(req: NextRequest) {
     let event: Stripe.Event;
     try {
       event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error(String(err));
       return NextResponse.json(
-        { error: "invalid_signature", message: err.message },
+        { error: "invalid_signature", message: error.message },
         { status: 400 }
       );
     }
@@ -44,9 +52,9 @@ export async function POST(req: NextRequest) {
     }
   } else {
     // Fallback simulated mode - accept JSON only
-    let body: any = null;
+    let body: WebhookBody | null = null;
     try {
-      body = await req.json();
+      body = (await req.json()) as WebhookBody;
     } catch {
       body = null;
     }
@@ -60,7 +68,7 @@ export async function POST(req: NextRequest) {
       body.paymentIntentId,
       body.payment_intent_id,
       body.id,
-    ].find((v: any) => typeof v === "string");
+    ].find((v) => typeof v === "string");
     status =
       typeof body.status === "string"
         ? body.status
@@ -116,7 +124,7 @@ export async function POST(req: NextRequest) {
         where: { id: order.id },
         data: { status: OrderStatus.PAID, paidAt: new Date() },
       });
-      await (tx as any).orderEvent.create({
+      await tx.orderEvent.create({
         data: {
           orderId: order.id,
           kind: OrderEventKind.PAYMENT_SUCCEEDED,
@@ -154,7 +162,7 @@ export async function POST(req: NextRequest) {
           where: { id: payment.id },
           data: { status: PaymentStatus.FAILED },
         });
-        await (tx as any).orderEvent.create({
+        await tx.orderEvent.create({
           data: {
             orderId: order.id,
             kind: OrderEventKind.PAYMENT_FAILED,

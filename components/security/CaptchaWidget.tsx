@@ -16,10 +16,14 @@ interface CaptchaProps {
   required?: boolean;
 }
 
+// Third-party captcha APIs - keeping as any for external library compatibility
 declare global {
   interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     grecaptcha: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     hcaptcha: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     turnstile: any;
   }
 }

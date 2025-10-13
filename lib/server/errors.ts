@@ -6,6 +6,7 @@ export interface ErrorContext {
   userId?: string;
   route?: string;
   operation?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 }
 
@@ -160,7 +161,7 @@ export function createErrorResponse(
 }
 
 // Async error wrapper for API routes
-export function withErrorHandling<T extends any[], R>(
+export function withErrorHandling<T extends unknown[], R>(
   handler: (...args: T) => Promise<R>,
   context?: Omit<ErrorContext, "route">
 ) {
@@ -191,6 +192,7 @@ export function withErrorHandling<T extends any[], R>(
 // Performance monitoring utility
 export function trackPerformance(
   operation: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>
 ) {
   const span = Sentry.startSpan(
@@ -207,7 +209,8 @@ export function trackPerformance(
           }
         },
         setTag: (key: string, value: string) => Sentry.setTag(key, value),
-        setData: (key: string, value: any) => Sentry.setContext(key, value),
+        setData: (key: string, value: Record<string, unknown> | null) =>
+          Sentry.setContext(key, value),
       };
     }
   );
@@ -225,6 +228,7 @@ export function trackPerformance(
 export function reportHealthStatus(
   component: string,
   status: "healthy" | "degraded" | "critical",
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>
 ) {
   if (status !== "healthy") {

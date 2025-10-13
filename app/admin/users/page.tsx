@@ -8,7 +8,7 @@ export const revalidate = 30; // Refresh every 30 seconds for real-time updates
 
 export default async function UsersPage() {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = session?.user?.id;
   if (!uid) redirect("/login?callbackUrl=/admin/users");
 
   const user = await prisma.user.findUnique({ where: { id: uid } });
@@ -45,7 +45,13 @@ export default async function UsersPage() {
     }).format(date);
   };
 
-  const getUserStatus = (user: any) => {
+  interface User {
+    lockedAt?: Date | null;
+    emailVerified?: boolean;
+    isAdmin?: boolean;
+  }
+
+  const getUserStatus = (user: User) => {
     if (user.lockedAt) return { label: "Locked", color: "red" };
     if (!user.emailVerified) return { label: "Unverified", color: "yellow" };
     if (user.isAdmin) return { label: "Admin", color: "purple" };

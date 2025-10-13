@@ -70,8 +70,8 @@ export function CurrencyNotification() {
             Switch to {detectedCurrencyData?.name}?
           </div>
           <div className="text-xs text-neutral-600 dark:text-neutral-400 mb-3">
-            We detected you're in a {detectedCurrencyData?.name} region. Would
-            you like to see prices in {detectedCurrencyData?.symbol}{" "}
+            We detected you&apos;re in a {detectedCurrencyData?.name} region.
+            Would you like to see prices in {detectedCurrencyData?.symbol}{" "}
             {detectedCurrency}?
           </div>
 

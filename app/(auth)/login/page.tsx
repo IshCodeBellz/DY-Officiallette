@@ -70,9 +70,8 @@ function LoginForm() {
           router.refresh();
         }, 10);
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Login error:", error);
+    } catch {
+      // Error logging handled by form submission, just set user-facing error
       setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);

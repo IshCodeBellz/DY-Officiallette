@@ -25,7 +25,7 @@ const MetricCard = ({
 
 export default async function BrandsAdminPage() {
   const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.isAdmin)
+  if (!(session?.user as { isAdmin: boolean })?.isAdmin)
     return <div className="p-6">Unauthorized</div>;
 
   // Fetch brands with statistics

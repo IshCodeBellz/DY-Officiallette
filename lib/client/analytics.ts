@@ -3,7 +3,7 @@
 
 export interface AnalyticsEvent {
   eventType: string;
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
   timestamp?: Date;
   userId?: string;
   sessionId?: string;
@@ -11,8 +11,8 @@ export interface AnalyticsEvent {
 
 export interface IAnalytics {
   setUserId(userId: string): void;
-  track(eventType: string, properties?: Record<string, any>): void;
-  trackPageView(customProperties?: Record<string, any>): void;
+  track(eventType: string, properties?: Record<string, unknown>): void;
+  trackPageView(customProperties?: Record<string, unknown>): void;
   trackProductView(
     productId: string,
     productName?: string,
@@ -21,7 +21,7 @@ export interface IAnalytics {
   trackSearch(
     query: string,
     resultCount?: number,
-    filters?: Record<string, any>
+    filters?: Record<string, unknown>
   ): void;
   trackCartEvent(
     action: "ADD_TO_CART" | "REMOVE_FROM_CART" | "CART_VIEW" | "CART_CLEAR",
@@ -86,7 +86,7 @@ class ClientAnalytics implements IAnalytics {
     this.userId = userId;
   }
 
-  public track(eventType: string, properties?: Record<string, any>): void {
+  public track(eventType: string, properties?: Record<string, unknown>): void {
     const event: AnalyticsEvent = {
       eventType,
       properties: {
@@ -112,7 +112,7 @@ class ClientAnalytics implements IAnalytics {
     }
   }
 
-  public trackPageView(customProperties?: Record<string, any>): void {
+  public trackPageView(customProperties?: Record<string, unknown>): void {
     this.track("PAGE_VIEW", {
       title: document.title,
       path: window.location.pathname,
@@ -137,7 +137,7 @@ class ClientAnalytics implements IAnalytics {
   public trackSearch(
     query: string,
     resultCount?: number,
-    filters?: Record<string, any>
+    filters?: Record<string, unknown>
   ): void {
     this.track("SEARCH", {
       query,
@@ -257,11 +257,14 @@ export function getAnalytics(): IAnalytics {
 }
 
 // Convenience functions
-export const track = (eventType: string, properties?: Record<string, any>) => {
+export const track = (
+  eventType: string,
+  properties?: Record<string, unknown>
+) => {
   getAnalytics().track(eventType, properties);
 };
 
-export const trackPageView = (customProperties?: Record<string, any>) => {
+export const trackPageView = (customProperties?: Record<string, unknown>) => {
   getAnalytics().trackPageView(customProperties);
 };
 
@@ -276,7 +279,7 @@ export const trackProductView = (
 export const trackSearch = (
   query: string,
   resultCount?: number,
-  filters?: Record<string, any>
+  filters?: Record<string, unknown>
 ) => {
   getAnalytics().trackSearch(query, resultCount, filters);
 };

@@ -7,6 +7,7 @@ import { DarkModeToggle } from "./DarkModeToggle";
 import { CurrencySelector } from "../ui/CurrencySelector";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export function Header() {
   const { totalQuantity, clear: clearCart } = useCart();
@@ -34,7 +35,7 @@ export function Header() {
   // Close drawer after navigation
   useEffect(() => {
     if (mobileMenuOpen) setMobileMenuOpen(false);
-  }, [pathname]);
+  }, [pathname, mobileMenuOpen]);
 
   // Body scroll lock
   useEffect(() => {
@@ -82,14 +83,16 @@ export function Header() {
               {session ? (
                 <div className="flex items-center gap-3 text-sm">
                   <span
-                    className="text-neutral-700 dark:text-neutral-300 truncate max-w-[120px]"
-                    title={
-                      session.user?.name || session.user?.email || undefined
-                    }
+                    className={cn(
+                      "text-neutral-900 dark:text-white font-medium truncate max-w-28",
+                      !session.user?.name && !session.user?.email
+                        ? "text-neutral-400"
+                        : ""
+                    )}
                   >
                     {session.user?.name?.split(" ")[0] || session.user?.email}
                   </span>
-                  {(session.user as any)?.isAdmin && (
+                  {session.user?.isAdmin && (
                     <Link
                       href="/admin"
                       className="hover:underline font-medium text-neutral-900 dark:text-white whitespace-nowrap"
@@ -300,7 +303,7 @@ export function Header() {
                   <div className="font-medium truncate text-neutral-900 dark:text-white">
                     {session.user?.name || session.user?.email}
                   </div>
-                  {(session.user as any)?.isAdmin && (
+                  {session.user?.isAdmin && (
                     <Link
                       href="/admin"
                       onClick={() => setMobileMenuOpen(false)}

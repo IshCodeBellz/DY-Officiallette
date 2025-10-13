@@ -60,13 +60,13 @@ export function withRateLimit(config: RateLimitConfig) {
  */
 export function rateLimit(config: RateLimitConfig) {
   return function decorator(
-    target: any,
+    target: unknown,
     propertyKey: string,
     descriptor: PropertyDescriptor
   ) {
     const originalMethod = descriptor.value;
 
-    descriptor.value = async function (req: NextRequest, ...args: any[]) {
+    descriptor.value = async function (req: NextRequest, ...args: unknown[]) {
       const middleware = withRateLimit(config);
       return middleware(req, () => originalMethod.call(this, req, ...args));
     };

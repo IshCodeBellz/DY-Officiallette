@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { ClientPrice } from "@/components/ui/ClientPrice";
 import FiltersClient from "./_client/FiltersClient";
@@ -6,7 +7,8 @@ import SortClient from "./_client/SortClient";
 
 import { headers } from "next/headers";
 
-interface PageSearchParams {
+interface PageSearchParams
+  extends Record<string, string | string[] | undefined> {
   q?: string;
   category?: string;
   brand?: string;
@@ -18,12 +20,25 @@ interface PageSearchParams {
   page?: string;
 }
 
+interface SearchProduct {
+  id: string;
+  name: string;
+  image: string;
+  priceCents: number;
+  comparePriceCents?: number;
+  brandName?: string;
+  score?: number;
+}
+
 export const dynamic = "force-dynamic";
 
 async function getData(params: PageSearchParams) {
   const sp = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => {
-    if (v) sp.set(k, v);
+    if (v) {
+      const value = Array.isArray(v) ? v.join(",") : v;
+      sp.set(k, value);
+    }
   });
   sp.set("facets", "1");
   sp.set("limit", "60");
@@ -47,10 +62,9 @@ async function getData(params: PageSearchParams) {
     // Silent fallback; UI will show empty state
     return {
       items: [],
-      facets: null,
       total: 0,
       error: (error as Error).message,
-    } as any;
+    };
   }
 }
 
@@ -69,7 +83,10 @@ export default async function SearchPage({
   function pageHref(p: number) {
     const sp = new URLSearchParams();
     Object.entries(searchParams).forEach(([k, v]) => {
-      if (v && k !== "page") sp.set(k, v);
+      if (v && k !== "page") {
+        const value = Array.isArray(v) ? v.join(",") : v;
+        sp.set(k, value);
+      }
     });
     if (p > 1) sp.set("page", String(p));
     return `/search?${sp.toString()}`;
@@ -87,7 +104,16 @@ export default async function SearchPage({
             </p>
           </div>
           {data.facets && (
-            <FiltersClient facets={data.facets} active={searchParams} />
+            <FiltersClient
+              facets={data.facets}
+              active={
+                Object.fromEntries(
+                  Object.entries(searchParams).filter(
+                    ([, v]) => v !== undefined
+                  )
+                ) as Record<string, string | string[]>
+              }
+            />
           )}
         </aside>
         <main className="flex-1 space-y-4 min-w-0">
@@ -101,16 +127,16 @@ export default async function SearchPage({
           )}
           {data.items.length > 0 && (
             <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
-              {data.items.map((p: any) => (
+              {data.items.map((p: SearchProduct) => (
                 <li key={p.id} className="group">
                   <Link href={`/product/${p.id}`} className="block">
                     <div className="relative aspect-[3/4] bg-neutral-100 rounded overflow-hidden">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={p.image}
                         alt={p.name}
-                        loading="lazy"
-                        className="object-cover w-full h-full group-hover:scale-105 transition-transform"
+                        fill
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        className="object-cover group-hover:scale-105 transition-transform"
                       />
                       {typeof p.score === "number" && sort === "trending" && (
                         <span className="absolute top-1 left-1 bg-black/60 text-[10px] px-1.5 py-0.5 rounded text-white">

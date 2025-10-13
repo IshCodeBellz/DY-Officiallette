@@ -25,7 +25,7 @@ const MetricCard = ({
 
 export default async function CategoriesAdminPage() {
   const session = await getServerSession(authOptions);
-  if (!(session?.user as any)?.isAdmin)
+  if (!(session?.user as { isAdmin: boolean })?.isAdmin)
     return <div className="p-6">Unauthorized</div>;
 
   let categories;
@@ -45,8 +45,7 @@ export default async function CategoriesAdminPage() {
         },
       },
     });
-  } catch (error) {
-    console.error("Database error:", error);
+  } catch {
     return (
       <div className="p-6">
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
@@ -57,16 +56,12 @@ export default async function CategoriesAdminPage() {
             Unable to connect to database. Please check your configuration.
           </p>
           <pre className="text-xs text-red-500 mt-2 overflow-auto">
-            {error instanceof Error ? error.message : String(error)}
+            Database connection failed
           </pre>
         </div>
       </div>
     );
   }
-
-  // Separate main categories from subcategories
-  const mainCategories = categories.filter((c) => !c.parentId);
-  const subcategories = categories.filter((c) => c.parentId);
 
   // Calculate metrics
   const totalCategories = categories.length;

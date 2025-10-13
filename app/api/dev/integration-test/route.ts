@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { IntegrationTestService } from "@/lib/server/integrationTestService";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 /**
  * Run integration tests for database, authentication, and performance
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     // Only allow in development or for admin users
     if (process.env.NODE_ENV === "production") {
       const session = await getServerSession(authOptions);
-      const isAdmin = (session?.user as any)?.role === "admin";
+      const isAdmin = session?.user?.isAdmin;
 
       if (!isAdmin) {
         return NextResponse.json(
@@ -93,11 +93,11 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
       ...(testType === "full"
         ? {
-            summary: (testResults as any).summary,
-            details: (testResults as any).details,
+            summary: (testResults as Record<string, unknown>).summary,
+            details: (testResults as Record<string, unknown>).details,
           }
         : {
-            results: (testResults as any).results,
+            results: (testResults as Record<string, unknown>).results,
           }),
       ...(testResults.errors &&
         testResults.errors.length > 0 && {
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(responseData);
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Integration test API error:", error);
     return NextResponse.json(
       {
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
  * Get integration test status and available tests
  * OPTIONS /api/dev/integration-test
  */
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return NextResponse.json({
     availableTests: [
       {

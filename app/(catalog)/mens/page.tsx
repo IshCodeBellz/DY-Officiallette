@@ -21,9 +21,7 @@ export default async function MensPage() {
         },
       },
     });
-  } catch (error) {
-      console.error("Error:", error);
-    console.error("Database error in MensPage:", error);
+  } catch {
     mensCategory = null;
   }
 

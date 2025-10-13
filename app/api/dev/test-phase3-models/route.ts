@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Test if we can access our new Phase 3 models
     console.log("Testing Prisma client with Phase 3 models...");
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Phase 3 model test error:", error);
     return NextResponse.json(
       {

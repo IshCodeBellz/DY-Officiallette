@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function MFASetupPage() {
   const [step, setStep] = useState<"loading" | "setup" | "verify" | "complete">(
@@ -29,8 +30,7 @@ export default function MFASetupPage() {
         } else {
           setError("Failed to initialize MFA setup");
         }
-      } catch (error) {
-      console.error("Error:", error);
+      } catch {
         setError("Network error occurred");
       }
     }
@@ -61,8 +61,7 @@ export default function MFASetupPage() {
             : "Verification failed"
         );
       }
-    } catch (error) {
-      console.error("Error:", error);
+    } catch {
       setError("Network error occurred");
     } finally {
       setLoading(false);
@@ -140,7 +139,13 @@ export default function MFASetupPage() {
                 <div className="flex-shrink-0">
                   {qrCode && (
                     <div className="p-4 bg-white border rounded-lg">
-                      <img src={qrCode} alt="QR Code" className="w-48 h-48" />
+                      <Image
+                        src={qrCode}
+                        alt="QR Code"
+                        width={192}
+                        height={192}
+                        className="w-48 h-48"
+                      />
                     </div>
                   )}
                 </div>

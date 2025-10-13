@@ -137,9 +137,7 @@ export default function RegisterPage() {
           setSuccess(true);
         }
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Registration error:", error);
+    } catch {
       setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);

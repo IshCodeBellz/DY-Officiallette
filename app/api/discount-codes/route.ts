@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
-import { withRequest } from "@/lib/server/logger";
 import { z } from "zod";
 import { ExtendedSession } from "@/lib/types";
 

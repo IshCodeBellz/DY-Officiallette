@@ -31,6 +31,21 @@ interface SessionDevice {
   firstSeen: Date;
 }
 
+interface SessionApiResponse {
+  id: string;
+  name: string;
+  type: "desktop" | "mobile" | "tablet" | "unknown";
+  browser: string;
+  os: string;
+  ipAddress: string;
+  location?: string;
+  lastActive: string | null;
+  isCurrent: boolean;
+  isActive: boolean;
+  riskScore: number;
+  firstSeen: string;
+}
+
 interface SessionManagerProps {
   className?: string;
   showRiskScores?: boolean;
@@ -65,11 +80,15 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
       }
 
       // Parse dates from API response
-      const parsedSessions = (data.sessions || []).map((session: any) => ({
-        ...session,
-        lastActive: session.lastActive ? new Date(session.lastActive) : null,
-        firstSeen: session.firstSeen ? new Date(session.firstSeen) : new Date(),
-      }));
+      const parsedSessions = (data.sessions || []).map(
+        (session: SessionApiResponse): SessionDevice => ({
+          ...session,
+          lastActive: session.lastActive ? new Date(session.lastActive) : null,
+          firstSeen: session.firstSeen
+            ? new Date(session.firstSeen)
+            : new Date(),
+        })
+      );
 
       setSessions(parsedSessions);
     } catch (error) {

@@ -137,7 +137,7 @@ export class CacheService {
       brandId?: string,
       limit: number = 20
     ) => {
-      const whereClause: any = {
+      const whereClause: Record<string, unknown> = {
         isActive: true,
         deletedAt: null,
         OR: [
@@ -241,7 +241,7 @@ export class CacheService {
 
         return behaviors;
       } catch (error) {
-      console.error("Error:", error);
+        console.error("Error:", error);
         console.error("Error fetching user activity:", error);
         return [];
       }
@@ -315,7 +315,7 @@ export class CacheService {
 
         return recommendations;
       } catch (error) {
-      console.error("Error:", error);
+        console.error("Error:", error);
         console.error("Error fetching recommendations:", error);
         return this.getCachedFeaturedProducts(limit);
       }
@@ -344,7 +344,7 @@ export class CacheService {
     userId: string | null,
     productId: string,
     eventType: "view" | "wishlist" | "cart" | "purchase",
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ) {
     try {
       await prisma.userBehavior.create({
@@ -358,7 +358,7 @@ export class CacheService {
       });
 
       // Update product metrics
-      const updateData: any = {};
+      const updateData: Record<string, { increment: number }> = {};
       switch (eventType) {
         case "view":
           updateData.views = { increment: 1 };

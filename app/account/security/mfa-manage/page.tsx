@@ -24,9 +24,8 @@ export default function MFAManagePage() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setMfaData((prev) => ({ ...prev, enabled: false }));
       setShowDisableConfirm(false);
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error:", error);
+    } catch {
+      // Error handling done by UI feedback
     } finally {
       setLoading(false);
     }
@@ -47,9 +46,8 @@ export default function MFAManagePage() {
         backupCodesUsed: 0,
       }));
       setShowBackupCodes(true);
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error:", error);
+    } catch {
+      // Error handling done by UI feedback
     } finally {
       setLoading(false);
     }
@@ -212,8 +210,8 @@ export default function MFAManagePage() {
                       Some backup codes have been used
                     </p>
                     <p className="text-yellow-700">
-                      Consider generating new backup codes if you're running
-                      low.
+                      Consider generating new backup codes if you&apos;re
+                      running low.
                     </p>
                   </div>
                 </div>

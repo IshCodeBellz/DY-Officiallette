@@ -11,7 +11,7 @@ export default async function OrderDetailPage({
   params: { id: string };
 }) {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = session?.user?.id as string | undefined;
   if (!uid) return <div className="p-6">Please log in.</div>;
   const order = await prisma.order.findFirst({
     where: { id: params.id, userId: uid },
@@ -29,7 +29,7 @@ export default async function OrderDetailPage({
     createdAt: Date;
     meta: string | null;
   }> = order
-    ? await (prisma as any).orderEvent.findMany({
+    ? await prisma.orderEvent.findMany({
         where: { orderId: order.id },
         orderBy: { createdAt: "asc" },
       })

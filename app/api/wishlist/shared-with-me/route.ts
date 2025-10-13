@@ -1,13 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
+import { error as logError } from "@/lib/server/logger";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    const userId = (session?.user as any)?.id;
+    const userId = session?.user?.id;
 
     if (!userId) {
       return NextResponse.json(
@@ -48,8 +49,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ wishlists: mockSharedWishlists });
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Error fetching shared wishlists:", error);
+    logError("Error fetching shared wishlists", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Failed to fetch shared wishlists" },
       { status: 500 }

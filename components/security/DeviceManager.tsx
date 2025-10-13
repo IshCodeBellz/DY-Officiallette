@@ -9,11 +9,9 @@ import {
   Clock,
   Shield,
   AlertTriangle,
-  MoreHorizontal,
   CheckCircle,
   XCircle,
 } from "lucide-react";
-import { toast } from "react-hot-toast";
 import { useToast } from "@/components/providers/ToastProvider";
 
 interface Device {
@@ -43,9 +41,7 @@ export function DeviceManager({
   onRevokeDevice,
   onTrustDevice,
   onRevokeAllOthers,
-  loading = false,
 }: DeviceManagerProps) {
-  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
   const [showRevokeConfirm, setShowRevokeConfirm] = useState(false);
   const [deviceToRevoke, setDeviceToRevoke] = useState<string | null>(null);
   const { push } = useToast();
@@ -261,8 +257,8 @@ export function DeviceManager({
             No Other Devices
           </h4>
           <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            You're only signed in on this device. Other devices will appear here
-            when you sign in.
+            You&apos;re only signed in on this device. Other devices will appear
+            here when you sign in.
           </p>
         </div>
       )}

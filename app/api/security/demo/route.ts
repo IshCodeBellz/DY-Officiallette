@@ -229,7 +229,7 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Security demo error:", error);
 
     if (error instanceof z.ZodError) {
@@ -255,8 +255,12 @@ export async function POST(request: NextRequest) {
 /**
  * Get IP-based security recommendations
  */
-function getIPRecommendations(ipInfo: any) {
-  const recommendations = [];
+function getIPRecommendations(ipInfo: {
+  riskScore: number;
+  isVPN?: boolean;
+  isTor?: boolean;
+}) {
+  const recommendations: string[] = [];
 
   if (ipInfo.riskScore >= 80) {
     recommendations.push("Consider blocking this IP temporarily");
@@ -337,7 +341,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Security config error:", error);
 
     return NextResponse.json(

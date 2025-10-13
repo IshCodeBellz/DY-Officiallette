@@ -13,7 +13,7 @@ export function getLatencySnapshot() {
 }
 
 export interface LogFields {
-  [k: string]: any;
+  [k: string]: unknown;
 }
 
 function base(fields: LogFields) {
@@ -34,19 +34,33 @@ export function error(msg: string, fields: LogFields = {}) {
   console.error(base({ level: "error", msg, ...fields }));
 }
 
-export function withRequest<T extends (...args: any[]) => Promise<any>>(
-  handler: T
-): T {
+interface RequestLike {
+  headers?: {
+    get?: (name: string) => string | null;
+  };
+  method?: string;
+  nextUrl?: {
+    pathname?: string;
+    search?: string;
+  };
+}
+
+interface ResponseLike {
+  status?: number;
+}
+
+// Simplified wrapper for Next.js route handlers - using any for compatibility
+export function withRequest(handler: (...args: any[]) => Promise<any>): any {
   // Wrap a Next.js route handler to add a request id & latency logging
-  return async function wrapped(this: any, ...args: any[]) {
+  return async function wrapped(this: unknown, ...args: any[]) {
     const start = Date.now();
-    const req = args[0];
+    const req = args[0] as RequestLike;
     const rid = req?.headers?.get?.("x-request-id") || randomUUID();
     try {
       const res = await handler.apply(this, args);
       const dur = Date.now() - start;
       const method = req?.method;
-      const userId = (req as any)?.headers?.get?.("x-demo-user") || undefined;
+      const userId = req?.headers?.get?.("x-demo-user") || undefined;
       recordLatency(dur);
       log("req_complete", {
         path: req?.nextUrl?.pathname,
@@ -55,14 +69,14 @@ export function withRequest<T extends (...args: any[]) => Promise<any>>(
         rid,
         ms: dur,
         latencyBucket: latencyBuckets.find((b) => dur <= b) || ">5000",
-        status: res?.status,
+        status: (res as ResponseLike)?.status,
         userId,
       });
       return res;
-    } catch (e: any) {
+    } catch (e: unknown) {
       const dur = Date.now() - start;
       const method = req?.method;
-      const userId = (req as any)?.headers?.get?.("x-demo-user") || undefined;
+      const userId = req?.headers?.get?.("x-demo-user") || undefined;
       recordLatency(dur);
       error("req_error", {
         path: req?.nextUrl?.pathname,
@@ -71,10 +85,10 @@ export function withRequest<T extends (...args: any[]) => Promise<any>>(
         rid,
         ms: dur,
         latencyBucket: latencyBuckets.find((b) => dur <= b) || ">5000",
-        err: e?.message,
+        err: e instanceof Error ? e.message : String(e),
         userId,
       });
       throw e;
     }
-  } as any;
+  };
 }

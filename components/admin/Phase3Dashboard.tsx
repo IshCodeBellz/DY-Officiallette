@@ -2,6 +2,40 @@
 
 import { useState, useEffect } from "react";
 
+interface DemoData {
+  sampleQuery?: string;
+  results?: number;
+  avgResponseTime?: string;
+  filterOptions?: string[];
+  [key: string]: unknown;
+}
+
+interface AnalyticsData {
+  // Inventory health specific
+  totalProducts?: string | number;
+  healthScore?: string | number;
+
+  // Search performance specific
+  suggestionsAvailable?: string | number;
+  trendingQueriesTracked?: string | number;
+
+  // Personalization metrics specific
+  strategiesImplemented?: string | number;
+  recommendationConfidence?: string | number;
+
+  // Common fields
+  totalItems?: number;
+  lowStock?: number;
+  outOfStock?: number;
+  lastUpdated?: string;
+  searchVolume?: number;
+  clickThrough?: string;
+  conversionRate?: string;
+  personalizedViews?: number;
+  recommendationAccuracy?: string;
+  [key: string]: unknown;
+}
+
 interface Phase3DemoData {
   phase: string;
   status: string;
@@ -10,28 +44,28 @@ interface Phase3DemoData {
     advancedSearch: {
       status: string;
       capabilities: string[];
-      demo: any;
+      demo: DemoData;
     };
     personalization: {
       status: string;
       capabilities: string[];
-      demo: any;
+      demo: DemoData;
     };
     inventoryManagement: {
       status: string;
       capabilities: string[];
-      demo: any;
+      demo: DemoData;
     };
     productManagement: {
       status: string;
       capabilities: string[];
-      demo: any;
+      demo: DemoData;
     };
   };
   analytics: {
-    inventoryHealth: any;
-    searchPerformance: any;
-    personalizationMetrics: any;
+    inventoryHealth: AnalyticsData;
+    searchPerformance: AnalyticsData;
+    personalizationMetrics: AnalyticsData;
   };
   nextSteps: string[];
 }

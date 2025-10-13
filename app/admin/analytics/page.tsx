@@ -192,8 +192,7 @@ async function getBasicAnalytics() {
     };
 
     return analyticsData;
-  } catch (error) {
-    console.error("Error fetching analytics:", error);
+  } catch {
     return null;
   }
 }

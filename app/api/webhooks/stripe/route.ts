@@ -4,6 +4,21 @@ import { prisma } from "@/lib/server/prisma";
 import { validateEnv } from "@/lib/server/env";
 import { log, warn } from "@/lib/server/logger";
 
+interface StripeEvent {
+  id?: string;
+  type: string;
+  data?: {
+    object?: {
+      metadata?: {
+        orderId?: string;
+      };
+    };
+  };
+  metadata?: {
+    orderId?: string;
+  };
+}
+
 // Stripe webhook handler: listens for payment_intent.succeeded and updates order & metrics.
 // Expects STRIPE_WEBHOOK_SECRET if real Stripe is used; if absent, treats body as JSON (simulated mode).
 
@@ -11,7 +26,7 @@ export async function POST(req: NextRequest) {
   // Ensure env validation runs (idempotent) for early visibility in logs.
   validateEnv();
   const stripe = getStripe();
-  let event: any;
+  let event: StripeEvent;
   const sig = req.headers.get("stripe-signature");
   const rawBody = await req.text();
   if (stripe && process.env.STRIPE_WEBHOOK_SECRET) {
@@ -20,8 +35,8 @@ export async function POST(req: NextRequest) {
         rawBody,
         sig as string,
         process.env.STRIPE_WEBHOOK_SECRET
-      );
-    } catch (e: any) {
+      ) as StripeEvent;
+    } catch {
       return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
     }
   } else {

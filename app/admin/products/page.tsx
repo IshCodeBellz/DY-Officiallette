@@ -9,17 +9,6 @@ import { formatPriceCents } from "@/lib/money";
 
 import Link from "next/link";
 
-interface AdminProduct {
-  id: string;
-  sku: string;
-  name: string;
-  priceCents: number;
-  deletedAt: Date | null;
-  brand?: { name: string };
-  category?: { name: string };
-  images: { url: string }[];
-}
-
 export const dynamic = "force-dynamic";
 
 export default async function AdminProductsPage({
@@ -28,7 +17,7 @@ export default async function AdminProductsPage({
   searchParams?: Record<string, string | string[] | undefined>;
 }) {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = (session?.user as { id: string })?.id;
   if (!uid) redirect("/login?callbackUrl=/admin/products");
   const user = await prisma.user.findUnique({ where: { id: uid } });
   if (!user?.isAdmin) redirect("/");
@@ -40,7 +29,7 @@ export default async function AdminProductsPage({
       ? searchParams?.category
       : undefined;
   const includeDeleted = searchParams?.deleted === "1";
-  const where: any = {
+  const where = {
     ...(includeDeleted ? {} : { deletedAt: null }),
     ...(brand ? { brandId: brand } : {}),
     ...(category ? { categoryId: category } : {}),
@@ -70,12 +59,9 @@ export default async function AdminProductsPage({
   });
 
   // Calculate stats
-  const totalValue = products.reduce(
-    (sum: number, p: any) => sum + p.priceCents,
-    0
-  );
+  const totalValue = products.reduce((sum: number, p) => sum + p.priceCents, 0);
   const averagePrice = products.length > 0 ? totalValue / products.length : 0;
-  const deletedCount = products.filter((p: any) => p.deletedAt).length;
+  const deletedCount = products.filter((p) => p.deletedAt).length;
   const activeCount = products.length - deletedCount;
 
   return (
@@ -165,48 +151,61 @@ export default async function AdminProductsPage({
               </tr>
             </thead>
             <tbody>
-              {products.map((p: any) => (
-                <tr key={p.id} className="border-t hover:bg-neutral-50">
-                  <td className="py-3 px-4">
-                    <div className="font-medium">{p.name}</div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <code className="text-xs bg-neutral-100 px-2 py-1 rounded">
-                      {p.sku}
-                    </code>
-                  </td>
-                  <td className="py-3 px-4 text-sm">{p.brand?.name || "-"}</td>
-                  <td className="py-3 px-4 text-sm">
-                    {p.category?.name || "-"}
-                  </td>
-                  <td className="py-2 px-4 text-sm text-gray-900">
-                    {/* Admin: show canonical stored price (GBP base) without currency conversion */}
-                    {formatPriceCents(p.priceCents, { currency: "GBP" })}
-                  </td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`text-xs px-2 py-1 rounded ${
-                        p.deletedAt
-                          ? "bg-red-100 text-red-800"
-                          : "bg-green-100 text-green-800"
-                      }`}
-                    >
-                      {p.deletedAt ? "Deleted" : "Active"}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-sm text-neutral-500">
-                    {p.createdAt.toISOString().split("T")[0]}
-                  </td>
-                  <td className="py-3 px-4">
-                    <Link
-                      href={`/admin/products/${p.id}`}
-                      className="text-sm text-blue-600 hover:underline"
-                    >
-                      Edit
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+              {products.map(
+                (p: {
+                  id: string;
+                  name: string;
+                  sku: string;
+                  priceCents: number;
+                  createdAt: Date;
+                  deletedAt: Date | null;
+                  brand: { id: string; name: string } | null;
+                  category: { id: string; name: string } | null;
+                }) => (
+                  <tr key={p.id} className="border-t hover:bg-neutral-50">
+                    <td className="py-3 px-4">
+                      <div className="font-medium">{p.name}</div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <code className="text-xs bg-neutral-100 px-2 py-1 rounded">
+                        {p.sku}
+                      </code>
+                    </td>
+                    <td className="py-3 px-4 text-sm">
+                      {p.brand?.name || "-"}
+                    </td>
+                    <td className="py-3 px-4 text-sm">
+                      {p.category?.name || "-"}
+                    </td>
+                    <td className="py-2 px-4 text-sm text-gray-900">
+                      {/* Admin: show canonical stored price (GBP base) without currency conversion */}
+                      {formatPriceCents(p.priceCents, { currency: "GBP" })}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`text-xs px-2 py-1 rounded ${
+                          p.deletedAt
+                            ? "bg-red-100 text-red-800"
+                            : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {p.deletedAt ? "Deleted" : "Active"}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-neutral-500">
+                      {p.createdAt.toISOString().split("T")[0]}
+                    </td>
+                    <td className="py-3 px-4">
+                      <Link
+                        href={`/admin/products/${p.id}`}
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        Edit
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              )}
               {products.length === 0 && (
                 <tr>
                   <td

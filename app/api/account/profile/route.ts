@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { hashPassword } from "@/lib/server/auth";
 import { ExtendedSession } from "@/lib/types";
+import { error as logError } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -25,14 +26,14 @@ export async function GET() {
     }
 
     // Get user preferences separately (if table exists)
-    let preferences = null;
+    const preferences = null;
     try {
-      // Type assertion needed as UserPreferences may not be in schema yet
-      preferences = await (prisma as any).userPreferences?.findUnique({
-        where: { userId: uid },
-      });
-    } catch (error) {
-      console.log("Preferences not found or error:", error);
+      // UserPreferences model may not exist in schema yet
+      // preferences = await prisma.userPreferences?.findUnique({
+      //   where: { userId: uid },
+      // });
+    } catch {
+      // Preferences not found or error - this is expected if UserPreferences model doesn't exist yet
     }
 
     return NextResponse.json({
@@ -40,7 +41,9 @@ export async function GET() {
       preferences,
     });
   } catch (error) {
-    console.error("Profile fetch error:", error);
+    logError("profile_fetch_error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "internal_server_error" },
       { status: 500 }
@@ -63,7 +66,7 @@ export async function POST(req: NextRequest) {
   try {
     // Handle comprehensive profile update
     if (body.action === "update_profile") {
-      const updateData: Record<string, any> = {};
+      const updateData: Record<string, string | Date | null> = {};
 
       // Handle name field
       if (typeof body.name === "string") {
@@ -82,8 +85,7 @@ export async function POST(req: NextRequest) {
       if (body.dateOfBirth) {
         try {
           updateData.dateOfBirth = new Date(body.dateOfBirth);
-        } catch (error) {
-          console.error("Error:", error);
+        } catch {
           return NextResponse.json(
             { error: "Invalid date of birth format" },
             { status: 400 }
@@ -132,7 +134,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Upsert user preferences in the database
-      await (prisma as any).userPreferences.upsert({
+      await prisma.userPreferences.upsert({
         where: { userId: uid },
         update: {
           emailMarketing: !!contactPreferences.email,
@@ -165,8 +167,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: "invalid_action" }, { status: 400 });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Profile update error:", error);
+    logError("profile_update_error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "internal_server_error" },
       { status: 500 }

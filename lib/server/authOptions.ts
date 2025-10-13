@@ -5,6 +5,31 @@ import { z } from "zod";
 import { prisma } from "@/lib/server/prisma";
 import { verifyPassword } from "@/lib/server/auth";
 
+// Extended types for NextAuth
+interface ExtendedUser {
+  id: string;
+  name?: string | null;
+  email: string;
+  isAdmin?: boolean;
+  emailVerified?: boolean;
+}
+
+interface ExtendedToken {
+  uid?: string;
+  isAdmin?: boolean;
+  emailVerified?: boolean;
+}
+
+interface ExtendedSession {
+  user: {
+    id?: string;
+    name?: string | null;
+    email?: string | null;
+    isAdmin?: boolean;
+    emailVerified?: boolean;
+  };
+}
+
 const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(3),
@@ -27,12 +52,14 @@ export const authOptions: NextAuthOptions = {
         }
         const valid = await verifyPassword(password, user.passwordHash);
         if (!valid) return null;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // NextAuth User type is restrictive, using any for custom properties
         return {
           id: user.id,
           name: user.name || null,
           email: user.email,
           isAdmin: user.isAdmin,
+          emailVerified: user.emailVerified,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
       },
     }),
@@ -48,28 +75,34 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   callbacks: {
     async jwt({ token, user }) {
-      if (user?.id) {
-        (token as any).uid = (user as any).id;
-        (token as any).isAdmin = (user as any).isAdmin || false;
-        (token as any).emailVerified = (user as any).emailVerified ?? true;
-      } else if ((token as any).uid && (token as any).isAdmin === undefined) {
+      const extendedToken = token as ExtendedToken;
+      const extendedUser = user as ExtendedUser;
+
+      if (extendedUser?.id) {
+        extendedToken.uid = extendedUser.id;
+        extendedToken.isAdmin = extendedUser.isAdmin || false;
+        extendedToken.emailVerified = extendedUser.emailVerified ?? true;
+      } else if (extendedToken.uid && extendedToken.isAdmin === undefined) {
         // lazy load isAdmin if missing (e.g., from OAuth or legacy session)
         const dbUser = await prisma.user.findUnique({
-          where: { id: (token as any).uid },
+          where: { id: extendedToken.uid },
         });
         if (dbUser) {
-          (token as any).isAdmin = dbUser.isAdmin;
-          (token as any).emailVerified = dbUser.emailVerified;
+          extendedToken.isAdmin = dbUser.isAdmin;
+          extendedToken.emailVerified = dbUser.emailVerified;
         }
       }
       return token;
     },
     async session({ session, token }) {
-      if ((token as any)?.uid) (session.user as any).id = (token as any).uid;
-      if ((token as any)?.isAdmin !== undefined)
-        (session.user as any).isAdmin = (token as any).isAdmin;
-      if ((token as any)?.emailVerified !== undefined)
-        (session.user as any).emailVerified = (token as any).emailVerified;
+      const extendedSession = session as ExtendedSession;
+      const extendedToken = token as ExtendedToken;
+
+      if (extendedToken?.uid) extendedSession.user.id = extendedToken.uid;
+      if (extendedToken?.isAdmin !== undefined)
+        extendedSession.user.isAdmin = extendedToken.isAdmin;
+      if (extendedToken?.emailVerified !== undefined)
+        extendedSession.user.emailVerified = extendedToken.emailVerified;
       return session;
     },
   },

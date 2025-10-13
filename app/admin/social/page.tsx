@@ -10,7 +10,7 @@ export const revalidate = 60;
 
 export default async function SocialPage() {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = session?.user?.id;
   if (!uid) redirect("/login?callbackUrl=/admin/social");
 
   const user = await prisma.user.findUnique({ where: { id: uid } });
@@ -280,7 +280,7 @@ export default async function SocialPage() {
                       {activity.action}{" "}
                     </span>
                     <span className="text-blue-600">
-                      "{activity.wishlistName}"
+                      &quot;{activity.wishlistName}&quot;
                     </span>
                   </div>
                   <span className="text-xs text-neutral-500">

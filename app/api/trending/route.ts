@@ -1,13 +1,27 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
 
+interface TrendingItem {
+  id: string;
+  name: string;
+  priceCents: number;
+  image: string | null;
+  createdAt: Date;
+  views: number;
+  detailViews: number;
+  wishlists: number;
+  addToCart: number;
+  purchases: number;
+  score: number;
+}
+
 // Basic trending scoring with time decay
 const HALF_LIFE_HOURS = 72; // tune as needed
 
 export async function GET() {
   try {
     // Raw SQL for scoring (PostgreSQL)
-    const items: any[] = await prisma.$queryRawUnsafe(`
+    const items: TrendingItem[] = await prisma.$queryRawUnsafe(`
       SELECT
         p.id,
         p.name,
@@ -68,7 +82,7 @@ export async function GET() {
 
     return NextResponse.json({ items });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     // On hard failure also fallback so homepage stays resilient
     try {
       const latest = await prisma.product.findMany({

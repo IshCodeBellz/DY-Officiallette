@@ -22,7 +22,7 @@ export default async function AdminOrdersPage({
   searchParams?: { status?: string };
 }) {
   const session = await getServerSession(authOptions);
-  const isAdmin = (session?.user as any)?.isAdmin;
+  const isAdmin = (session?.user as { isAdmin: boolean })?.isAdmin;
   if (!isAdmin) return <div className="p-6">Unauthorized</div>;
   const status =
     searchParams?.status && ALLOWED.includes(searchParams.status)

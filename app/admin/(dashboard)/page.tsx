@@ -5,17 +5,14 @@ import { ClientPrice } from "@/components/ui/ClientPrice";
 import type { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const RestoreProductButton = require("./restoreButton").default as (props: {
-  productId: string;
-}) => JSX.Element;
+import RestoreProductButton from "./restoreButton";
 
 // Revalidate dashboard every 60s (counts + low stock); remove if you prefer fully dynamic.
 export const revalidate = 60;
 
 export default async function AdminHomePage() {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = (session?.user as { id: string })?.id;
   if (!uid) redirect("/login?callbackUrl=/admin");
   const user = await prisma.user.findUnique({ where: { id: uid } });
   if (!user?.isAdmin) redirect("/");

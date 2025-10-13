@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
 import {
@@ -13,7 +13,7 @@ interface HealthCheckResult {
   component: string;
   status: "healthy" | "degraded" | "critical";
   latency_ms?: number;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   error?: string;
 }
 
@@ -63,7 +63,7 @@ async function checkDatabase(): Promise<HealthCheckResult> {
       },
     };
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     return {
       component: "database",
       status: "critical",
@@ -109,7 +109,7 @@ async function checkMemory(): Promise<HealthCheckResult> {
       },
     };
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     return {
       component: "memory",
       status: "critical",
@@ -140,7 +140,7 @@ async function checkEventLoop(): Promise<HealthCheckResult> {
 }
 
 // GET /api/health - Comprehensive health check endpoint
-export const GET = withRequest(async function GET(req: NextRequest) {
+export const GET = withRequest(async function GET() {
   const start = Date.now();
   const perf = trackPerformance("health_check", { route: "/api/health" });
 
@@ -191,7 +191,7 @@ export const GET = withRequest(async function GET(req: NextRequest) {
           ...(check.error && { error: check.error }),
         };
         return acc;
-      }, {} as Record<string, any>),
+      }, {} as Record<string, unknown>),
     };
 
     // Set appropriate HTTP status for load balancer health checks
@@ -208,7 +208,7 @@ export const GET = withRequest(async function GET(req: NextRequest) {
       headers: { "cache-control": "no-store" },
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     perf.finish("error");
 
     return createErrorResponse(

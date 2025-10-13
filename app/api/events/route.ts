@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
-import { withRequest } from "@/lib/server/logger";
 
 // Local metric field union (mirrors ProductMetrics model fields except id/meta)
 type MetricField =
@@ -20,8 +19,8 @@ const MAP: Record<string, MetricField | null> = {
   PURCHASE: "purchases",
 };
 
-export const POST = withRequest(async function POST(req: NextRequest) {
-  let body: any;
+export async function POST(req: NextRequest) {
+  let body: unknown;
   try {
     body = await req.json();
   } catch {
@@ -77,6 +76,6 @@ export const POST = withRequest(async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ ok: true, updated: entries.length });
-});
+}
 
 export const runtime = "nodejs";

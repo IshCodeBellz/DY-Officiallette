@@ -5,13 +5,12 @@ import { redirect } from "next/navigation";
 import AccountSettingsClient from "./settingsClient";
 import { AccountNavigation } from "@/components/account/AccountNavigation";
 import Link from "next/link";
-import clsx from "clsx";
 
 export const dynamic = "force-dynamic";
 
 export default async function AccountPage() {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = (session?.user as { id: string })?.id;
   if (!uid) redirect("/login?callbackUrl=/account");
 
   const [user, primaryAddress, lastOrder] = await Promise.all([

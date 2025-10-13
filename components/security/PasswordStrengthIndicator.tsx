@@ -198,8 +198,8 @@ export const PasswordStrengthIndicator: React.FC<
             <div className="text-sm text-amber-800 dark:text-amber-300">
               <p className="font-medium">Password Security Tip:</p>
               <p className="mt-1">
-                Use a unique password that you haven't used elsewhere. Consider
-                using a passphrase with mixed characters.
+                Use a unique password that you haven&apos;t used elsewhere.
+                Consider using a passphrase with mixed characters.
               </p>
             </div>
           </div>

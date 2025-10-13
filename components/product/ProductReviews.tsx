@@ -41,35 +41,38 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
     Record<string, number>
   >({});
 
-  const fetchReviews = useCallback(async (pageNum = 1, reset = false) => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `/api/products/${productId}/reviews?page=${pageNum}&limit=10&includeAnalytics=true`
-      );
+  const fetchReviews = useCallback(
+    async (pageNum = 1, reset = false) => {
+      try {
+        setLoading(true);
+        const response = await fetch(
+          `/api/products/${productId}/reviews?page=${pageNum}&limit=10&includeAnalytics=true`
+        );
 
-      if (response.ok) {
-        const data = await response.json();
+        if (response.ok) {
+          const data = await response.json();
 
-        if (reset || pageNum === 1) {
-          setReviews(data.reviews);
-        } else {
-          setReviews((prev) => [...prev, ...data.reviews]);
+          if (reset || pageNum === 1) {
+            setReviews(data.reviews);
+          } else {
+            setReviews((prev) => [...prev, ...data.reviews]);
+          }
+
+          setTotalCount(data.totalCount);
+          setAverageRating(data.averageRating);
+          setRatingDistribution(data.ratingDistribution);
+          setHasMore(data.hasMore);
+          setPage(pageNum);
         }
-
-        setTotalCount(data.totalCount);
-        setAverageRating(data.averageRating);
-        setRatingDistribution(data.ratingDistribution);
-        setHasMore(data.hasMore);
-        setPage(pageNum);
+      } catch (error) {
+        console.error("Error:", error);
+        console.error("Failed to fetch reviews:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Failed to fetch reviews:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [productId]);
+    },
+    [productId]
+  );
 
   useEffect(() => {
     fetchReviews(1, true);

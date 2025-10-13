@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 // GET /api/orders/:id/events - timeline events for user's order
 export const GET = withRequest(async function GET(
@@ -12,7 +12,7 @@ export const GET = withRequest(async function GET(
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = session?.user?.id;
   if (!uid)
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   const order = await prisma.order.findFirst({
@@ -20,7 +20,7 @@ export const GET = withRequest(async function GET(
     select: { id: true },
   });
   if (!order) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const events = await (prisma as any).orderEvent.findMany({
+  const events = await prisma.orderEvent.findMany({
     where: { orderId: order.id },
     orderBy: { createdAt: "asc" },
     select: {

@@ -5,6 +5,17 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { ChevronLeft } from "lucide-react";
 
+interface NavigationItem {
+  href: string;
+  text: string;
+  disabled?: boolean;
+}
+
+interface NavigationSection {
+  label: string;
+  items: NavigationItem[];
+}
+
 interface NavigationProps {
   showBackToAccount?: boolean;
 }
@@ -14,7 +25,7 @@ export function AccountNavigation({
 }: NavigationProps) {
   const pathname = usePathname();
 
-  const sections = [
+  const sections: NavigationSection[] = [
     {
       label: "My Account",
       items: [
@@ -108,7 +119,7 @@ export function AccountNavigation({
             </div>
             <ul className="space-y-4 pl-2">
               {group.items.map((item) => {
-                const disabled = (item as any).disabled;
+                const disabled = item.disabled;
                 const current = isCurrentPath(item.href);
                 const className = clsx(
                   "block text-neutral-800 dark:text-neutral-200 hover:underline transition-colors",
@@ -118,12 +129,8 @@ export function AccountNavigation({
                 );
 
                 return disabled ? (
-                  <li
-                    key={item.href}
-                    className={className}
-                    aria-disabled="true"
-                  >
-                    {item.text}
+                  <li key={item.href} className={className}>
+                    <span aria-disabled="true">{item.text}</span>
                   </li>
                 ) : item.href.startsWith("#") ? (
                   <li key={item.href}>

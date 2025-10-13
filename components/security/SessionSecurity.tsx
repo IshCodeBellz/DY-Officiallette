@@ -115,7 +115,7 @@ export const SessionSecurity: React.FC<SessionSecurityProps> = ({
 
   const handleSettingChange = (
     key: keyof SessionSecuritySettings,
-    value: any
+    value: SessionSecuritySettings[keyof SessionSecuritySettings]
   ) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);

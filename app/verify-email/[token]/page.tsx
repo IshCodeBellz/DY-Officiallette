@@ -40,7 +40,7 @@ export default function VerifyEmailPage({ params }: PageProps) {
           }
         }
       } catch (error) {
-      console.error("Error:", error);
+        console.error("Error:", error);
         setStatus("error");
         setError("Network error occurred");
       }
@@ -199,7 +199,7 @@ export default function VerifyEmailPage({ params }: PageProps) {
         </div>
         <h1 className="text-2xl font-semibold">Verification failed</h1>
         <p className="text-neutral-600">
-          We couldn't verify your email address. The link may be invalid or
+          We couldn&apos;t verify your email address. The link may be invalid or
           already used.
         </p>
 

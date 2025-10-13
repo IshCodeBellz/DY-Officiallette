@@ -4,6 +4,7 @@ import { Search, Loader2 } from "lucide-react";
 import { HTMLAttributes, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 interface Suggestion {
   id: string;
@@ -12,7 +13,9 @@ interface Suggestion {
   image: string;
 }
 
-interface Props extends HTMLAttributes<HTMLDivElement> {}
+interface Props extends HTMLAttributes<HTMLDivElement> {
+  className?: string;
+}
 
 export function SearchBar({ className }: Props) {
   const [q, setQ] = useState("");
@@ -20,7 +23,7 @@ export function SearchBar({ className }: Props) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Suggestion[]>([]);
   const abortRef = useRef<AbortController | null>(null);
-  const timerRef = useRef<any>();
+  const timerRef = useRef<NodeJS.Timeout>();
   const router = useRouter();
   function executeSearch() {
     const query = q.trim();
@@ -99,10 +102,11 @@ export function SearchBar({ className }: Props) {
                 href={`/product/${it.id}`}
                 className="flex items-center gap-3 p-2 hover:bg-neutral-50 dark:hover:bg-neutral-800"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={it.image}
                   alt=""
+                  width={32}
+                  height={40}
                   className="h-10 w-8 object-cover rounded"
                 />
                 <span className="flex-1 truncate">{it.name}</span>

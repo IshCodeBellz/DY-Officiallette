@@ -127,7 +127,7 @@ export class SystemSettingsService {
   // Create or update a setting
   static async setSetting(
     key: string,
-    value: any,
+    value: string | number | boolean | object,
     type: "string" | "number" | "boolean" | "json",
     category: string,
     modifiedBy: string,
@@ -431,7 +431,7 @@ export class SystemSettingsService {
   static async bulkUpdateSettings(
     updates: Array<{
       key: string;
-      value: any;
+      value: string | number | boolean | object;
       type?: "string" | "number" | "boolean" | "json";
     }>,
     modifiedBy: string
@@ -468,7 +468,18 @@ export class SystemSettingsService {
   }
 
   // Export settings
-  static async exportSettings(): Promise<any> {
+  static async exportSettings(): Promise<{
+    exportedAt: string;
+    totalSettings: number;
+    settings: Array<{
+      key: string;
+      value: string;
+      type: string;
+      category: string;
+      description: string | undefined;
+      isPublic: boolean;
+    }>;
+  } | null> {
     try {
       const settings = await this.getAllSettings();
       return {

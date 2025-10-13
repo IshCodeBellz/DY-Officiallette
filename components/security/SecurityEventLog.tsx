@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Shield,
   AlertTriangle,
@@ -11,10 +11,8 @@ import {
   Smartphone,
   Tablet,
   Globe,
-  Filter,
   RefreshCw,
   Eye,
-  MoreVertical,
   Download,
 } from "lucide-react";
 
@@ -40,7 +38,7 @@ interface SecurityEvent {
   deviceType: "desktop" | "mobile" | "tablet" | "unknown";
   riskScore: number; // 0-100
   status: "resolved" | "investigating" | "dismissed" | "active";
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 interface SecurityEventLogProps {
@@ -168,7 +166,7 @@ export const SecurityEventLog: React.FC<SecurityEventLogProps> = ({
     }
   };
 
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...events];
 
     // Filter by type
@@ -213,7 +211,7 @@ export const SecurityEventLog: React.FC<SecurityEventLogProps> = ({
     filtered = filtered.slice(0, displayLimit);
 
     setFilteredEvents(filtered);
-  };
+  }, [events, filters, sortBy, displayLimit]);
 
   const getEventIcon = (event: SecurityEvent) => {
     switch (event.type) {
@@ -254,12 +252,6 @@ export const SecurityEventLog: React.FC<SecurityEventLogProps> = ({
       default:
         return <Globe className="w-3 h-3" />;
     }
-  };
-
-  const getRiskColor = (riskScore: number) => {
-    if (riskScore < 30) return "text-green-600 dark:text-green-400";
-    if (riskScore < 70) return "text-yellow-600 dark:text-yellow-400";
-    return "text-red-600 dark:text-red-400";
   };
 
   const getRiskBadge = (riskScore: number) => {

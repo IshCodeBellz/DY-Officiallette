@@ -3,6 +3,23 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
+// API response item (tolerant of different shapes)
+interface ProductApiItem {
+  id?: string;
+  productId?: string;
+  code?: string;
+  name?: string;
+  title?: string;
+  slug?: string | null;
+  image?: string;
+  imageUrl?: string;
+  img?: string;
+  price?: number;
+  priceCents?: number;
+  discountPrice?: number | null;
+  salePrice?: number | null;
+}
+
 // Minimal product shape expected from API
 interface ProductLite {
   id: string;
@@ -35,7 +52,7 @@ export function RecentlyViewed() {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
     if (typeof window === "undefined") return;
-    let raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(KEY);
     if (!raw) {
       setItems([]);
       return;
@@ -60,28 +77,19 @@ export function RecentlyViewed() {
           setItems([]);
           return;
         }
-        const map = new Map<string, ProductLite>(
-          (data.items as any[]).map((p: any) => {
-            const pid = p.id || p.productId || p.code; // tolerate alternative shapes
-            if (!pid) return ["", null] as any;
-            return [
-              pid as string,
-              {
-                id: pid,
-                name: p.name || p.title || "Untitled",
-                slug: p.slug || null,
-                image: p.image || p.img || "/placeholder.svg",
-                price:
-                  p.price != null
-                    ? p.price
-                    : p.priceCents != null
-                    ? Math.round(p.priceCents / 100)
-                    : 0,
-                discountPrice: p.discountPrice ?? null,
-              },
-            ];
-          })
-        );
+        const map = new Map<string, ProductLite>();
+        for (const p of data.items as ProductApiItem[]) {
+          const pid = p.id || p.productId || p.code; // tolerate alternative shapes
+          if (!pid) continue;
+          map.set(pid, {
+            id: pid,
+            name: p.name || p.title || "Unknown",
+            slug: p.slug,
+            image: p.image || p.imageUrl || "/placeholder.jpg",
+            price: p.price || 0,
+            discountPrice: p.discountPrice || p.salePrice,
+          });
+        }
         const ordered: ProductLite[] = ids
           .map((id) => map.get(id))
           .filter((x): x is ProductLite => Boolean(x))
@@ -101,7 +109,7 @@ export function RecentlyViewed() {
         </h2>
       </div>
       <div className="flex gap-4 overflow-x-auto snap-x pb-2 -mx-4 px-4 scrollbar-thin">
-        {items.map((p) => {
+        {items.map((p: ProductLite) => {
           const href = p.slug ? `/product/${p.slug}` : `/product/${p.id}`;
           return (
             <Link

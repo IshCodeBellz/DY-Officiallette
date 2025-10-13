@@ -5,6 +5,21 @@ import { useSession } from "next-auth/react";
 import { AccountNavigation } from "@/components/account/AccountNavigation";
 import Link from "next/link";
 
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 export default function AccountDetailsPage() {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
@@ -31,21 +46,6 @@ export default function AccountDetailsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
 
   const loadUserData = useCallback(async () => {
     try {
@@ -89,13 +89,12 @@ export default function AccountDetailsPage() {
           contactPreferences,
         }));
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error loading user data:", error);
+    } catch {
+      // Error loading user data - keep default state
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // months is a static array, no need to include in dependencies
 
   // Load user data from database
   useEffect(() => {
@@ -224,9 +223,7 @@ export default function AccountDetailsPage() {
         const error = await response.json();
         alert(error.error || "Failed to update account information");
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error updating account info:", error);
+    } catch {
       alert("Failed to update account information");
     }
   };
@@ -266,9 +263,7 @@ export default function AccountDetailsPage() {
         const error = await response.json();
         alert(error.error || "Failed to update password");
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error updating password:", error);
+    } catch {
       alert("Failed to update password");
     }
   };
@@ -302,9 +297,7 @@ export default function AccountDetailsPage() {
         const error = await response.json();
         alert(error.error || "Failed to update contact preferences");
       }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error updating contact preferences:", error);
+    } catch {
       alert("Failed to update contact preferences");
     }
   };
@@ -749,8 +742,8 @@ export default function AccountDetailsPage() {
                       className="w-4 h-4 text-blue-600 border-neutral-300 dark:border-neutral-600 rounded focus:ring-blue-500 mt-0.5"
                     />
                     <span className="text-sm text-neutral-900 dark:text-white">
-                      I'd like to receive occasional updates by email, post, and
-                      SMS* from carefully selected third parties
+                      I&apos;d like to receive occasional updates by email,
+                      post, and SMS* from carefully selected third parties
                     </span>
                   </label>
                 </div>
@@ -878,9 +871,7 @@ export default function AccountDetailsPage() {
                       const error = await response.json();
                       alert(error.error || "Failed to delete account");
                     }
-                  } catch (error) {
-                    console.error("Error:", error);
-                    console.error("Error deleting account:", error);
+                  } catch {
                     alert("Failed to delete account");
                   }
                   setShowDeleteModal(false);

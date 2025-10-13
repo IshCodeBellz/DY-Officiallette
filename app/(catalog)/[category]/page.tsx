@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useWishlist, useCart } from "@/components/providers/CartProvider";
 import { useState, useEffect, useRef } from "react";
 import { lineIdFor } from "@/lib/types";
+import Image from "next/image";
 
 interface ProductResponse {
   id: string;
@@ -139,10 +140,8 @@ export default function CategoryPage({
             }
           }
         }
-      } catch (error) {
-        console.error("Error:", error);
+      } catch {
         // Keep default range on error
-        console.warn("Failed to load price range:", error);
       }
     }
 
@@ -162,8 +161,7 @@ export default function CategoryPage({
           const data = await res.json();
           setAvailableBrands(data || []);
         }
-      } catch (error) {
-        console.error("Error:", error);
+      } catch {
         // Keep empty brands on error
       }
     }
@@ -202,8 +200,7 @@ export default function CategoryPage({
             }))
           );
         }
-      } catch (error) {
-        console.error("Error:", error);
+      } catch {
         /* ignore */
       } finally {
         setLoading(false);
@@ -222,10 +219,12 @@ export default function CategoryPage({
       {isFaceBody && (
         <section className="relative h-64 md:h-80 w-full overflow-hidden rounded-lg">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="https://picsum.photos/seed/facebody-hero/1600/900"
             alt="Face and body care assortment"
-            className="absolute inset-0 w-full h-full object-cover"
+            layout="fill"
+            objectFit="cover"
+            className="absolute inset-0 w-full h-full"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
           <div className="relative z-10 h-full flex flex-col justify-end p-6 md:p-10 text-white">
@@ -486,9 +485,11 @@ export default function CategoryPage({
               >
                 <Link href={`/product/${p.id}`} className="absolute inset-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={p.image}
+                  <Image
+                    src={p.image || "/placeholder.png"}
                     alt={p.name}
+                    width={300}
+                    height={300}
                     className="object-cover w-full h-full group-hover:scale-105 transition-transform"
                   />
                 </Link>

@@ -11,14 +11,18 @@ interface Facets {
 interface Props {
   facets: Facets;
   // active search params (server passed)
-  active: Record<string, any>;
+  active: Record<string, string | string[]>;
 }
 
 export default function FiltersClient({ facets, active }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
-  const [min, setMin] = useState<string>(active.min || "");
-  const [max, setMax] = useState<string>(active.max || "");
+  const [min, setMin] = useState<string>(
+    Array.isArray(active.min) ? active.min[0] || "" : active.min || ""
+  );
+  const [max, setMax] = useState<string>(
+    Array.isArray(active.max) ? active.max[0] || "" : active.max || ""
+  );
   const [isPending, startTransition] = useTransition();
 
   function setParam(key: string, value?: string) {

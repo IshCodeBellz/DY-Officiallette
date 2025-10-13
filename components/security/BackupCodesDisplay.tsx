@@ -137,8 +137,8 @@ export function BackupCodesDisplay({
                 No backup codes available
               </p>
               <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                You've used all your backup codes. Generate new ones immediately
-                to maintain account security.
+                You&apos;ve used all your backup codes. Generate new ones
+                immediately to maintain account security.
               </p>
             </div>
           </div>
@@ -234,8 +234,10 @@ export function BackupCodesDisplay({
             • Store these codes in a secure location (password manager, safe,
             etc.)
           </li>
-          <li>• Don't store them in plain text on your computer</li>
-          <li>• Generate new codes if you suspect they've been compromised</li>
+          <li>• Don&apos;t store them in plain text on your computer</li>
+          <li>
+            • Generate new codes if you suspect they&apos;ve been compromised
+          </li>
           <li>
             • These codes are as sensitive as your password - treat them
             carefully

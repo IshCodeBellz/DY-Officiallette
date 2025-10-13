@@ -21,7 +21,7 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({ email }),
       });
 
-      const data = await res.json();
+      await res.json(); // Response data not currently used
 
       if (!res.ok) {
         if (res.status === 429) {
@@ -61,11 +61,11 @@ export default function ForgotPasswordPage() {
           </div>
           <h1 className="text-2xl font-semibold">Check your email</h1>
           <p className="text-neutral-600">
-            If an account with that email exists, we've sent you a password
+            If an account with that email exists, we&apos;ve sent you a password
             reset link.
           </p>
           <p className="text-sm text-neutral-500">
-            Check your spam folder if you don't see the email within a few
+            Check your spam folder if you don&apos;t see the email within a few
             minutes.
           </p>
           <div className="pt-4">
@@ -86,7 +86,7 @@ export default function ForgotPasswordPage() {
       <div className="text-center mb-8">
         <h1 className="text-2xl font-semibold mb-2">Reset your password</h1>
         <p className="text-neutral-600">
-          Enter your email address and we'll send you a link to reset your
+          Enter your email address and we&apos;ll send you a link to reset your
           password.
         </p>
       </div>
@@ -133,7 +133,8 @@ export default function ForgotPasswordPage() {
 
       <div className="mt-8 pt-6 border-t">
         <p className="text-xs text-neutral-500 text-center">
-          For security reasons, we don't reveal whether an email is registered.
+          For security reasons, we don&apos;t reveal whether an email is
+          registered.
           <br />
           If you have trouble, contact our support team.
         </p>

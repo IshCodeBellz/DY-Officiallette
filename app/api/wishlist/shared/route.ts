@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/server/authOptions";
 import { SocialWishlistService } from "@/lib/server/socialWishlistService";
 import { z } from "zod";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const createWishlistSchema = z.object({
   name: z.string().min(1).max(100),
@@ -12,10 +12,10 @@ const createWishlistSchema = z.object({
   isPublic: z.boolean().default(false),
 });
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    const userId = (session?.user as any)?.id;
+    const userId = session?.user?.id;
 
     if (!userId) {
       return NextResponse.json(
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ wishlists: formattedWishlists });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Error fetching shared wishlists:", error);
     return NextResponse.json(
       { error: "Failed to fetch wishlists" },
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    const userId = (session?.user as any)?.id;
+    const userId = session?.user?.id;
 
     if (!userId) {
       return NextResponse.json(
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       wishlist: formattedWishlist,
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Error creating shared wishlist:", error);
     return NextResponse.json(
       { error: "Failed to create wishlist" },

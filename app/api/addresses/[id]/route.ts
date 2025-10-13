@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
+import { error as logError } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -64,8 +65,10 @@ export async function PUT(
 
     return NextResponse.json(address);
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Error updating address:", error);
+    logError("Error updating address", {
+      error: error instanceof Error ? error.message : String(error),
+      addressId: params.id,
+    });
     return NextResponse.json(
       { error: "Failed to update address" },
       { status: 500 }
@@ -145,8 +148,10 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Error deleting address:", error);
+    logError("Error deleting address", {
+      error: error instanceof Error ? error.message : String(error),
+      addressId: params.id,
+    });
     return NextResponse.json(
       { error: "Failed to delete address" },
       { status: 500 }

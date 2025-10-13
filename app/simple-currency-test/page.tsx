@@ -1,14 +1,14 @@
 "use client";
 
 import { useCurrency } from "@/components/providers/CurrencyProvider";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export default function SimpleCurrencyTest() {
   const { currentCurrency, convertPrice, formatPrice, setCurrency } =
     useCurrency();
   const [testResults, setTestResults] = useState<string[]>([]);
 
-  const runTest = () => {
+  const runTest = useCallback(() => {
     const results: string[] = [];
     const amount = 1000; // £10 GBP (base)
 
@@ -29,11 +29,11 @@ export default function SimpleCurrencyTest() {
     results.push(`Our EUR conversion: ${eurConverted} cents`);
 
     setTestResults(results);
-  };
+  }, [currentCurrency, convertPrice, formatPrice]);
 
   useEffect(() => {
     runTest();
-  }, [currentCurrency]);
+  }, [currentCurrency, runTest]);
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-2xl">

@@ -1,6 +1,5 @@
 // Security Service - Real-time security monitoring and management
 import { prisma } from "@/lib/server/prisma";
-import { Prisma } from "@prisma/client";
 
 export interface SecurityStats {
   blockedIPs: number;
@@ -18,7 +17,7 @@ export interface SecurityEvent {
   userAgent?: string;
   eventType: string;
   severity: "low" | "medium" | "high" | "critical";
-  details?: any;
+  details?: Record<string, unknown>;
   location?: string;
   blocked: boolean;
   resolved: boolean;
@@ -59,7 +58,7 @@ export class SecurityService {
     userAgent?: string;
     eventType: string;
     severity: "low" | "medium" | "high" | "critical";
-    details?: any;
+    details?: Record<string, unknown>;
     location?: string;
     blocked?: boolean;
   }): Promise<void> {
@@ -256,7 +255,7 @@ export class SecurityService {
         id: event.id,
         eventType: event.eventType,
         severity: event.severity as "low" | "medium" | "high" | "critical",
-        details: event.details,
+        details: event.details ? JSON.parse(event.details) : undefined,
         blocked: event.blocked,
         resolved: event.resolved,
         ipAddress: event.ipAddress,
@@ -377,7 +376,26 @@ export class SecurityService {
   }
 
   // Generate security report
-  static async generateSecurityReport(days = 7): Promise<any> {
+  static async generateSecurityReport(days = 7): Promise<{
+    period: string;
+    summary: {
+      totalEvents: number;
+      eventsResolved: number;
+      activeBlocks: number;
+    };
+    eventsByType: { type: string; count: number }[];
+    eventsBySeverity: { severity: string; count: number }[];
+    topBlockedIPs: {
+      ipAddress: string;
+      reason: string;
+      requestCount: number;
+    }[];
+    rateLimitsByEndpoint: {
+      endpoint: string;
+      totalRequests: number;
+      violations: number;
+    }[];
+  }> {
     try {
       const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
@@ -444,7 +462,14 @@ export class SecurityService {
       };
     } catch (error) {
       console.error("Error generating security report:", error);
-      return null;
+      return {
+        period: `${days} days`,
+        summary: { totalEvents: 0, eventsResolved: 0, activeBlocks: 0 },
+        eventsByType: [],
+        eventsBySeverity: [],
+        topBlockedIPs: [],
+        rateLimitsByEndpoint: [],
+      };
     }
   }
 }

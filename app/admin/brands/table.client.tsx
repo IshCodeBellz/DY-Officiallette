@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 
 interface Brand {
   id: string;
@@ -248,9 +249,11 @@ export default function BrandsClient({ initial }: { initial: Brand[] }) {
                 />
                 {editForm.logoUrl && (
                   <div className="mt-2">
-                    <img
+                    <Image
                       src={editForm.logoUrl}
                       alt="Logo preview"
+                      width={80}
+                      height={80}
                       className="w-20 h-20 object-contain border border-gray-200 rounded"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -277,9 +280,11 @@ export default function BrandsClient({ initial }: { initial: Brand[] }) {
                 />
                 {editForm.backgroundImage && (
                   <div className="mt-2">
-                    <img
+                    <Image
                       src={editForm.backgroundImage}
                       alt="Background preview"
+                      width={128}
+                      height={80}
                       className="w-32 h-20 object-cover border border-gray-200 rounded"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
@@ -401,9 +406,11 @@ export default function BrandsClient({ initial }: { initial: Brand[] }) {
                     <div className="flex items-center gap-3">
                       <div className="flex-shrink-0 w-10 h-10">
                         {brand.logoUrl ? (
-                          <img
+                          <Image
                             src={brand.logoUrl}
-                            alt={brand.name}
+                            alt={`${brand.name} logo`}
+                            width={40}
+                            height={40}
                             className="w-10 h-10 object-contain border border-gray-200 rounded"
                           />
                         ) : (

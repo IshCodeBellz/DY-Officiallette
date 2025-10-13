@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function OrdersPage() {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = session?.user?.id as string | undefined;
   if (!uid)
     return <div className="p-6">Please log in to view your orders.</div>;
   const orders = await prisma.order.findMany({

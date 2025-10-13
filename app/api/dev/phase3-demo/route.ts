@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { SearchService } from "@/lib/server/searchService";
 import { PersonalizationService } from "@/lib/server/personalizationService";
 import { InventoryService } from "@/lib/server/inventoryService";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     console.log("🚀 Phase 3 Advanced E-Commerce Features Demo");
 
@@ -275,7 +275,7 @@ export async function GET(request: NextRequest) {
       data: demoResults,
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Phase 3 demo error:", error);
     return NextResponse.json(
       {

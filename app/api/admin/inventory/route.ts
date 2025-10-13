@@ -3,7 +3,7 @@ import { InventoryService } from "@/lib/server/inventoryService";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,9 +39,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: inventory,
     });
-  } catch (error) {
-      console.error("Error:", error);
-    console.error("Get inventory API error:", error);
+  } catch {
     return NextResponse.json(
       {
         success: false,
@@ -117,9 +115,7 @@ export async function POST(request: NextRequest) {
         newStock: result.newStock,
       },
     });
-  } catch (error) {
-      console.error("Error:", error);
-    console.error("Update inventory API error:", error);
+  } catch {
     return NextResponse.json(
       {
         success: false,

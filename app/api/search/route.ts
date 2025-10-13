@@ -1,6 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
-import { withRequest } from "@/lib/server/logger";
+
+// Type definitions for search functionality
+interface SearchBreakdown {
+  nameCount: number;
+  descCount: number;
+  brandCount: number;
+  catCount: number;
+  skuCount: number;
+  expandedTerms: string[];
+}
+
+interface ProductQueryRow {
+  id: string;
+  name: string;
+  priceCents: number;
+  createdAt: Date;
+}
+
+// Use Prisma result type for actual database results
+type ProductWithIncludes = Awaited<
+  ReturnType<typeof prisma.product.findMany>
+>[0];
+
+interface ScoredProduct {
+  p: ProductWithIncludes;
+  d: number;
+  score: number;
+}
 
 // One-time diagnostic logging guard (helps confirm DB file / env in dev)
 let diagLogged = false;
@@ -8,7 +35,7 @@ const BUILD_SIGNATURE = "search-v3.1"; // bump when changing search logic
 
 const HALF_LIFE_HOURS = 72; // for trending sort scoring
 
-export const GET = withRequest(async function GET(req: NextRequest) {
+export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") || "").trim();
   const category = searchParams.get("category") || undefined; // category slug
@@ -25,7 +52,7 @@ export const GET = withRequest(async function GET(req: NextRequest) {
   const includeFacets = searchParams.get("facets") === "1";
   const skip = (page - 1) * limit;
 
-  const where: any = {
+  const where: Record<string, unknown> = {
     deletedAt: null,
     priceCents: { gte: Math.round(min * 100), lte: Math.round(max * 100) },
   };
@@ -76,7 +103,7 @@ export const GET = withRequest(async function GET(req: NextRequest) {
       if (syns) syns.forEach((s) => termSet.add(s));
     }
     expandedTerms = Array.from(termSet).filter(Boolean).slice(0, 12);
-    const or: any[] = [];
+    const or: Array<Record<string, unknown>> = [];
     const pushTerm = (term: string) => {
       or.push({ name: { contains: term } });
       or.push({ description: { contains: term } });
@@ -89,7 +116,7 @@ export const GET = withRequest(async function GET(req: NextRequest) {
   }
 
   // For non-trending/non-relevance sorts we can use orderBy directly
-  let orderBy: any = undefined;
+  let orderBy: Record<string, "asc" | "desc"> | undefined = undefined;
   switch (sort) {
     case "price_asc":
       orderBy = { priceCents: "asc" };
@@ -191,7 +218,7 @@ export const GET = withRequest(async function GET(req: NextRequest) {
                AND (${likeClauses})
              ORDER BY p.createdAt DESC
              LIMIT ${take}`;
-        const rows = await prisma.$queryRawUnsafe<any[]>(sql);
+        const rows = await prisma.$queryRawUnsafe<ProductQueryRow[]>(sql);
         if (rows.length) {
           // Fetch with images for consistency
           const ids = rows.map((r) => r.id);
@@ -268,11 +295,11 @@ export const GET = withRequest(async function GET(req: NextRequest) {
                 -1e-12;
             return { p, d, score };
           })
-          .filter(Boolean) as any[];
+          .filter(Boolean) as ScoredProduct[];
         scored.sort((a, b) => b.score - a.score);
         const top = scored.slice(0, limit);
         if (top.length) {
-          products = top.map((t) => t.p);
+          products = top.map((t) => t.p) as typeof products;
           // eslint-disable-next-line no-console
           console.log("[search:fuzzy-fallback-hit]", {
             q,
@@ -295,7 +322,23 @@ export const GET = withRequest(async function GET(req: NextRequest) {
   if (sort === "trending") {
     const now = Date.now();
     scored = [...products].map((p) => {
-      const m: any = (p as any).metrics || {};
+      const m = (
+        p as ProductWithIncludes & {
+          metrics?: {
+            views: number;
+            detailViews: number;
+            wishlists: number;
+            addToCart: number;
+            purchases: number;
+          };
+        }
+      ).metrics || {
+        views: 0,
+        detailViews: 0,
+        wishlists: 0,
+        addToCart: 0,
+        purchases: 0,
+      };
       const ageHours = (now - new Date(p.createdAt).getTime()) / 3600000;
       const weighted =
         0.5 * (m.views || 0) +
@@ -307,7 +350,11 @@ export const GET = withRequest(async function GET(req: NextRequest) {
       const score = weighted * decay;
       return Object.assign({}, p, { score });
     });
-    scored.sort((a: any, b: any) => (b.score || 0) - (a.score || 0));
+    scored.sort(
+      (a, b) =>
+        ((b as { score?: number }).score || 0) -
+        ((a as { score?: number }).score || 0)
+    );
   }
 
   if (sort === "relevance" && q) {
@@ -317,7 +364,7 @@ export const GET = withRequest(async function GET(req: NextRequest) {
     // Build synonym baseline (reuse expandedTerms already built)
     const termSet = new Set(expandedTerms);
     const originalSet = new Set(tokens);
-    scored = products.map((p: any) => {
+    scored = products.map((p) => {
       let score = 0;
       const nameLower = p.name.toLowerCase();
       const descLower = (p.description || "").toLowerCase();
@@ -338,23 +385,27 @@ export const GET = withRequest(async function GET(req: NextRequest) {
       score += recency * 15;
       return { ...p, score };
     });
-    scored.sort((a: any, b: any) => (b.score || 0) - (a.score || 0));
+    scored.sort(
+      (a, b) =>
+        ((b as { score?: number }).score || 0) -
+        ((a as { score?: number }).score || 0)
+    );
   }
 
   // Apply pagination slice AFTER scoring for relevance/trending; otherwise slice occurred via skip
-  let trimmed: any[];
+  let trimmed: typeof products;
   if (sort === "trending" || (sort === "relevance" && q)) {
     trimmed = scored.slice(skip, skip + limit);
   } else {
     trimmed = scored;
   }
-  const items = trimmed.map((p: any) => ({
+  const items = trimmed.map((p) => ({
     id: p.id,
     name: p.name,
     priceCents: p.priceCents,
     price: p.priceCents / 100,
     image: p.images[0]?.url || "/placeholder.svg",
-    score: (p as any).score,
+    score: (p as { score?: number }).score,
   }));
 
   if (q && items.length === 0) {
@@ -375,10 +426,10 @@ export const GET = withRequest(async function GET(req: NextRequest) {
 
   const debugMode = searchParams.get("debug");
   const debugRequested = debugMode === "1" || debugMode === "2";
-  let breakdown: any = undefined;
+  let breakdown: SearchBreakdown | undefined = undefined;
   if (debugMode === "2" && q) {
     const query = q.toLowerCase();
-    const base = { deletedAt: null } as any;
+    const base: Record<string, unknown> = { deletedAt: null };
     const [nameCount, descCount, brandCount, catCount, skuCount] =
       await Promise.all([
         prisma.product.count({
@@ -416,8 +467,10 @@ export const GET = withRequest(async function GET(req: NextRequest) {
     };
   }
   // Extended diagnostics (debug=3): per-term match counts & dataset info
-  let termMatches: any[] | undefined;
-  let dataset: any | undefined;
+  let termMatches:
+    | Array<{ term: string; nameCount: number; descCount: number }>
+    | undefined;
+  let dataset: { totalProducts: number } | undefined;
   let debugError: string | undefined;
   if (debugMode === "3" && q) {
     try {
@@ -427,7 +480,7 @@ export const GET = withRequest(async function GET(req: NextRequest) {
         : [q.toLowerCase()];
       termMatches = await Promise.all(
         termsForDiag.map(async (term) => {
-          const base = { deletedAt: null } as any;
+          const base = { deletedAt: null };
           const [nameCount, descCount] = await Promise.all([
             prisma.product.count({
               where: { ...base, name: { contains: term } },
@@ -446,8 +499,8 @@ export const GET = withRequest(async function GET(req: NextRequest) {
         where: { deletedAt: null },
       });
       dataset = { totalProducts };
-    } catch (e: any) {
-      debugError = e?.message || String(e);
+    } catch (e: unknown) {
+      debugError = e instanceof Error ? e.message : String(e);
     }
   }
 
@@ -549,4 +602,4 @@ export const GET = withRequest(async function GET(req: NextRequest) {
     page,
     pageSize: limit,
   });
-});
+}

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/server/prisma";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { ExtendedSession } from "@/lib/types";
+import { log, error as logError } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -97,19 +98,20 @@ export async function POST(request: NextRequest) {
     });
 
     // Log password change for security audit
-    console.log(
-      `Password changed for user ${
-        user.email
-      } (ID: ${userId}) at ${new Date().toISOString()}`
-    );
+    log("password_changed", {
+      userId,
+      email: user.email,
+      timestamp: new Date().toISOString(),
+    });
 
     return NextResponse.json(
       { message: "Password updated successfully" },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Password change error:", error);
+    logError("password_change_error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

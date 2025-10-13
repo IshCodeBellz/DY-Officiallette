@@ -19,7 +19,7 @@ interface ProductClientProps {
 
 export default function ProductClient({ product }: ProductClientProps) {
   const [size, setSize] = useState<string>("");
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [, setActiveIndex] = useState(0); // Currently unused but part of future image carousel
   const { addItem } = useCart();
   const { toggle, has } = useWishlist();
   const wishId = lineIdFor(product.id, size || undefined);

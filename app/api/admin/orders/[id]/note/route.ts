@@ -2,24 +2,29 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/server/authOptions";
 import { prisma } from "@/lib/server/prisma";
-import { withRequest } from "@/lib/server/logger";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 // POST /api/admin/orders/:id/note { message }
-export const POST = withRequest(async function POST(
+export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  let session: any = await getServerSession(authOptions);
+  let session = await getServerSession(authOptions);
   const testUser =
     process.env.NODE_ENV === "test" ? req.headers.get("x-test-user") : null;
   if (testUser) {
     session = {
-      user: { id: testUser, email: "test@example.com", isAdmin: true },
+      user: {
+        id: testUser,
+        email: "test@example.com",
+        isAdmin: true,
+        emailVerified: true,
+      },
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     };
   }
-  if (!(session?.user as any)?.isAdmin) {
+  if (!session?.user?.isAdmin) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const body = await req.json().catch(() => null);
@@ -28,13 +33,13 @@ export const POST = withRequest(async function POST(
   }
   const order = await prisma.order.findUnique({ where: { id: params.id } });
   if (!order) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  await (prisma as any).orderEvent.create({
+  await prisma.orderEvent.create({
     data: {
       orderId: order.id,
       kind: "NOTE",
       message: body.message.trim().slice(0, 500),
-      meta: JSON.stringify({ authorId: (session.user as any).id }),
+      meta: JSON.stringify({ authorId: session?.user?.id }),
     },
   });
   return NextResponse.json({ ok: true });
-});
+}

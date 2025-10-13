@@ -4,11 +4,11 @@ import { authOptions } from "@/lib/server/authOptions";
 import { ReviewService } from "@/lib/server/reviewService";
 import { prisma } from "@/lib/server/prisma";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 async function ensureAdmin() {
   const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.id as string | undefined;
+  const uid = session?.user?.id;
   if (!uid) return null;
   const user = await prisma.user.findUnique({ where: { id: uid } });
   if (!user?.isAdmin) return null;
@@ -32,9 +32,7 @@ export async function GET(request: NextRequest) {
     const queue = await ReviewService.getModerationQueue(limit);
 
     return NextResponse.json({ queue });
-  } catch (error) {
-      console.error("Error:", error);
-    console.error("GET moderation queue error:", error);
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch moderation queue" },
       { status: 500 }
@@ -89,9 +87,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: result.message,
     });
-  } catch (error) {
-      console.error("Error:", error);
-    console.error("POST moderation action error:", error);
+  } catch {
     return NextResponse.json(
       { error: "Failed to perform moderation action" },
       { status: 500 }

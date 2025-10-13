@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 interface Brand {
   id: string;
@@ -27,7 +28,7 @@ export default function BrandsPage() {
           setBrands(data.brands || []);
         }
       } catch (error) {
-      console.error("Error:", error);
+        console.error("Error:", error);
         console.error("Failed to fetch brands:", error);
       } finally {
         setLoading(false);
@@ -137,9 +138,11 @@ export default function BrandsPage() {
                 {/* Brand Logo */}
                 <div className="w-16 h-16 mx-auto mb-4 rounded-lg flex items-center justify-center overflow-hidden">
                   {brand.logoUrl ? (
-                    <img
+                    <Image
                       src={brand.logoUrl}
                       alt={`${brand.name} logo`}
+                      width={64}
+                      height={64}
                       className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
                     />
                   ) : (
@@ -199,9 +202,11 @@ export default function BrandsPage() {
                           <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
                           <div className="absolute inset-0 flex items-center justify-center">
                             {brand.logoUrl ? (
-                              <img
+                              <Image
                                 src={brand.logoUrl}
                                 alt={`${brand.name} logo`}
+                                width={96}
+                                height={48}
                                 className="max-w-24 max-h-12 object-contain filter drop-shadow-lg"
                               />
                             ) : (
@@ -214,9 +219,11 @@ export default function BrandsPage() {
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-700 dark:to-neutral-800 flex items-center justify-center">
                           {brand.logoUrl ? (
-                            <img
+                            <Image
                               src={brand.logoUrl}
                               alt={`${brand.name} logo`}
+                              width={96}
+                              height={48}
                               className="max-w-24 max-h-12 object-contain"
                             />
                           ) : (

@@ -3,7 +3,7 @@ import { CaptchaService } from "@/lib/server/captcha";
 
 export async function POST(request: NextRequest) {
   try {
-    const { token, provider, configKey = "default" } = await request.json();
+    const { token, configKey = "default" } = await request.json();
 
     if (!token) {
       return NextResponse.json(
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       score: verification.score,
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("CAPTCHA verification error:", error);
     return NextResponse.json(
       { message: "Internal server error" },
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ config });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("Failed to get CAPTCHA config:", error);
     return NextResponse.json(
       { message: "Internal server error" },

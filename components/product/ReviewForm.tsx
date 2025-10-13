@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Star, Upload, X, AlertCircle, CheckCircle } from "lucide-react";
+import { Star, Upload, AlertCircle, CheckCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -24,7 +24,7 @@ export function ReviewForm({
   const [hoveredRating, setHoveredRating] = useState(0);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [images, setImages] = useState<string[]>([]);
+  const [images] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);

@@ -13,7 +13,7 @@ import { buildDraftFromCart, calculateRates } from "@/lib/server/taxShipping";
 export const dynamic = "force-dynamic";
 import { decrementSizeStock } from "@/lib/server/inventory";
 import { debug } from "@/lib/server/debug";
-import { withRequest } from "@/lib/server/logger";
+import { withRequest, error as logError } from "@/lib/server/logger";
 import { ExtendedSession } from "@/lib/types";
 
 // Basic Phase 3 draft checkout endpoint:
@@ -331,7 +331,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
         },
       });
 
-      await (tx as any).orderEvent.create({
+      await tx.orderEvent.create({
         data: {
           orderId: order.id,
           kind: "CREATED",
@@ -348,7 +348,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       });
 
       if (discountMeta.id) {
-        await (tx as any).orderEvent.create({
+        await tx.orderEvent.create({
           data: {
             orderId: order.id,
             kind: "DISCOUNT_APPLIED",
@@ -381,11 +381,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
             (s) => s.label === line.size
           );
           if (sizeVariant) {
-            const ok = await decrementSizeStock(
-              tx as any,
-              sizeVariant.id,
-              line.qty
-            );
+            const ok = await decrementSizeStock(tx, sizeVariant.id, line.qty);
             if (!ok) throw new Error("STOCK_RACE_CONFLICT");
           }
         }
@@ -422,25 +418,26 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       });
       return order;
     });
-  } catch (e: any) {
-    if (e?.message === "STOCK_RACE_CONFLICT") {
+  } catch (e: unknown) {
+    const error = e instanceof Error ? e : new Error(String(e));
+    if (error.message === "STOCK_RACE_CONFLICT") {
       debug("CHECKOUT", "stock_race_conflict");
       return NextResponse.json({ error: "stock_conflict" }, { status: 409 });
     }
-    if (e?.message === "DISCOUNT_RACE_EXHAUSTED") {
+    if (error.message === "DISCOUNT_RACE_EXHAUSTED") {
       debug("CHECKOUT", "discount_race_exhausted");
       return NextResponse.json(
         { error: "discount_exhausted" },
         { status: 400 }
       );
     }
-    throw e;
+    throw error;
   }
 
   // Send rich order confirmation email (includes line items & addresses)
   if (session && session.user?.email && !testUser) {
     try {
-      const userId = (session.user as any).id as string | undefined;
+      const userId = session.user.id;
       if (userId) {
         const [user, full] = await Promise.all([
           prisma.user.findUnique({ where: { id: userId } }),
@@ -500,7 +497,10 @@ export const POST = withRequest(async function POST(req: NextRequest) {
         }
       }
     } catch (error) {
-      console.error("order confirmation email failed", error);
+      logError("order confirmation email failed", {
+        error: error instanceof Error ? error.message : String(error),
+        orderId: result.id,
+      });
     }
   }
   // TODO: invoke payment intent creation (Stripe) here and update order.status => AWAITING_PAYMENT

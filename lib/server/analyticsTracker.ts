@@ -13,6 +13,7 @@ export interface EventData {
   productId?: string;
   categoryId?: string;
   metadata?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   properties?: Record<string, any>;
   timestamp?: Date;
   ipAddress?: string;

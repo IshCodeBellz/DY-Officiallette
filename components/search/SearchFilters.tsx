@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 interface FilterOption {
@@ -23,60 +23,63 @@ export default function SearchFilters() {
   >({});
 
   // Mock filter data
-  const filterGroups: FilterGroup[] = [
-    {
-      id: "category",
-      label: "Category",
-      options: [
-        { id: "clothing", label: "Clothing", count: 1250 },
-        { id: "shoes", label: "Shoes", count: 340 },
-        { id: "accessories", label: "Accessories", count: 890 },
-        { id: "bags", label: "Bags", count: 245 },
-      ],
-    },
-    {
-      id: "brand",
-      label: "Brand",
-      options: [
-        { id: "nike", label: "Nike", count: 156 },
-        { id: "adidas", label: "Adidas", count: 134 },
-        { id: "zara", label: "Zara", count: 203 },
-        { id: "h&m", label: "H&M", count: 187 },
-      ],
-    },
-    {
-      id: "price",
-      label: "Price Range",
-      options: [
-        { id: "0-25", label: "Under $25", count: 456 },
-        { id: "25-50", label: "$25 - $50", count: 789 },
-        { id: "50-100", label: "$50 - $100", count: 623 },
-        { id: "100+", label: "Over $100", count: 234 },
-      ],
-    },
-    {
-      id: "size",
-      label: "Size",
-      options: [
-        { id: "xs", label: "XS", count: 234 },
-        { id: "s", label: "S", count: 567 },
-        { id: "m", label: "M", count: 891 },
-        { id: "l", label: "L", count: 723 },
-        { id: "xl", label: "XL", count: 456 },
-      ],
-    },
-    {
-      id: "color",
-      label: "Color",
-      options: [
-        { id: "black", label: "Black", count: 567 },
-        { id: "white", label: "White", count: 432 },
-        { id: "blue", label: "Blue", count: 345 },
-        { id: "red", label: "Red", count: 234 },
-        { id: "green", label: "Green", count: 198 },
-      ],
-    },
-  ];
+  const filterGroups: FilterGroup[] = useMemo(
+    () => [
+      {
+        id: "category",
+        label: "Category",
+        options: [
+          { id: "clothing", label: "Clothing", count: 1250 },
+          { id: "shoes", label: "Shoes", count: 340 },
+          { id: "accessories", label: "Accessories", count: 890 },
+          { id: "bags", label: "Bags", count: 245 },
+        ],
+      },
+      {
+        id: "brand",
+        label: "Brand",
+        options: [
+          { id: "nike", label: "Nike", count: 156 },
+          { id: "adidas", label: "Adidas", count: 134 },
+          { id: "zara", label: "Zara", count: 203 },
+          { id: "h&m", label: "H&M", count: 187 },
+        ],
+      },
+      {
+        id: "price",
+        label: "Price Range",
+        options: [
+          { id: "0-25", label: "Under $25", count: 456 },
+          { id: "25-50", label: "$25 - $50", count: 789 },
+          { id: "50-100", label: "$50 - $100", count: 623 },
+          { id: "100+", label: "Over $100", count: 234 },
+        ],
+      },
+      {
+        id: "size",
+        label: "Size",
+        options: [
+          { id: "xs", label: "XS", count: 234 },
+          { id: "s", label: "S", count: 567 },
+          { id: "m", label: "M", count: 891 },
+          { id: "l", label: "L", count: 723 },
+          { id: "xl", label: "XL", count: 456 },
+        ],
+      },
+      {
+        id: "color",
+        label: "Color",
+        options: [
+          { id: "black", label: "Black", count: 567 },
+          { id: "white", label: "White", count: 432 },
+          { id: "blue", label: "Blue", count: 345 },
+          { id: "red", label: "Red", count: 234 },
+          { id: "green", label: "Green", count: 198 },
+        ],
+      },
+    ],
+    []
+  );
 
   useEffect(() => {
     // Parse current filters from URL
