@@ -124,9 +124,11 @@ export async function TrendingNow() {
         <h2 className="text-2xl font-bold tracking-tight">
           {items[0]?.fallback ? "Latest Products" : "Trending Now"}
         </h2>
-        <span className="text-[11px] uppercase tracking-wide text-neutral-500">
-          {items[0]?.fallback ? "Fallback Feed" : "Live Activity"}
-        </span>
+        {!items[0]?.fallback && (
+          <span className="text-[11px] uppercase tracking-wide text-neutral-500">
+            Live Activity
+          </span>
+        )}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {items.map((p, i: number) => (
