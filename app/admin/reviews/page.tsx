@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { ReviewModeration } from "@/components/admin/ReviewModeration";
 
 export default async function AdminReviewsPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptionsEnhanced);
 
   // Check if user is authenticated and is admin
   if (!session?.user || !session.user.isAdmin) {

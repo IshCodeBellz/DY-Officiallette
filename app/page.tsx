@@ -3,15 +3,19 @@ import Link from "next/link";
 import { RecentlyViewed } from "../components/home/RecentlyViewed";
 import { TrendingNow } from "../components/home/TrendingNow";
 import { ReviewsCarousel } from "../components/home/ReviewsCarousel";
+import { CMSService } from "@/lib/server/cmsService";
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Get CMS images
+  const { heroImages, categoryImages } = await CMSService.getHomePageImages();
+
   return (
     <div className="space-y-12 pb-20">
       <section className="relative h-[480px] w-full bg-neutral-200 flex items-center justify-center">
         <div className="absolute inset-0 grid md:grid-cols-2">
           <div className="hidden md:block relative">
             <Image
-              src="https://picsum.photos/900/1200"
+              src={heroImages.left}
               alt="Hero"
               fill
               className="object-cover"
@@ -19,7 +23,7 @@ export default function HomePage() {
           </div>
           <div className="relative">
             <Image
-              src="https://picsum.photos/901/1200"
+              src={heroImages.right}
               alt="Hero"
               fill
               className="object-cover"
@@ -59,32 +63,32 @@ export default function HomePage() {
             {
               label: "Denim",
               slug: "denim",
-              img: "https://picsum.photos/seed/denim/800/1000",
+              img: categoryImages.denim,
             },
             {
               label: "Shoes",
               slug: "footwear",
-              img: "https://picsum.photos/seed/shoes/800/1000",
+              img: categoryImages.shoes,
             },
             {
               label: "Accessories",
               slug: "accessories",
-              img: "https://picsum.photos/seed/accessories/800/1000",
+              img: categoryImages.accessories,
             },
             {
               label: "Sportswear",
               slug: "sportswear",
-              img: "https://picsum.photos/seed/sportswear/800/1000",
+              img: categoryImages.sportswear,
             },
             {
               label: "Dresses",
               slug: "dresses",
-              img: "https://picsum.photos/seed/dresses/800/1000",
+              img: categoryImages.dresses,
             },
             {
               label: "Brands",
               slug: "brands",
-              img: "https://picsum.photos/seed/brands/800/1000",
+              img: categoryImages.brands,
             },
           ].map((cat) => (
             <Link
@@ -115,7 +119,10 @@ export default function HomePage() {
             className="relative col-span-2 sm:col-span-3 md:col-span-6 h-[140px] md:h-[180px] overflow-hidden rounded-xl group flex items-center justify-center ring-2 ring-rose-200 bg-gradient-to-r from-rose-600 via-rose-500 to-orange-400 text-white shadow-md hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-rose-400/50 transition-all"
             aria-label="Shop New In arrivals"
           >
-            <div className="absolute inset-0 opacity-40 mix-blend-overlay bg-[url('https://picsum.photos/seed/newin/1200/600')] bg-cover bg-center" />
+            <div
+              className="absolute inset-0 opacity-40 mix-blend-overlay bg-cover bg-center"
+              style={{ backgroundImage: `url('${categoryImages.newIn}')` }}
+            />
             <div className="relative z-10 text-center px-6">
               <span className="block text-xs tracking-[0.2em] font-bold mb-1">
                 JUST DROPPED

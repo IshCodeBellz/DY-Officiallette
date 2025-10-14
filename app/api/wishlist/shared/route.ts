@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { SocialWishlistService } from "@/lib/server/socialWishlistService";
 import { z } from "zod";
 
@@ -14,7 +14,7 @@ const createWishlistSchema = z.object({
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptionsEnhanced);
     const userId = session?.user?.id;
 
     if (!userId) {
@@ -55,7 +55,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptionsEnhanced);
     const userId = session?.user?.id;
 
     if (!userId) {

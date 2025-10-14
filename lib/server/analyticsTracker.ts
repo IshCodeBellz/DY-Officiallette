@@ -333,16 +333,16 @@ export class AnalyticsTracker {
         const conversionRate =
           metrics.views > 0 ? (metrics.purchases / metrics.views) * 100 : 0;
 
-        // Get revenue data
-        const revenueData = await prisma.$queryRaw<Array<{ revenue: bigint }>>`
+        // Get revenue data for future use
+        const _revenueData = await prisma.$queryRaw<Array<{ revenue: bigint }>>`
           SELECT COALESCE(SUM(oi."priceCents" * oi.quantity), 0) as revenue
           FROM "OrderItem" oi
           INNER JOIN "Order" o ON oi."orderId" = o.id
           WHERE oi."productId" = ${productId} AND o.status = 'COMPLETED'
         `;
 
-        const _revenue = Number(revenueData[0]?.revenue || 0);
-        // Revenue calculation for future use
+        // Revenue calculation available but not currently used
+        // const _revenue = Number(_revenueData[0]?.revenue || 0);
 
         await prisma.productAnalytics.upsert({
           where: { productId },

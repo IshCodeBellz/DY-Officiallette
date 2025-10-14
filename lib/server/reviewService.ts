@@ -740,9 +740,9 @@ export class ReviewService {
   }
 
   // ✅ Additional admin methods for moderation
-  static async approveReview(reviewId: string, adminUserId: string) {
+  static async approveReview(reviewId: string, _adminUserId: string) {
     try {
-      const review = await prisma.productReview.update({
+      const _review = await prisma.productReview.update({
         where: { id: reviewId },
         data: {
           isPublished: true,
@@ -764,9 +764,9 @@ export class ReviewService {
     }
   }
 
-  static async rejectReview(reviewId: string, adminUserId: string) {
+  static async rejectReview(reviewId: string, _adminUserId: string) {
     try {
-      const review = await prisma.productReview.update({
+      const _review = await prisma.productReview.update({
         where: { id: reviewId },
         data: {
           isPublished: false,
@@ -788,7 +788,7 @@ export class ReviewService {
     }
   }
 
-  static async deleteReview(reviewId: string, adminUserId: string) {
+  static async deleteReview(reviewId: string, _adminUserId: string) {
     try {
       await prisma.productReview.delete({
         where: { id: reviewId },

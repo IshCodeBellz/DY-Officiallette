@@ -89,7 +89,7 @@ export class InventoryService {
     quantity: number,
     type: "in" | "out" | "adjustment",
     reason: string,
-    userId?: string
+    _userId?: string
   ): Promise<{ success: boolean; newStock?: number; error?: string }> {
     try {
       // Validate quantity
@@ -284,7 +284,7 @@ export class InventoryService {
     try {
       const [
         totalProducts,
-        totalVariants,
+        _totalVariants,
         lowStockVariants,
         outOfStockVariants,
         allVariants,
@@ -332,8 +332,8 @@ export class InventoryService {
    * Additional methods for backward compatibility
    */
   static async reserveStock(
-    items: Array<{ productId: string; variantId?: string; quantity: number }>,
-    orderId: string
+    _items: Array<{ productId: string; variantId?: string; quantity: number }>,
+    _orderId: string
   ): Promise<{ success: boolean; reservationId?: string; error?: string }> {
     // TODO: Implement reservation system
     return { success: true, reservationId: `res_${Date.now()}` };
@@ -341,7 +341,7 @@ export class InventoryService {
 
   static async releaseReservedStock(
     reservationId: string,
-    reason: string = "Order cancelled"
+    _reason: string = "Order cancelled"
   ): Promise<{ success: boolean; error?: string }> {
     // TODO: Implement reservation release
     return { success: true };

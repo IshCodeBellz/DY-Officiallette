@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { PersonalizationService } from "@/lib/server/personalizationService";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptionsEnhanced);
 
     if (!session?.user) {
       return NextResponse.json(

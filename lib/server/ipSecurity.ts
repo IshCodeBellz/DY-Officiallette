@@ -113,29 +113,97 @@ export class IPSecurityService {
       // Skip for local/private IPs
       if (this.isPrivateIP(ip)) {
         return {
-          country: "Local",
+          country: "Local Network",
           countryCode: "LOCAL",
-          region: "Local",
-          city: "Local",
+          region: "Private Network",
+          city: "Local Device",
           latitude: 0,
           longitude: 0,
           timezone: "UTC",
         };
       }
 
-      // In production, integrate with geolocation service
-      // For now, return mock data
-      return {
-        country: "United States",
-        countryCode: "US",
-        region: "California",
-        city: "San Francisco",
-        latitude: 37.7749,
-        longitude: -122.4194,
-        timezone: "America/Los_Angeles",
-      };
+      // Use free IP geolocation service for real location data
+      try {
+        // Create timeout controller for requests
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch(
+          `http://ip-api.com/json/${ip}?fields=status,message,country,countryCode,region,regionName,city,lat,lon,timezone,isp,org,as,proxy,hosting`,
+          {
+            headers: {
+              "User-Agent": "DY-OFFICIALLETTE/1.0",
+            },
+            signal: controller.signal,
+          }
+        );
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.status === "success") {
+          return {
+            country: data.country || "Unknown",
+            countryCode: data.countryCode || "XX",
+            region: data.regionName || data.region || "Unknown",
+            city: data.city || "Unknown",
+            latitude: data.lat || 0,
+            longitude: data.lon || 0,
+            timezone: data.timezone || "UTC",
+          };
+        }
+
+        // Fallback to ipapi.co if ip-api.com fails
+        const fallbackController = new AbortController();
+        const fallbackTimeoutId = setTimeout(
+          () => fallbackController.abort(),
+          5000
+        );
+
+        const fallbackResponse = await fetch(`https://ipapi.co/${ip}/json/`, {
+          headers: {
+            "User-Agent": "DY-OFFICIALLETTE/1.0",
+          },
+          signal: fallbackController.signal,
+        });
+
+        clearTimeout(fallbackTimeoutId);
+
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          return {
+            country: fallbackData.country_name || "Unknown",
+            countryCode: fallbackData.country_code || "XX",
+            region: fallbackData.region || "Unknown",
+            city: fallbackData.city || "Unknown",
+            latitude: fallbackData.latitude || 0,
+            longitude: fallbackData.longitude || 0,
+            timezone: fallbackData.timezone || "UTC",
+          };
+        }
+
+        throw new Error("Both geolocation services failed");
+      } catch (geoError) {
+        console.warn(`Geolocation lookup failed for IP ${ip}:`, geoError);
+
+        // Return unknown location instead of San Francisco mock data
+        return {
+          country: "Unknown",
+          countryCode: "XX",
+          region: "Unknown",
+          city: "Unknown",
+          latitude: 0,
+          longitude: 0,
+          timezone: "UTC",
+        };
+      }
     } catch (error) {
-      console.error("Error:", error);
       console.error("Geolocation error:", error);
       return null;
     }
@@ -173,7 +241,7 @@ export class IPSecurityService {
   /**
    * Detect if IP is from proxy
    */
-  static async detectProxy(ip: string): Promise<boolean> {
+  static async detectProxy(_ip: string): Promise<boolean> {
     try {
       // In production, use proxy detection services
       // Check for common proxy headers, open ports, etc.
@@ -189,7 +257,7 @@ export class IPSecurityService {
   /**
    * Detect if IP is from Tor exit node
    */
-  static async detectTor(ip: string): Promise<boolean> {
+  static async detectTor(_ip: string): Promise<boolean> {
     try {
       // In production, check against Tor exit node list
       // Available from: https://check.torproject.org/exit-addresses
@@ -259,7 +327,7 @@ export class IPSecurityService {
   /**
    * Get reverse DNS for IP
    */
-  static async getReverseDNS(ip: string): Promise<string | null> {
+  static async getReverseDNS(_ip: string): Promise<string | null> {
     try {
       // In production, use DNS lookup
       // For now, return null
@@ -394,7 +462,7 @@ export class IPSecurityService {
   /**
    * Get IP reputation from multiple sources
    */
-  static async getIPReputation(ip: string): Promise<{
+  static async getIPReputation(_ip: string): Promise<{
     reputation: "good" | "suspicious" | "malicious" | "unknown";
     sources: string[];
     details: Record<string, unknown>;

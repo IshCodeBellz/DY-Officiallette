@@ -1,12 +1,12 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import DiscountCodesClient from "./table.client";
 
 export const dynamic = "force-dynamic";
 
 export default async function DiscountCodesAdminPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptionsEnhanced);
   if (!(session?.user as { isAdmin: boolean })?.isAdmin)
     return <div className="p-6">Unauthorized</div>;
   const codes = await prisma.discountCode.findMany({

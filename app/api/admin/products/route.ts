@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
 import { NextRequest, NextResponse } from "next/server";
@@ -33,7 +33,7 @@ const productSchema = z.object({
 
 export const POST = withRequest(async function POST(req: NextRequest) {
   const session = (await getServerSession(
-    authOptions
+    authOptionsEnhanced
   )) as ExtendedSession | null;
   const uid = session?.user?.id;
   if (!uid)

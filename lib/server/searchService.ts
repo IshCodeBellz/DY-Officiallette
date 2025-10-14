@@ -441,7 +441,7 @@ export class SearchService {
    * Generate mock facets for search results
    */
   private static generateMockFacets(
-    products: ProductSearchResult[]
+    _products: ProductSearchResult[]
   ): SearchFacets {
     return {
       categories: [
@@ -528,7 +528,7 @@ export class SearchService {
   async getSearchAnalytics() {
     try {
       // Get real analytics data from user behavior tracking
-      const [totalSearches, searchBehaviors, totalViews, totalPurchases] =
+      const [totalSearches, searchBehaviors, totalViews, _totalPurchases] =
         await Promise.all([
           prisma.userBehavior.count({
             where: { eventType: "search" },

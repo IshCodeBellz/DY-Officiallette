@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { SecurityActivity } from "@/components/security/SecurityActivity";
+import { DeviceManagement } from "@/components/security/DeviceManagement";
 
 interface User {
   id: string;
@@ -260,30 +262,10 @@ export default function SecurityClient({
       </section>
 
       {/* Login Activity */}
-      <section className="bg-white rounded-lg border p-6">
-        <h2 className="text-lg font-semibold mb-4">Login Activity</h2>
-        <div className="space-y-4">
-          <div className="text-sm text-neutral-600">
-            Recent login activity will be displayed here.
-          </div>
-          <div className="text-center py-8 text-neutral-400">
-            <svg
-              className="w-12 h-12 mx-auto mb-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <p className="text-sm">No recent activity to display</p>
-          </div>
-        </div>
-      </section>
+      <SecurityActivity />
+
+      {/* Device Management */}
+      <DeviceManagement />
 
       {/* Account Actions */}
       <section className="bg-white rounded-lg border p-6">

@@ -29,7 +29,8 @@ export class RateLimitService {
     config: RateLimitConfig
   ): Promise<RateLimitResult> {
     const now = new Date();
-    const _windowStart = new Date(now.getTime() - config.windowMs);
+    // Window start calculation available if needed
+    // const _windowStart = new Date(now.getTime() - config.windowMs);
 
     // Clean up expired entries first
     await this.cleanupExpiredEntries();

@@ -1,14 +1,17 @@
 import { prisma } from "@/lib/server/prisma";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 
-// Directly exercise authOptions callbacks to raise function + branch coverage.
+// Directly exercise authOptionsEnhanced callbacks to raise function + branch coverage.
 // We avoid next-auth runtime; we just call the callbacks with crafted params.
 
-describe("authOptions callbacks", () => {
+describe("authOptionsEnhanced callbacks", () => {
   test("jwt callback sets uid and isAdmin from user object", async () => {
     const user: any = { id: "cb-user-1", isAdmin: true };
     const token: any = {};
-    const out = await (authOptions as any).callbacks.jwt({ token, user });
+    const out = await (authOptionsEnhanced as any).callbacks.jwt({
+      token,
+      user,
+    });
     expect(out.uid).toBe("cb-user-1");
     expect(out.isAdmin).toBe(true);
   });
@@ -25,7 +28,7 @@ describe("authOptions callbacks", () => {
       },
     });
     const first: any = { uid: u.id }; // simulate prior session where isAdmin absent
-    const out = await (authOptions as any).callbacks.jwt({
+    const out = await (authOptionsEnhanced as any).callbacks.jwt({
       token: first,
       user: undefined,
     });
@@ -35,7 +38,7 @@ describe("authOptions callbacks", () => {
   test("session callback injects id and isAdmin", async () => {
     const token: any = { uid: "tok-user", isAdmin: true };
     const session: any = { user: {} };
-    const out = await (authOptions as any).callbacks.session({
+    const out = await (authOptionsEnhanced as any).callbacks.session({
       session,
       token,
     });

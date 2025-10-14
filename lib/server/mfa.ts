@@ -7,6 +7,7 @@ import {
   MFAVerificationResult,
   generateBackupCodes,
 } from "../security";
+import { CMSService } from "./cmsService";
 
 export class MFAService {
   /**
@@ -14,7 +15,7 @@ export class MFAService {
    */
   static async setupTOTP(
     userId: string,
-    appName: string = "DYOFFICIALLETTE"
+    customAppName?: string
   ): Promise<MFASetupResult> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -25,9 +26,22 @@ export class MFAService {
       throw new Error("User not found");
     }
 
-    // Generate secret
+    // Get site name from CMS settings or use default
+    let appName = customAppName;
+    if (!appName) {
+      try {
+        const settings = await CMSService.getSiteSettings();
+        appName = (settings.siteName as string) || "DY OFFICIALETTE";
+      } catch (_error) {
+        console.warn("Could not load site name from CMS, using default");
+        appName = "DY OFFICIALETTE";
+      }
+    }
+
+    // Generate secret with proper naming format for authenticator apps
+    // Format: "Site Name (user@email.com)" - this shows both site and email
     const secret = speakeasy.generateSecret({
-      name: user.email,
+      name: `${appName} (${user.email})`,
       issuer: appName,
     });
 

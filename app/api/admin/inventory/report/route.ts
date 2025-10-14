@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { InventoryService } from "@/lib/server/inventoryService";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptionsEnhanced);
 
     // Mock admin check
     if (!session?.user) {

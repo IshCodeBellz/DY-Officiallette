@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import { redirect } from "next/navigation";
 import { AccountNavigation } from "@/components/account/AccountNavigation";
@@ -88,7 +88,7 @@ async function getSecurityData(userId: string): Promise<SecurityData> {
 }
 
 export default async function AccountSecurityPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptionsEnhanced);
   const uid = (session?.user as { id: string })?.id;
 
   if (!uid) {
