@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { ExtendedSession } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export const GET = withRequest(async function GET() {
   const session = (await getServerSession(
-    authOptions
+    authOptionsEnhanced
   )) as ExtendedSession | null;
   const uid = session?.user?.id;
   if (!uid)

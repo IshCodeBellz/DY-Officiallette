@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/server/prisma";
 import Link from "next/link";
@@ -7,7 +7,7 @@ import Link from "next/link";
 export const revalidate = 300; // 5 minutes
 
 export default async function UserAnalyticsPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptionsEnhanced);
   const uid = session?.user?.id;
   if (!uid) redirect("/login?callbackUrl=/admin/users/analytics");
 

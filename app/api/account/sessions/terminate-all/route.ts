@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { error as logError } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
 export async function POST() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptionsEnhanced);
 
     if (!session?.user?.id) {
       return NextResponse.json(

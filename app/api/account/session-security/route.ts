@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { error as logError } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ interface SessionSecuritySettings {
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptionsEnhanced);
 
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -55,7 +55,7 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptionsEnhanced);
 
     if (!session?.user?.id) {
       return NextResponse.json(

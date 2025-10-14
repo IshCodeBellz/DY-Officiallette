@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import { AccountNavigation } from "@/components/account/AccountNavigation";
 import { ClientPrice } from "@/components/ui/ClientPrice";
@@ -8,8 +8,8 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export default async function OrdersPage() {
-  const session = await getServerSession(authOptions);
-  const uid = session?.user?.id as string | undefined;
+  const session = await getServerSession(authOptionsEnhanced);
+  const uid = session?.user?.id;
   if (!uid)
     return <div className="p-6">Please log in to view your orders.</div>;
   const orders = await prisma.order.findMany({

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { IntegrationTestService } from "@/lib/server/integrationTestService";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   try {
     // Only allow in development or for admin users
     if (process.env.NODE_ENV === "production") {
-      const session = await getServerSession(authOptions);
+      const session = await getServerSession(authOptionsEnhanced);
       const isAdmin = session?.user?.isAdmin;
 
       if (!isAdmin) {

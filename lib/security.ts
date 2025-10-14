@@ -3,6 +3,8 @@
  * Supports TOTP (Time-based One-Time Password) and SMS-based MFA
  */
 
+import { randomBytes } from "crypto";
+
 export enum MFAMethod {
   TOTP = "TOTP",
   SMS = "SMS",
@@ -108,8 +110,10 @@ export function generateBackupCodes(count: number = 10): string[] {
   const codes: string[] = [];
 
   for (let i = 0; i < count; i++) {
-    // Generate 8-digit backup code
-    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+    // Generate cryptographically secure 8-character backup code
+    // Using randomBytes for better security than Math.random()
+    const bytes = randomBytes(6);
+    const code = bytes.toString("hex").substring(0, 8).toUpperCase();
     codes.push(code);
   }
 

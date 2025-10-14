@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { MFAService } from "@/lib/server/mfa";
 import { captureError } from "@/lib/server/errors";
 
@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export async function POST() {
   let session;
   try {
-    session = await getServerSession(authOptions);
+    session = await getServerSession(authOptionsEnhanced);
 
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -62,7 +62,7 @@ export async function POST() {
 export async function GET() {
   let session;
   try {
-    session = await getServerSession(authOptions);
+    session = await getServerSession(authOptionsEnhanced);
 
     if (!session?.user?.id) {
       return NextResponse.json(

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +10,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  let session = await getServerSession(authOptions);
+  let session = await getServerSession(authOptionsEnhanced);
   const testUser =
     process.env.NODE_ENV === "test" ? req.headers.get("x-test-user") : null;
   if (testUser) {

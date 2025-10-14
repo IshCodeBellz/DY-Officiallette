@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
@@ -36,7 +36,7 @@ const productUpdateSchema = z.object({
 });
 
 async function requireAdmin() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptionsEnhanced);
   const uid = session?.user?.id;
   if (!uid) return { error: "unauthorized" as const };
   const user = await prisma.user.findUnique({ where: { id: uid } });

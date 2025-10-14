@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import { OrderTransitions, isOrderStatus } from "@/lib/status";
 
@@ -11,7 +11,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   // Test harness bypass (mirrors pattern used in checkout & payment intent endpoints)
-  let session = await getServerSession(authOptions);
+  let session = await getServerSession(authOptionsEnhanced);
   const testUser =
     process.env.NODE_ENV === "test" ? req.headers.get("x-test-user") : null;
   if (testUser) {

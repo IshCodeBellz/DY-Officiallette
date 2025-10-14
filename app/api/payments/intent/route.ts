@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import { z } from "zod";
 import { getStripe } from "@/lib/server/stripe";
@@ -20,7 +20,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
   if (testUser) {
     uid = testUser;
   } else {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptionsEnhanced);
     uid = session?.user?.id;
   }
   if (!uid) {

@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import { NextResponse } from "next/server";
 
@@ -9,7 +9,7 @@ export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptionsEnhanced);
   if (!session?.user?.isAdmin)
     return new NextResponse("Unauthorized", { status: 401 });
   const data = await req.json();
@@ -41,7 +41,7 @@ export async function DELETE(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptionsEnhanced);
   if (!session?.user?.isAdmin)
     return new NextResponse("Unauthorized", { status: 401 });
   try {

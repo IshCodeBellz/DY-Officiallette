@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { ReviewService } from "@/lib/server/reviewService";
 import { prisma } from "@/lib/server/prisma";
 
 export const dynamic = "force-dynamic";
 
 async function ensureAdmin() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptionsEnhanced);
   const uid = session?.user?.id;
   if (!uid) return null;
   const user = await prisma.user.findUnique({ where: { id: uid } });

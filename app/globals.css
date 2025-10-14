@@ -49,6 +49,21 @@ body {
     @apply btn border border-neutral-300 text-neutral-900 hover:bg-neutral-100;
   }
 
+  /* Header dropdown styles */
+  .header-dropdown {
+    @apply absolute right-0 top-full mt-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 min-w-48 z-50;
+  }
+
+  /* Prevent header content overflow */
+  .header-nav {
+    @apply flex items-center gap-2 xl:gap-3;
+    min-width: 0; /* Allow flex items to shrink */
+  }
+
+  .header-nav > * {
+    flex-shrink: 0;
+  }
+
   .badge {
     @apply text-xs px-2 py-0.5 rounded bg-neutral-900 text-white;
   }

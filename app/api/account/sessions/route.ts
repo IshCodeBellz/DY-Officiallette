@@ -1,13 +1,70 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { error as logError } from "@/lib/server/logger";
+import { prisma } from "@/lib/server/prisma";
+import { IPSecurityService } from "@/lib/server/ipSecurity";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+// Helper function to parse user agent and get device info
+function parseUserAgent(userAgent?: string) {
+  if (!userAgent)
+    return {
+      browser: "Unknown",
+      os: "Unknown",
+      deviceName: "Unknown Device",
+      type: "desktop" as const,
+    };
+
+  const ua = userAgent.toLowerCase();
+
+  // Detect OS
+  let os = "Unknown";
+  if (ua.includes("mac os x") || ua.includes("macos")) os = "macOS";
+  else if (ua.includes("windows")) os = "Windows";
+  else if (ua.includes("linux")) os = "Linux";
+  else if (ua.includes("android")) os = "Android";
+  else if (ua.includes("ios") || ua.includes("iphone") || ua.includes("ipad"))
+    os = "iOS";
+
+  // Detect browser
+  let browser = "Unknown";
+  if (ua.includes("chrome") && !ua.includes("edg")) browser = "Chrome";
+  else if (ua.includes("firefox")) browser = "Firefox";
+  else if (ua.includes("safari") && !ua.includes("chrome")) browser = "Safari";
+  else if (ua.includes("edg")) browser = "Edge";
+  else if (ua.includes("opera")) browser = "Opera";
+
+  // Detect device type and name
+  let type: "desktop" | "mobile" | "tablet" = "desktop";
+  let deviceName = `${os} Device`;
+
+  if (
+    ua.includes("mobile") ||
+    ua.includes("android") ||
+    ua.includes("iphone")
+  ) {
+    type = "mobile";
+    if (ua.includes("iphone")) deviceName = "iPhone";
+    else if (ua.includes("android")) deviceName = "Android Phone";
+    else deviceName = "Mobile Device";
+  } else if (ua.includes("tablet") || ua.includes("ipad")) {
+    type = "tablet";
+    if (ua.includes("ipad")) deviceName = "iPad";
+    else deviceName = "Tablet";
+  } else if (ua.includes("mac")) {
+    deviceName = "Mac";
+  } else if (ua.includes("windows")) {
+    deviceName = "Windows PC";
+  }
+
+  return { browser, os, deviceName, type };
+}
+
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptionsEnhanced);
 
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -16,53 +73,111 @@ export async function GET() {
       );
     }
 
-    // Since we don't have a sessions table yet, return mock data
-    const mockSessions = [
-      {
+    // Get current request info for identifying current session
+    const currentIP = IPSecurityService.extractIP(request);
+    const currentUserAgent = request.headers.get("user-agent") || "";
+
+    // Get real user sessions from database
+    const userSessions = await prisma.userSession.findMany({
+      where: {
+        userId: session.user.id,
+        endTime: null, // Only active sessions
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      take: 20, // Limit to last 20 sessions
+    });
+
+    // Transform database sessions to API format
+    const sessions = await Promise.all(
+      userSessions.map(async (dbSession) => {
+        const deviceInfo = parseUserAgent(dbSession.userAgent || undefined);
+        let location = "Unknown Location";
+
+        // Get location for this session's IP
+        if (dbSession.ipAddress) {
+          try {
+            const geoData = await IPSecurityService.getGeoLocation(
+              dbSession.ipAddress
+            );
+            if (geoData && geoData.city !== "Unknown") {
+              location = `${geoData.city}, ${geoData.region}`;
+              if (geoData.country && geoData.country !== "Unknown") {
+                location += `, ${geoData.country}`;
+              }
+            }
+          } catch (error) {
+            console.warn("Failed to get location for session:", error);
+          }
+        }
+
+        // Determine if this is the current session
+        const isCurrent =
+          dbSession.ipAddress === currentIP &&
+          dbSession.userAgent === currentUserAgent;
+
+        // Calculate risk score based on session data
+        let riskScore = 10; // Base score
+        if (
+          dbSession.ipAddress &&
+          !IPSecurityService.isPrivateIP(dbSession.ipAddress)
+        ) {
+          riskScore += 10;
+        }
+        if (location.includes("Unknown")) riskScore += 15;
+
+        return {
+          id: dbSession.id,
+          name: deviceInfo.deviceName,
+          type: deviceInfo.type,
+          browser: `${deviceInfo.browser} ${dbSession.browser || ""}`.trim(),
+          os: deviceInfo.os,
+          location,
+          ipAddress: dbSession.ipAddress || "Unknown",
+          lastActive: dbSession.updatedAt,
+          isCurrent,
+          isActive: true, // All sessions without endTime are active
+          riskScore: Math.min(riskScore, 100),
+          firstSeen: dbSession.startTime,
+        };
+      })
+    );
+
+    // If no sessions found, create a current session entry
+    if (sessions.length === 0) {
+      const currentDeviceInfo = parseUserAgent(currentUserAgent);
+      let currentLocation = "Unknown Location";
+
+      try {
+        const geoData = await IPSecurityService.getGeoLocation(currentIP);
+        if (geoData && geoData.city !== "Unknown") {
+          currentLocation = `${geoData.city}, ${geoData.region}`;
+          if (geoData.country && geoData.country !== "Unknown") {
+            currentLocation += `, ${geoData.country}`;
+          }
+        }
+      } catch (error) {
+        console.warn("Failed to get current location:", error);
+      }
+
+      sessions.push({
         id: "current",
-        name: "Current Session",
-        type: "desktop" as const,
-        browser: "Chrome 120.0",
-        os: "macOS",
-        location: "San Francisco, CA",
-        ipAddress: "192.168.1.100",
+        name: currentDeviceInfo.deviceName,
+        type: currentDeviceInfo.type,
+        browser: currentDeviceInfo.browser,
+        os: currentDeviceInfo.os,
+        location: currentLocation,
+        ipAddress: currentIP,
         lastActive: new Date(),
         isCurrent: true,
         isActive: true,
-        riskScore: 15,
-        firstSeen: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-      },
-      {
-        id: "mobile-1",
-        name: "iPhone 15 Pro",
-        type: "mobile" as const,
-        browser: "Safari 17.1",
-        os: "iOS 17.1",
-        location: "San Francisco, CA",
-        ipAddress: "192.168.1.101",
-        lastActive: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-        isCurrent: false,
-        isActive: true,
-        riskScore: 25,
-        firstSeen: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 14 days ago
-      },
-      {
-        id: "laptop-1",
-        name: "MacBook Pro",
-        type: "desktop" as const,
-        browser: "Firefox 119.0",
-        os: "macOS",
-        location: "New York, NY",
-        ipAddress: "10.0.0.50",
-        lastActive: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-        isCurrent: false,
-        isActive: false,
-        riskScore: 65,
-        firstSeen: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-      },
-    ];
+        riskScore: IPSecurityService.isPrivateIP(currentIP) ? 5 : 25,
+        firstSeen: new Date(),
+      });
+    }
 
-    return NextResponse.json({ sessions: mockSessions });
+    return NextResponse.json({ sessions });
   } catch (error) {
     logError("Failed to get sessions", {
       error: error instanceof Error ? error.message : String(error),
@@ -76,7 +191,7 @@ export async function GET() {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptionsEnhanced);
 
     if (!session?.user?.id) {
       return NextResponse.json(

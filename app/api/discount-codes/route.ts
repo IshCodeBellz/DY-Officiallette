@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import { z } from "zod";
 import { ExtendedSession } from "@/lib/types";
@@ -32,7 +32,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const session = (await getServerSession(
-    authOptions
+    authOptionsEnhanced
   )) as ExtendedSession | null;
   if (!session?.user?.isAdmin)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });

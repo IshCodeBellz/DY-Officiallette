@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/server/prisma";
 // Search is now rendered inside client Filters component
@@ -16,7 +16,7 @@ export default async function AdminProductsPage({
 }: {
   searchParams?: Record<string, string | string[] | undefined>;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptionsEnhanced);
   const uid = (session?.user as { id: string })?.id;
   if (!uid) redirect("/login?callbackUrl=/admin/products");
   const user = await prisma.user.findUnique({ where: { id: uid } });

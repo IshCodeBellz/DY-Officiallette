@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import { hashPassword } from "@/lib/server/auth";
 import { ExtendedSession } from "@/lib/types";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const session = (await getServerSession(
-    authOptions
+    authOptionsEnhanced
   )) as ExtendedSession | null;
   const uid = session?.user?.id;
   if (!uid)
@@ -53,7 +53,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const session = (await getServerSession(
-    authOptions
+    authOptionsEnhanced
   )) as ExtendedSession | null;
   const uid = session?.user?.id;
   if (!uid)

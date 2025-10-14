@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -13,15 +13,17 @@ import {
   FileText,
   Layout,
   Star,
+  Palette,
 } from "lucide-react";
-import Link from "next/link";
+import { LogoManager } from "@/components/admin/cms/LogoManager";
+import Image from "next/image";
 
 interface ContentSection {
   id?: string;
   type: string;
   title?: string;
   subtitle?: string;
-  content?: any;
+  content?: unknown;
   imageUrl?: string;
   buttonText?: string;
   buttonLink?: string;
@@ -67,33 +69,29 @@ export default function CMSManagement() {
   const [loading, setLoading] = useState(true);
   const [editingPage, setEditingPage] = useState<ContentPage | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"pages" | "settings">("pages");
+  const [activeTab, setActiveTab] = useState<
+    "pages" | "settings" | "images" | "logo"
+  >("pages");
   const [message, setMessage] = useState<{
     text: string;
     type: "success" | "error";
   } | null>(null);
+  const [homeImages, setHomeImages] = useState<{
+    heroImages: { left: string; right: string };
+    categoryImages: Record<string, string>;
+  } | null>(null);
 
-  useEffect(() => {
-    loadData();
+  const showMessage = useCallback((text: string, type: "success" | "error") => {
+    setMessage({ text, type });
   }, []);
 
-  useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => setMessage(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [message]);
-
-  const showMessage = (text: string, type: "success" | "error") => {
-    setMessage({ text, type });
-  };
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [pagesRes, settingsRes] = await Promise.all([
+      const [pagesRes, settingsRes, imagesRes] = await Promise.all([
         fetch("/api/admin/cms/pages"),
         fetch("/api/admin/cms/settings"),
+        fetch("/api/admin/cms/images"),
       ]);
 
       if (pagesRes.ok) {
@@ -105,13 +103,29 @@ export default function CMSManagement() {
         const settingsData = await settingsRes.json();
         setSettings(settingsData.settings || {});
       }
+
+      if (imagesRes.ok) {
+        const imagesData = await imagesRes.json();
+        setHomeImages(imagesData.images || null);
+      }
     } catch (error) {
       console.error("Error loading CMS data:", error);
       showMessage("Failed to load CMS data", "error");
     } finally {
       setLoading(false);
     }
-  };
+  }, [showMessage]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
   const savePage = async (page: ContentPage) => {
     try {
@@ -177,6 +191,31 @@ export default function CMSManagement() {
     } catch (error) {
       console.error("Error saving settings:", error);
       showMessage("Failed to save settings", "error");
+    }
+  };
+
+  const saveImages = async () => {
+    try {
+      const response = await fetch("/api/admin/cms/images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(homeImages),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setHomeImages(data.images);
+        showMessage("Images saved successfully", "success");
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to save images");
+      }
+    } catch (error) {
+      console.error("Error saving images:", error);
+      showMessage(
+        error instanceof Error ? error.message : "Failed to save images",
+        "error"
+      );
     }
   };
 
@@ -298,6 +337,28 @@ export default function CMSManagement() {
               >
                 <Settings className="h-4 w-4 inline mr-2" />
                 Site Settings
+              </button>
+              <button
+                onClick={() => setActiveTab("images")}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === "images"
+                    ? "border-neutral-900 text-neutral-900"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                <Layout className="h-4 w-4 inline mr-2" />
+                Homepage Images
+              </button>
+              <button
+                onClick={() => setActiveTab("logo")}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === "logo"
+                    ? "border-neutral-900 text-neutral-900"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                <Palette className="h-4 w-4 inline mr-2" />
+                Logo & Branding
               </button>
             </nav>
           </div>
@@ -559,6 +620,209 @@ export default function CMSManagement() {
                 </div>
               </div>
             )}
+
+            {activeTab === "images" && (
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Homepage Images
+                </h2>
+                <p className="text-gray-600">
+                  Manage the hero images and category background images
+                  displayed on your homepage.
+                </p>
+
+                {homeImages && (
+                  <>
+                    {/* Hero Images Section */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium text-gray-900">
+                        Hero Images
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Left Hero Image URL
+                          </label>
+                          <Input
+                            value={homeImages.heroImages.left}
+                            onChange={(e) =>
+                              setHomeImages({
+                                ...homeImages,
+                                heroImages: {
+                                  ...homeImages.heroImages,
+                                  left: e.target.value,
+                                },
+                              })
+                            }
+                            placeholder="https://example.com/image.jpg"
+                          />
+                          {homeImages.heroImages.left && (
+                            <div className="mt-2">
+                              <Image
+                                src={homeImages.heroImages.left}
+                                alt="Left hero preview"
+                                width={300}
+                                height={96}
+                                className="w-full h-24 object-cover rounded border"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display =
+                                    "none";
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Right Hero Image URL
+                          </label>
+                          <Input
+                            value={homeImages.heroImages.right}
+                            onChange={(e) =>
+                              setHomeImages({
+                                ...homeImages,
+                                heroImages: {
+                                  ...homeImages.heroImages,
+                                  right: e.target.value,
+                                },
+                              })
+                            }
+                            placeholder="https://example.com/image.jpg"
+                          />
+                          {homeImages.heroImages.right && (
+                            <div className="mt-2">
+                              <Image
+                                src={homeImages.heroImages.right}
+                                alt="Right hero preview"
+                                width={300}
+                                height={96}
+                                className="w-full h-24 object-cover rounded border"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display =
+                                    "none";
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Category Images Section */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium text-gray-900">
+                        Category Images
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {Object.entries({
+                          denim: "Denim",
+                          shoes: "Shoes",
+                          accessories: "Accessories",
+                          sportswear: "Sportswear",
+                          dresses: "Dresses",
+                          brands: "Brands",
+                          newIn: "New In Banner",
+                        }).map(([key, label]) => (
+                          <div key={key}>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              {label} Image URL
+                            </label>
+                            <Input
+                              value={homeImages.categoryImages[key] || ""}
+                              onChange={(e) =>
+                                setHomeImages({
+                                  ...homeImages,
+                                  categoryImages: {
+                                    ...homeImages.categoryImages,
+                                    [key]: e.target.value,
+                                  },
+                                })
+                              }
+                              placeholder="https://example.com/image.jpg"
+                            />
+                            {homeImages.categoryImages[key] && (
+                              <div className="mt-2">
+                                <Image
+                                  src={homeImages.categoryImages[key]}
+                                  alt={`${label} preview`}
+                                  width={300}
+                                  height={80}
+                                  className="w-full h-20 object-cover rounded border"
+                                  onError={(e) => {
+                                    (
+                                      e.target as HTMLImageElement
+                                    ).style.display = "none";
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <button
+                        onClick={async () => {
+                          if (
+                            confirm(
+                              "Are you sure you want to reset all images to defaults? This action cannot be undone."
+                            )
+                          ) {
+                            try {
+                              const response = await fetch(
+                                "/api/admin/cms/images/reset",
+                                {
+                                  method: "POST",
+                                }
+                              );
+
+                              if (response.ok) {
+                                loadData(); // Reload all data including images
+                                showMessage(
+                                  "Images reset to defaults successfully",
+                                  "success"
+                                );
+                              } else {
+                                throw new Error("Failed to reset images");
+                              }
+                            } catch (error) {
+                              console.error("Error resetting images:", error);
+                              showMessage("Failed to reset images", "error");
+                            }
+                          }
+                        }}
+                        className="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600 flex items-center gap-2"
+                      >
+                        <Layout className="h-4 w-4" />
+                        Reset to Defaults
+                      </button>
+                      <button
+                        onClick={saveImages}
+                        className="bg-neutral-900 text-white px-4 py-2 rounded text-sm hover:bg-neutral-800 flex items-center gap-2"
+                      >
+                        <Save className="h-4 w-4" />
+                        Save Images
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {!homeImages && (
+                  <div className="text-center py-12">
+                    <Layout className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">
+                      Loading images...
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Please wait while we load the image settings.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "logo" && <LogoManager />}
           </div>
         </div>
 
@@ -696,9 +960,10 @@ export default function CMSManagement() {
                           <Textarea
                             placeholder="Content (JSON format for complex data)"
                             value={
-                              typeof section.content === "object"
+                              typeof section.content === "object" &&
+                              section.content !== null
                                 ? JSON.stringify(section.content, null, 2)
-                                : section.content || ""
+                                : String(section.content || "")
                             }
                             onChange={(e) => {
                               try {

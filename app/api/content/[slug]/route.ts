@@ -18,12 +18,12 @@ export const GET = withRequest(async function GET(
       if (content && slug === "home") {
         return NextResponse.json({ content });
       }
-    } catch (error) {
+    } catch {
       console.warn("CMS service not available, falling back to mock data");
     }
 
     // Mock content for different pages
-    const mockContent: Record<string, any> = {
+    const mockContent: Record<string, Record<string, unknown>> = {
       home: {
         id: "clp_landing_01",
         slug: "home",

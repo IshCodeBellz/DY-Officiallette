@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import {
   sendOrderConfirmation,
@@ -62,7 +62,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       expires: "",
     };
   } else {
-    session = (await getServerSession(authOptions)) as ExtendedSession | null;
+    session = (await getServerSession(authOptionsEnhanced)) as ExtendedSession | null;
     uid = session?.user?.id;
   }
   if (!uid) {

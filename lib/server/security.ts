@@ -386,20 +386,20 @@ export class SecurityService {
    * Extract security context from request
    */
   static extractSecurityContext(
-    req: NextRequest | any,
+    req: NextRequest | Request,
     userId?: string
   ): SecurityEventContext {
     let userAgent = "unknown";
     let endpoint = "unknown";
 
     // Handle NextRequest
-    if (req.headers && typeof req.headers.get === "function") {
+    if (req instanceof NextRequest) {
       userAgent = req.headers.get("user-agent") || "unknown";
       endpoint = req.nextUrl?.pathname || "unknown";
     }
-    // Handle Node.js Request
-    else if (req.headers) {
-      userAgent = req.headers["user-agent"] || "unknown";
+    // Handle standard Request
+    else if (req.headers && typeof req.headers.get === "function") {
+      userAgent = req.headers.get("user-agent") || "unknown";
       endpoint = req.url || "unknown";
     }
 
@@ -415,7 +415,7 @@ export class SecurityService {
   /**
    * Get client IP from request
    */
-  static getClientIP(req: NextRequest | any): string {
+  static getClientIP(req: NextRequest | Request): string {
     // Handle NextRequest (with .get() method)
     if (req.headers && typeof req.headers.get === "function") {
       const forwarded = req.headers.get("x-forwarded-for");
@@ -435,27 +435,6 @@ export class SecurityService {
       }
     }
 
-    // Handle Node.js Request (with headers object)
-    if (req.headers) {
-      const forwarded = req.headers["x-forwarded-for"];
-      const realIP = req.headers["x-real-ip"];
-      const cfIP = req.headers["cf-connecting-ip"];
-
-      if (forwarded) {
-        return Array.isArray(forwarded)
-          ? forwarded[0]
-          : forwarded.split(",")[0].trim();
-      }
-
-      if (realIP) {
-        return Array.isArray(realIP) ? realIP[0] : realIP;
-      }
-
-      if (cfIP) {
-        return Array.isArray(cfIP) ? cfIP[0] : cfIP;
-      }
-    }
-
-    return req.ip || "unknown";
+    return "unknown";
   }
 }

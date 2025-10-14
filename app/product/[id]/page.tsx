@@ -15,7 +15,7 @@ export default async function ProductPage({
   params: { id: string };
   searchParams?: Record<string, string | string[] | undefined>;
 }) {
-  // const session = await getServerSession(authOptions);
+  // const session = await getServerSession(authOptionsEnhanced);
 
   const product = (await prisma.product.findUnique({
     where: { id: params.id },

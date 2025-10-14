@@ -5,9 +5,9 @@ import { useCart, useWishlist } from "../providers/CartProvider";
 import { useSession, signOut } from "next-auth/react";
 import { DarkModeToggle } from "./DarkModeToggle";
 import { CurrencySelector } from "../ui/CurrencySelector";
+import { DynamicLogo } from "./DynamicLogo";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
 
 export function Header() {
   const { totalQuantity, clear: clearCart } = useCart();
@@ -56,89 +56,89 @@ export function Header() {
         Skip to main content
       </a>
       <header className="bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700 sticky top-0 z-40">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-2 md:px-4 lg:px-6">
           {/* Main Header Row */}
-          <div className="flex items-center justify-between h-16 gap-4">
+          <div className="flex items-center h-16 gap-2 md:gap-4">
             {/* Logo */}
-            <div className="flex items-center">
-              <Link
-                href="/"
-                className="font-bold text-xl tracking-tight"
-                aria-label="DY Official Home"
-              >
-                <span className="text-neutral-900 dark:text-white">DY</span>
-                <span className="text-red-600">OFFICIALETTE</span>
-              </Link>
-            </div>
+            <DynamicLogo
+              className="flex items-center shrink-0"
+              linkClassName="font-bold text-lg md:text-xl tracking-tight"
+            />
 
             {/* Desktop Search Bar - Centered */}
-            <div className="hidden md:block flex-1 max-w-2xl mx-8">
-              <EnhancedSearchBar />
+            <div className="hidden md:flex flex-1 justify-center max-w-none min-w-0">
+              <div className="w-full max-w-sm lg:max-w-md xl:max-w-lg min-w-0">
+                <EnhancedSearchBar />
+              </div>
             </div>
 
             {/* Right Side - Currency, Auth, Actions */}
-            <nav className="hidden md:flex items-center gap-4">
+            <nav className="hidden md:flex header-nav shrink-0">
               <CurrencySelector variant="minimal" showLabel={false} size="sm" />
               <DarkModeToggle />
               {session ? (
-                <div className="flex items-center gap-3 text-sm">
-                  <span
-                    className={cn(
-                      "text-neutral-900 dark:text-white font-medium truncate max-w-28",
-                      !session.user?.name && !session.user?.email
-                        ? "text-neutral-400"
-                        : ""
-                    )}
-                  >
-                    {session.user?.name?.split(" ")[0] || session.user?.email}
-                  </span>
+                <div className="flex items-center gap-2 text-sm">
                   {session.user?.isAdmin && (
                     <Link
                       href="/admin"
-                      className="hover:underline font-medium text-neutral-900 dark:text-white whitespace-nowrap"
+                      className="hover:underline font-medium text-neutral-900 dark:text-white text-xs px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded"
                     >
                       Admin
                     </Link>
                   )}
-                  <Link
-                    href="/account"
-                    className="hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
-                  >
-                    My Account
-                  </Link>
-                  <button
-                    onClick={() => {
-                      try {
-                        clearCart();
-                        clearWishlist();
-                        if (typeof window !== "undefined") {
-                          localStorage.removeItem("app.cart.v1");
-                          localStorage.removeItem("app.wishlist.v1");
-                        }
-                      } catch {}
-                      signOut();
-                    }}
-                    className="hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
-                  >
-                    Sign out
-                  </button>
+                  <div className="relative group">
+                    <button className="text-neutral-900 dark:text-white font-medium hover:text-red-600 dark:hover:text-red-400 text-xs truncate max-w-20">
+                      {session.user?.name?.split(" ")[0] || "Account"}
+                    </button>
+                    <div className="header-dropdown">
+                      <div className="py-2">
+                        <div className="px-3 py-2 border-b border-neutral-200 dark:border-neutral-700">
+                          <p className="text-xs font-medium text-neutral-900 dark:text-white truncate">
+                            {session.user?.name || session.user?.email}
+                          </p>
+                        </div>
+                        <Link
+                          href="/account"
+                          className="block px-3 py-2 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                        >
+                          My Account
+                        </Link>
+                        <button
+                          onClick={() => {
+                            try {
+                              clearCart();
+                              clearWishlist();
+                              if (typeof window !== "undefined") {
+                                localStorage.removeItem("app.cart.v1");
+                                localStorage.removeItem("app.wishlist.v1");
+                              }
+                            } catch {}
+                            signOut();
+                          }}
+                          className="block w-full text-left px-3 py-2 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                        >
+                          Sign out
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <Link
                   href="/login"
-                  className="text-sm hover:underline text-neutral-900 dark:text-white"
+                  className="text-xs hover:underline text-neutral-900 dark:text-white px-2 py-1"
                 >
                   Sign in
                 </Link>
               )}
               <Link
                 href="/saved"
-                className="relative text-sm hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
+                className="relative text-xs hover:underline text-neutral-900 dark:text-white px-1"
               >
                 Saved
                 <span
                   className={
-                    "absolute -top-2 -right-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center transition-opacity " +
+                    "absolute -top-1 -right-1 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[9px] leading-none h-3 min-w-3 px-0.5 flex items-center justify-center transition-opacity " +
                     (wishItems.length === 0 ? "opacity-0" : "opacity-100")
                   }
                   aria-hidden={wishItems.length === 0}
@@ -148,18 +148,18 @@ export function Header() {
               </Link>
               <Link
                 href="/social/wishlists"
-                className="text-sm hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
+                className="text-xs hover:underline text-neutral-900 dark:text-white px-1"
               >
                 Social
               </Link>
               <Link
                 href="/bag"
-                className="relative text-sm hover:underline text-neutral-900 dark:text-white whitespace-nowrap"
+                className="relative text-xs hover:underline text-neutral-900 dark:text-white px-1"
               >
                 Bag
                 <span
                   className={
-                    "absolute -top-2 -right-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[10px] leading-none h-4 min-w-4 px-1 flex items-center justify-center transition-opacity " +
+                    "absolute -top-1 -right-1 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full text-[9px] leading-none h-3 min-w-3 px-0.5 flex items-center justify-center transition-opacity " +
                     (totalQuantity === 0 ? "opacity-0" : "opacity-100")
                   }
                   aria-hidden={totalQuantity === 0}
@@ -234,40 +234,40 @@ export function Header() {
 
           {/* Navigation Row - Desktop Only */}
           <div className="hidden md:block border-t border-neutral-200 dark:border-neutral-700">
-            <nav className="flex items-center justify-center gap-8 py-3">
+            <nav className="flex items-center justify-center gap-4 lg:gap-6 xl:gap-8 py-3 overflow-x-auto">
               <Link
                 href="/new-in"
-                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400"
+                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400 whitespace-nowrap"
               >
                 New In
               </Link>
               <Link
                 href="/womens"
-                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400"
+                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400 whitespace-nowrap"
               >
                 Women
               </Link>
               <Link
                 href="/mens"
-                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400"
+                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400 whitespace-nowrap"
               >
                 Men
               </Link>
               <Link
                 href="/shoes"
-                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400"
+                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400 whitespace-nowrap"
               >
                 Shoes
               </Link>
               <Link
                 href="/accessories"
-                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400"
+                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400 whitespace-nowrap"
               >
                 Accessories
               </Link>
               <Link
                 href="/brands"
-                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400"
+                className="text-sm font-medium text-neutral-900 dark:text-white hover:text-red-600 dark:hover:text-red-400 whitespace-nowrap"
               >
                 Brands
               </Link>

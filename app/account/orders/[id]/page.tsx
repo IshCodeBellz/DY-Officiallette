@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptions";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import Link from "next/link";
 
@@ -10,7 +10,7 @@ export default async function OrderDetailPage({
 }: {
   params: { id: string };
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptionsEnhanced);
   const uid = session?.user?.id as string | undefined;
   if (!uid) return <div className="p-6">Please log in.</div>;
   const order = await prisma.order.findFirst({

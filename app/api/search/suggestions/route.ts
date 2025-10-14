@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CacheService } from "@/lib/server/cacheService";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const categoryId = searchParams.get("category") || undefined;
     const brandId = searchParams.get("brand") || undefined;
 
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptionsEnhanced);
     const userId = session?.user?.id;
 
     if (!query || query.length < 2) {

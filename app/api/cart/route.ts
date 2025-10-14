@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withRequest } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/server/authOptionsEnhanced";
+import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
 import { z } from "zod";
 import { ExtendedSession } from "@/lib/types";
@@ -39,7 +39,7 @@ async function getOrCreateCart(userId: string) {
 
 export const GET = withRequest(async function GET() {
   const session = (await getServerSession(
-    authOptions
+    authOptionsEnhanced
   )) as ExtendedSession | null;
   const uid = session?.user?.id;
   if (!uid) return NextResponse.json({ lines: [] });
@@ -60,7 +60,7 @@ export const GET = withRequest(async function GET() {
 // Replace cart
 export const POST = withRequest(async function POST(req: NextRequest) {
   const session = (await getServerSession(
-    authOptions
+    authOptionsEnhanced
   )) as ExtendedSession | null;
   const uid = session?.user?.id;
   if (!uid)
@@ -107,7 +107,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
 // Merge cart (accumulate qty)
 export const PATCH = withRequest(async function PATCH(req: NextRequest) {
   const session = (await getServerSession(
-    authOptions
+    authOptionsEnhanced
   )) as ExtendedSession | null;
   const uid = session?.user?.id;
   if (!uid)

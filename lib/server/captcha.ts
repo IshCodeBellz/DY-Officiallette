@@ -218,8 +218,8 @@ export class CaptchaService {
    */
   private static verifyMock(
     token: string,
-    config: CaptchaConfig,
-    context: CaptchaContext
+    _config: CaptchaConfig,
+    _context: CaptchaContext
   ): CaptchaVerificationResult {
     // Simple mock logic
     const success = token === "mock_success_token" || token.length > 10;
@@ -374,7 +374,7 @@ export class CaptchaService {
   /**
    * Generate CAPTCHA analytics
    */
-  static async getAnalytics(timeRange: { start: Date; end: Date }): Promise<{
+  static async getAnalytics(_timeRange: { start: Date; end: Date }): Promise<{
     totalVerifications: number;
     successRate: number;
     averageScore: number;
