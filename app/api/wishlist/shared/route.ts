@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
+import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
+import { logger } from "@/lib/server/logger";
 import { SocialWishlistService } from "@/lib/server/socialWishlistService";
+import { logger } from "@/lib/server/logger";
 import { z } from "zod";
+import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -44,8 +49,8 @@ export async function GET() {
 
     return NextResponse.json({ wishlists: formattedWishlists });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Error fetching shared wishlists:", error);
+    logger.error("Error:", error);
+    logger.error("Error fetching shared wishlists:", error);
     return NextResponse.json(
       { error: "Failed to fetch wishlists" },
       { status: 500 }
@@ -112,8 +117,8 @@ export async function POST(request: NextRequest) {
       wishlist: formattedWishlist,
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Error creating shared wishlist:", error);
+    logger.error("Error:", error);
+    logger.error("Error creating shared wishlist:", error);
     return NextResponse.json(
       { error: "Failed to create wishlist" },
       { status: 500 }

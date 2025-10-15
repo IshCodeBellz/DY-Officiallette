@@ -34,6 +34,28 @@ npm run dev
 
 Visit: http://localhost:3000 | Admin: /admin (see demo accounts below)
 
+## 🚀 Production Commands
+
+```bash
+# Environment validation
+npm run env:validate:production
+
+# Database optimization
+npm run db:optimize
+
+# Cache warming
+npm run cache:warm
+
+# Performance analysis
+npm run performance:analyze
+
+# Deployment readiness check
+npm run deployment:readiness
+
+# Production deployment
+npm run production:deploy
+```
+
 ## � Seed Data Options
 
 | Strategy            | Products | Brands | Use Case                |
@@ -69,6 +91,8 @@ Next.js 14, TypeScript, Prisma, NextAuth, Tailwind, Stripe (simulated), Jest.
 - Trending & recently viewed personalization slices
 - Order lifecycle + metrics instrumentation
 - **Advanced Analytics** - Comprehensive business intelligence dashboard with user behavior tracking, conversion funnels, revenue analytics, and real-time insights
+- **Performance Optimization** - Database optimization, Redis caching, connection pooling, and performance monitoring for production-scale operations
+- **Production Deployment** - Complete deployment infrastructure with Docker, environment validation, health checks, and zero-downtime deployment automation
 
 ## 🔍 Search & Trending
 
@@ -85,6 +109,22 @@ Products, brands, categories, orders, discount codes, basic inventory + social m
 - Product performance metrics and conversion rates
 - Search analytics and funnel optimization
 - Real-time monitoring and historical insights
+
+**Performance Dashboard** (`/admin/performance`) - Production performance monitoring with:
+
+- Database optimization and query analysis
+- Redis caching management and statistics
+- Connection pool monitoring and health checks
+- Real-time performance metrics and recommendations
+- Automated optimization tools and cache warming
+
+**Production Deployment** - Enterprise-ready deployment system with:
+
+- Zero-downtime deployment automation
+- Docker and container orchestration
+- Environment validation and health monitoring
+- Performance optimization and cache warming
+- Comprehensive backup and rollback capabilities
 
 ## 🧪 Tests
 

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { withRequest } from "@/lib/server/logger";
+import { logger } from "@/lib/server/logger";
 import { CMSService } from "@/lib/server/cmsService";
+import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +22,7 @@ export const GET = withRequest(async function GET(
         return NextResponse.json({ content });
       }
     } catch {
-      console.warn("CMS service not available, falling back to mock data");
+      logger.warn("CMS service not available, falling back to mock data");
     }
 
     // Mock content for different pages
@@ -104,7 +107,7 @@ export const GET = withRequest(async function GET(
 
     return NextResponse.json({ content });
   } catch (error) {
-    console.error("Error fetching page content:", error);
+    logger.error("Error fetching page content:", error);
     return NextResponse.json(
       { error: "Failed to fetch content" },
       { status: 500 }

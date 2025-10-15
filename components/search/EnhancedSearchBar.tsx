@@ -92,7 +92,7 @@ export default function EnhancedSearchBar() {
           setSuggestions(data.suggestions || []);
         }
       } catch (error) {
-        console.error("Failed to load suggestions:", error);
+        
       } finally {
         setLoading(false);
       }
@@ -119,7 +119,7 @@ export default function EnhancedSearchBar() {
         setRecentSearches(JSON.parse(saved));
       }
     } catch (error) {
-      console.error("Failed to load recent searches:", error);
+      
     }
   }
 
@@ -131,7 +131,7 @@ export default function EnhancedSearchBar() {
         setTrendingSearches(data.trending || []);
       }
     } catch (error) {
-      console.error("Failed to load trending searches:", error);
+      
     }
   }
 

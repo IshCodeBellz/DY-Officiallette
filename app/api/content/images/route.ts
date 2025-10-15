@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { CMSService } from "@/lib/server/cmsService";
+import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +11,7 @@ export async function GET() {
     const images = await CMSService.getHomePageImages();
     return NextResponse.json({ images });
   } catch (error) {
-    console.error("Error fetching homepage images:", error);
+    logger.error("Error fetching homepage images:", error);
     return NextResponse.json(
       { error: "Failed to fetch images" },
       { status: 500 }

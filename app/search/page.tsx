@@ -58,7 +58,7 @@ async function getData(params: PageSearchParams) {
     if (!res.ok) return { items: [], facets: null, total: 0, totalCount: 0 };
     return res.json();
   } catch (error) {
-    console.error("Error:", error);
+    
     // Silent fallback; UI will show empty state
     return {
       items: [],

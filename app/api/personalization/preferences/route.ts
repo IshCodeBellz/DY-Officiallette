@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { PersonalizationService } from "@/lib/server/personalizationService";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
+import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
+import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -31,8 +35,8 @@ export async function GET() {
       data: preferences,
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("User preferences API error:", error);
+    logger.error("Error:", error);
+    logger.error("User preferences API error:", error);
     return NextResponse.json(
       {
         success: false,

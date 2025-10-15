@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { CaptchaService } from "@/lib/server/captcha";
+import { logger } from "@/lib/server/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,8 +42,8 @@ export async function POST(request: NextRequest) {
       score: verification.score,
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("CAPTCHA verification error:", error);
+    logger.error("Error:", error);
+    logger.error("CAPTCHA verification error:", error);
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }
@@ -58,8 +60,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ config });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Failed to get CAPTCHA config:", error);
+    logger.error("Error:", error);
+    logger.error("Failed to get CAPTCHA config:", error);
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }

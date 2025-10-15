@@ -28,7 +28,7 @@ export default function ResetPasswordPage({ params }: PageProps) {
 
         setTokenValid(res.ok);
       } catch (error) {
-      console.error("Error:", error);
+      
         setTokenValid(false);
       }
     }
@@ -85,7 +85,7 @@ export default function ResetPasswordPage({ params }: PageProps) {
         }, 3000);
       }
     } catch (error) {
-      console.error("Error:", error);
+      
       setError("Network error. Please check your connection.");
     } finally {
       setLoading(false);

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
+import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
+import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +26,7 @@ export async function POST(
     const helpful = body.helpful; // Will be used when functionality is implemented
 
     // Use the parameters to avoid unused warnings
-    console.log(
+    logger.info(
       `Processing helpful vote for review ${params.reviewId} in product ${params.id}: ${helpful}`
     );
 

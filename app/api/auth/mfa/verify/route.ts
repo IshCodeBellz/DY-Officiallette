@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth/next";
+import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
+import { logger } from "@/lib/server/logger";
 import { MFAService } from "@/lib/server/mfa";
+import { logger } from "@/lib/server/logger";
 import { z } from "zod";
+import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +34,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { token, action } = verifySchema.parse(body);
 
-    console.log(
+    logger.info(
       "MFA Verify - User ID:",
       session.user.id,
       "Token:",
@@ -48,7 +53,7 @@ export async function POST(request: NextRequest) {
       result = await MFAService.verifyMFA(session.user.id, token);
     }
 
-    console.log("MFA Verify Result:", result);
+    logger.info("MFA Verify Result:", result);
 
     if (!result.success) {
       return NextResponse.json(
@@ -72,8 +77,8 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("MFA verification error:", error);
+    logger.error("Error:", error);
+    logger.error("MFA verification error:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

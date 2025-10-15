@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { CacheService } from "@/lib/server/cacheService";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
+import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
+import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -60,8 +64,8 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Search suggestions API error:", error);
+    logger.error("Error:", error);
+    logger.error("Search suggestions API error:", error);
     return NextResponse.json(
       {
         success: false,

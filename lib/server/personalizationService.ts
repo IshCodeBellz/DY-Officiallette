@@ -1,59 +1,8 @@
 export interface UserBehaviorData {
-  views: number;
-  purchases: number;
-  wishlistAdds: number;
-  cartAdds: number;
-  searchQueries: string[];
-  categoryPreferences: Record<string, number>;
-  brandPreferences: Record<string, number>;
-  priceRange: { min: number; max: number };
-  sizePreferences: string[];
-  colorPreferences: string[];
-}
-
-export interface PersonalizationPreferences {
-  categories: Array<{ id: string; name: string; score: number }>;
-  brands: Array<{ id: string; name: string; score: number }>;
-  priceRange: { min: number; max: number };
-  sizes: Array<{ value: string; frequency: number }>;
-  colors: Array<{ value: string; hexColor?: string; frequency: number }>;
-  styles: Array<{ tag: string; score: number }>;
-}
-
-export interface RecommendationResult {
-  products: RecommendedProduct[];
-  reasons: Array<{ type: string; message: string; confidence: number }>;
-  strategy: string;
-}
-
-export interface RecommendedProduct {
-  id: string;
-  name: string;
-  priceCents: number;
-  image: string;
-  brandName?: string;
-  categoryName?: string;
-  rating?: number;
-  reasonScore: number;
-  matchReasons: string[];
-}
-
-/**
- * Personalization Engine for Phase 3
- */
-export class PersonalizationService {
-  /**
-   * Get personalized product recommendations for user
-   */
-  static async getPersonalizedRecommendations(
-    userId: string,
-    options: {
-      limit?: number;
-      strategy?: "collaborative" | "content" | "hybrid" | "trending";
-      excludeProductIds?: string[];
-      categoryId?: string;
-    } = {}
-  ): Promise<RecommendationResult> {
+  _views: any, number>;
+  _brandPreferences: any, number>;
+  _priceRange: any,
+    _options: any): Promise<RecommendationResult> {
     try {
       const {
         limit = 12,
@@ -63,18 +12,11 @@ export class PersonalizationService {
       } = options;
 
       // Get user behavior data
-      const userBehavior = await this.getUserBehaviorData(userId);
-      const preferences = await this.getUserPreferences(userId);
+      const _userBehavior = await this.getUserBehaviorData(userId);
+      const _preferences = await this.getUserPreferences(userId);
 
       // Apply recommendation strategy
-      let products: RecommendedProduct[] = [];
-      let reasons: Array<{
-        type: string;
-        message: string;
-        confidence: number;
-      }> = [];
-
-      switch (strategy) {
+      let _products: any) {
         case "collaborative":
           ({ products, reasons } = await this.getCollaborativeRecommendations(
             userId,
@@ -99,8 +41,7 @@ export class PersonalizationService {
           ));
           break;
         case "hybrid":
-        default:
-          ({ products, reasons } = await this.getHybridRecommendations(
+        _default: any, reasons } = await this.getHybridRecommendations(
             userId,
             userBehavior,
             preferences,
@@ -112,25 +53,23 @@ export class PersonalizationService {
       }
 
       return {
-        products: products.slice(0, limit),
+        _products: any, limit),
         reasons,
         strategy,
       };
     } catch (error) {
       console.error("Error:", error);
-      console.error("Personalization error:", error);
+      console.error("Personalization _error: any, error);
 
       // Fallback to trending products
       return {
-        products: await this.getFallbackRecommendations(options.limit || 12),
-        reasons: [
-          {
-            type: "fallback",
-            message: "Showing trending products",
-            confidence: 0.5,
+        _products: any),
+        _reasons: any,
+            _message: any,
+            _confidence: any,
           },
         ],
-        strategy: "fallback",
+        _strategy: any,
       };
     }
   }
@@ -142,27 +81,25 @@ export class PersonalizationService {
     try {
       // Mock behavior data since UserBehavior model not synced yet
       return {
-        views: 45,
-        purchases: 3,
-        wishlistAdds: 8,
-        cartAdds: 12,
-        searchQueries: ["t-shirt", "jeans", "sneakers", "jacket"],
-        categoryPreferences: {
-          cat_1: 0.8, // T-Shirts
-          cat_2: 0.6, // Jeans
-          cat_3: 0.4, // Sneakers
+        _views: any,
+        _purchases: any,
+        _wishlistAdds: any,
+        _cartAdds: any,
+        _searchQueries: any, "jeans", "sneakers", "jacket"],
+        _categoryPreferences: any, // T-Shirts
+          _cat_2: any, // Jeans
+          _cat_3: any, // Sneakers
         },
-        brandPreferences: {
-          brand_1: 0.9, // Premium Brand
-          brand_2: 0.7, // Denim Co
+        _brandPreferences: any, // Premium Brand
+          _brand_2: any, // Denim Co
         },
-        priceRange: { min: 20, max: 80 },
-        sizePreferences: ["M", "L"],
-        colorPreferences: ["Blue", "Black", "White"],
+        _priceRange: any, _max: any,
+        _sizePreferences: any, "L"],
+        _colorPreferences: any, "Black", "White"],
       };
     } catch (error) {
       console.error("Error:", error);
-      console.error("User behavior data error:", error);
+      console.error("User behavior data _error: any, error);
       return this.getDefaultBehaviorData();
     }
   }
@@ -171,40 +108,36 @@ export class PersonalizationService {
    * Get user preferences based on behavior
    */
   static async getUserPreferences(
-    userId: string
-  ): Promise<PersonalizationPreferences> {
+    _userId: any): Promise<PersonalizationPreferences> {
     try {
-      const behavior = await this.getUserBehaviorData(userId);
+      const _behavior = await this.getUserBehaviorData(userId);
 
       return {
-        categories: [
-          { id: "cat_1", name: "T-Shirts", score: 0.8 },
-          { id: "cat_2", name: "Jeans", score: 0.6 },
-          { id: "cat_3", name: "Sneakers", score: 0.4 },
+        _categories: any, _name: any, _score: any,
+          { _id: any, _name: any, _score: any,
+          { _id: any, _name: any, _score: any,
         ],
-        brands: [
-          { id: "brand_1", name: "Premium Brand", score: 0.9 },
-          { id: "brand_2", name: "Denim Co", score: 0.7 },
+        _brands: any, _name: any, _score: any,
+          { _id: any, _name: any, _score: any,
         ],
-        priceRange: behavior.priceRange,
-        sizes: behavior.sizePreferences.map((size) => ({
-          value: size,
-          frequency: 1,
+        _priceRange: any,
+        _sizes: any) => ({
+          _value: any,
+          _frequency: any,
         })),
-        colors: behavior.colorPreferences.map((color) => ({
-          value: color,
-          frequency: 1,
-          hexColor: this.getColorHex(color),
+        _colors: any) => ({
+          _value: any,
+          _frequency: any,
+          _hexColor: any),
         })),
-        styles: [
-          { tag: "casual", score: 0.8 },
-          { tag: "comfortable", score: 0.7 },
-          { tag: "modern", score: 0.6 },
+        _styles: any, _score: any,
+          { _tag: any, _score: any,
+          { _tag: any, _score: any,
         ],
       };
     } catch (error) {
       console.error("Error:", error);
-      console.error("User preferences error:", error);
+      console.error("User preferences _error: any, error);
       return this.getDefaultPreferences();
     }
   }
@@ -213,37 +146,29 @@ export class PersonalizationService {
    * Collaborative filtering recommendations
    */
   private static async getCollaborativeRecommendations(
-    _userId: string,
-    _userBehavior: UserBehaviorData,
-    _limit: number,
-    _excludeIds: string[]
-  ): Promise<{
-    products: RecommendedProduct[];
-    reasons: Array<{ type: string; message: string; confidence: number }>;
-  }> {
-    // Mock collaborative filtering
-    const products: RecommendedProduct[] = [
-      {
-        id: "prod_3",
-        name: "Similar Users Loved This Shirt",
-        priceCents: 3499,
-        image: "/images/collab-shirt.jpg",
-        brandName: "Trendy Brand",
-        categoryName: "Shirts",
-        rating: 4.6,
-        reasonScore: 0.85,
-        matchReasons: [
-          "Users with similar taste bought this",
+    __userId: any,
+    __userBehavior: any,
+    __limit: any,
+    __excludeIds: any): Promise<{
+    _products: any,
+        _name: any,
+        _priceCents: any,
+        _image: any,
+        _brandName: any,
+        _categoryName: any,
+        _rating: any,
+        _reasonScore: any,
+        _matchReasons: any,
           "High rating from similar users",
         ],
       },
     ];
 
-    const reasons = [
+    const _reasons = [
       {
-        type: "collaborative",
-        message: "Based on users with similar preferences",
-        confidence: 0.8,
+        _type: any,
+        _message: any,
+        _confidence: any,
       },
     ];
 
@@ -254,38 +179,31 @@ export class PersonalizationService {
    * Content-based recommendations
    */
   private static async getContentBasedRecommendations(
-    _preferences: PersonalizationPreferences,
-    _limit: number,
-    _excludeIds: string[],
+    __preferences: any,
+    __limit: any,
+    __excludeIds: any,
     _categoryId?: string
   ): Promise<{
-    products: RecommendedProduct[];
-    reasons: Array<{ type: string; message: string; confidence: number }>;
-  }> {
-    // Mock content-based filtering
-    const products: RecommendedProduct[] = [
-      {
-        id: "prod_4",
-        name: "Perfect Match T-Shirt",
-        priceCents: 2999,
-        image: "/images/content-tshirt.jpg",
-        brandName: "Premium Brand",
-        categoryName: "T-Shirts",
-        rating: 4.4,
-        reasonScore: 0.9,
-        matchReasons: [
-          "Matches your favorite brand",
+    _products: any,
+        _name: any,
+        _priceCents: any,
+        _image: any,
+        _brandName: any,
+        _categoryName: any,
+        _rating: any,
+        _reasonScore: any,
+        _matchReasons: any,
           "In your preferred price range",
           "Your favorite category",
         ],
       },
     ];
 
-    const reasons = [
+    const _reasons = [
       {
-        type: "content",
-        message: "Matches your preferences",
-        confidence: 0.85,
+        _type: any,
+        _message: any,
+        _confidence: any,
       },
     ];
 
@@ -296,33 +214,26 @@ export class PersonalizationService {
    * Trending recommendations with personalization
    */
   private static async getTrendingRecommendations(
-    _preferences: PersonalizationPreferences,
-    _limit: number,
-    _excludeIds: string[]
-  ): Promise<{
-    products: RecommendedProduct[];
-    reasons: Array<{ type: string; message: string; confidence: number }>;
-  }> {
-    // Mock trending with personalization
-    const products: RecommendedProduct[] = [
-      {
-        id: "prod_5",
-        name: "Trending Denim Jacket",
-        priceCents: 6999,
-        image: "/images/trending-jacket.jpg",
-        brandName: "Fashion Forward",
-        categoryName: "Jackets",
-        rating: 4.3,
-        reasonScore: 0.7,
-        matchReasons: ["Trending now", "Popular in your area"],
+    __preferences: any,
+    __limit: any,
+    __excludeIds: any): Promise<{
+    _products: any,
+        _name: any,
+        _priceCents: any,
+        _image: any,
+        _brandName: any,
+        _categoryName: any,
+        _rating: any,
+        _reasonScore: any,
+        _matchReasons: any, "Popular in your area"],
       },
     ];
 
-    const reasons = [
+    const _reasons = [
       {
-        type: "trending",
-        message: "Popular products right now",
-        confidence: 0.7,
+        _type: any,
+        _message: any,
+        _confidence: any,
       },
     ];
 
@@ -333,20 +244,16 @@ export class PersonalizationService {
    * Hybrid recommendations combining multiple strategies
    */
   private static async getHybridRecommendations(
-    userId: string,
-    userBehavior: UserBehaviorData,
-    preferences: PersonalizationPreferences,
-    limit: number,
-    excludeIds: string[],
+    _userId: any,
+    _userBehavior: any,
+    _preferences: any,
+    _limit: any,
+    _excludeIds: any,
     categoryId?: string
   ): Promise<{
-    products: RecommendedProduct[];
-    reasons: Array<{ type: string; message: string; confidence: number }>;
-  }> {
-    // Combine multiple recommendation strategies
-    const contentLimit = Math.ceil(limit * 0.4);
-    const collabLimit = Math.ceil(limit * 0.3);
-    const trendingLimit = limit - contentLimit - collabLimit;
+    _products: any);
+    const _collabLimit = Math.ceil(limit * 0.3);
+    const _trendingLimit = limit - contentLimit - collabLimit;
 
     const [contentRecs, collabRecs, trendingRecs] = await Promise.all([
       this.getContentBasedRecommendations(
@@ -365,13 +272,13 @@ export class PersonalizationService {
     ]);
 
     // Combine and deduplicate
-    const allProducts = [
+    const _allProducts = [
       ...contentRecs.products,
       ...collabRecs.products,
       ...trendingRecs.products,
     ];
 
-    const uniqueProducts = allProducts.filter(
+    const _uniqueProducts = allProducts.filter(
       (product, index, self) =>
         index === self.findIndex((p) => p.id === product.id)
     );
@@ -379,16 +286,16 @@ export class PersonalizationService {
     // Sort by reason score
     uniqueProducts.sort((a, b) => b.reasonScore - a.reasonScore);
 
-    const reasons = [
+    const _reasons = [
       {
-        type: "hybrid",
-        message: "Personalized mix of recommendations",
-        confidence: 0.8,
+        _type: any,
+        _message: any,
+        _confidence: any,
       },
     ];
 
     return {
-      products: uniqueProducts.slice(0, limit),
+      _products: any, limit),
       reasons,
     };
   }
@@ -397,30 +304,29 @@ export class PersonalizationService {
    * Fallback recommendations when personalization fails
    */
   private static async getFallbackRecommendations(
-    limit: number
-  ): Promise<RecommendedProduct[]> {
+    _limit: any): Promise<RecommendedProduct[]> {
     return [
       {
-        id: "prod_fallback_1",
-        name: "Popular Cotton T-Shirt",
-        priceCents: 2499,
-        image: "/images/fallback-tshirt.jpg",
-        brandName: "Basic Brand",
-        categoryName: "T-Shirts",
-        rating: 4.0,
-        reasonScore: 0.5,
-        matchReasons: ["Popular choice"],
+        _id: any,
+        _name: any,
+        _priceCents: any,
+        _image: any,
+        _brandName: any,
+        _categoryName: any,
+        _rating: any,
+        _reasonScore: any,
+        _matchReasons: any,
       },
       {
-        id: "prod_fallback_2",
-        name: "Best Selling Jeans",
-        priceCents: 4999,
-        image: "/images/fallback-jeans.jpg",
-        brandName: "Denim Co",
-        categoryName: "Jeans",
-        rating: 4.2,
-        reasonScore: 0.5,
-        matchReasons: ["Best seller"],
+        _id: any,
+        _name: any,
+        _priceCents: any,
+        _image: any,
+        _brandName: any,
+        _categoryName: any,
+        _rating: any,
+        _reasonScore: any,
+        _matchReasons: any,
       },
     ].slice(0, limit);
   }
@@ -429,26 +335,20 @@ export class PersonalizationService {
    * Track user interaction for personalization learning
    */
   static async trackUserInteraction(
-    userId: string,
-    productId: string,
-    interactionType:
-      | "view"
-      | "cart_add"
-      | "wishlist_add"
-      | "purchase"
-      | "search"
-  ): Promise<void> {
+    _userId: any,
+    _productId: any,
+    _interactionType: any): Promise<void> {
     try {
       // In production, this would update UserBehavior model
-      console.log("User interaction tracked:", {
+      console.log("User interaction _tracked: any, {
         userId,
         productId,
         interactionType,
-        timestamp: new Date(),
+        _timestamp: any),
       });
     } catch (error) {
       console.error("Error:", error);
-      console.error("Interaction tracking error:", error);
+      console.error("Interaction tracking _error: any, error);
     }
   }
 
@@ -456,14 +356,13 @@ export class PersonalizationService {
    * Get recommended searches based on user behavior
    */
   static async getRecommendedSearches(
-    userId: string,
-    limit: number = 5
-  ): Promise<string[]> {
+    _userId: any,
+    _limit: any): Promise<string[]> {
     try {
-      const behavior = await this.getUserBehaviorData(userId);
+      const _behavior = await this.getUserBehaviorData(userId);
 
       // Generate search recommendations based on behavior
-      const searchRecommendations = [
+      const _searchRecommendations = [
         ...behavior.searchQueries,
         "new arrivals",
         "sale items",
@@ -473,7 +372,7 @@ export class PersonalizationService {
       return searchRecommendations.slice(0, limit);
     } catch (error) {
       console.error("Error:", error);
-      console.error("Recommended searches error:", error);
+      console.error("Recommended searches _error: any, error);
       return ["t-shirt", "jeans", "sneakers", "dress", "jacket"];
     }
   }
@@ -483,42 +382,42 @@ export class PersonalizationService {
    */
   private static getDefaultBehaviorData(): UserBehaviorData {
     return {
-      views: 0,
-      purchases: 0,
-      wishlistAdds: 0,
-      cartAdds: 0,
-      searchQueries: [],
-      categoryPreferences: {},
-      brandPreferences: {},
-      priceRange: { min: 0, max: 1000 },
-      sizePreferences: [],
-      colorPreferences: [],
+      _views: any,
+      _purchases: any,
+      _wishlistAdds: any,
+      _cartAdds: any,
+      _searchQueries: any,
+      _categoryPreferences: any,
+      _brandPreferences: any,
+      _priceRange: any, _max: any,
+      _sizePreferences: any,
+      _colorPreferences: any,
     };
   }
 
   private static getDefaultPreferences(): PersonalizationPreferences {
     return {
-      categories: [],
-      brands: [],
-      priceRange: { min: 0, max: 1000 },
-      sizes: [],
-      colors: [],
-      styles: [],
+      _categories: any,
+      _brands: any,
+      _priceRange: any, _max: any,
+      _sizes: any,
+      _colors: any,
+      _styles: any,
     };
   }
 
   private static getColorHex(colorName: string): string {
-    const colorMap: Record<string, string> = {
-      Red: "#FF0000",
-      Blue: "#0000FF",
-      Black: "#000000",
-      White: "#FFFFFF",
-      Green: "#008000",
-      Yellow: "#FFFF00",
-      Purple: "#800080",
-      Pink: "#FFC0CB",
-      Orange: "#FFA500",
-      Brown: "#A52A2A",
+    const _colorMap: any, string> = {
+      _Red: any,
+      _Blue: any,
+      _Black: any,
+      _White: any,
+      _Green: any,
+      _Yellow: any,
+      _Purple: any,
+      _Pink: any,
+      _Orange: any,
+      _Brown: any,
     };
     return colorMap[colorName] || "#CCCCCC";
   }
@@ -530,25 +429,25 @@ export class PersonalizationService {
     // Mock algorithm performance data - in production, this would query analytics
     return [
       {
-        name: "Collaborative Filtering",
-        status: "active",
-        clickRate: 12.5,
-        conversionRate: 3.2,
-        coverage: 89,
+        _name: any,
+        _status: any,
+        _clickRate: any,
+        _conversionRate: any,
+        _coverage: any,
       },
       {
-        name: "Content-Based",
-        status: "active",
-        clickRate: 8.7,
-        conversionRate: 2.8,
-        coverage: 95,
+        _name: any,
+        _status: any,
+        _clickRate: any,
+        _conversionRate: any,
+        _coverage: any,
       },
       {
-        name: "Hybrid Model",
-        status: "active",
-        clickRate: 15.3,
-        conversionRate: 4.1,
-        coverage: 92,
+        _name: any,
+        _status: any,
+        _clickRate: any,
+        _conversionRate: any,
+        _coverage: any,
       },
     ];
   }
@@ -557,32 +456,32 @@ export class PersonalizationService {
     // Mock user segmentation data - in production, this would analyze user behavior
     return [
       {
-        name: "High-Value Customers",
-        description: "Frequent purchasers with high order values",
-        userCount: 2450,
-        avgOrderValue: 156.78,
-        engagementScore: 87,
+        _name: any,
+        _description: any,
+        _userCount: any,
+        _avgOrderValue: any,
+        _engagementScore: any,
       },
       {
-        name: "Fashion Enthusiasts",
-        description: "Users interested in latest trends and styles",
-        userCount: 5678,
-        avgOrderValue: 89.45,
-        engagementScore: 76,
+        _name: any,
+        _description: any,
+        _userCount: any,
+        _avgOrderValue: any,
+        _engagementScore: any,
       },
       {
-        name: "Budget Shoppers",
-        description: "Price-conscious customers seeking deals",
-        userCount: 8901,
-        avgOrderValue: 42.33,
-        engagementScore: 62,
+        _name: any,
+        _description: any,
+        _userCount: any,
+        _avgOrderValue: any,
+        _engagementScore: any,
       },
       {
-        name: "Occasional Buyers",
-        description: "Infrequent but targeted purchases",
-        userCount: 3456,
-        avgOrderValue: 67.89,
-        engagementScore: 45,
+        _name: any,
+        _description: any,
+        _userCount: any,
+        _avgOrderValue: any,
+        _engagementScore: any,
       },
     ];
   }
@@ -590,10 +489,10 @@ export class PersonalizationService {
   async getRecommendationStats() {
     // Mock recommendation statistics - in production, this would aggregate real data
     return {
-      dailyRecommendations: 45678,
-      clickThroughRate: 14.2,
-      revenueAttribution: 12450,
-      userCoverage: 89,
+      _dailyRecommendations: any,
+      _clickThroughRate: any,
+      _revenueAttribution: any,
+      _userCoverage: any,
     };
   }
 }

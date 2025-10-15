@@ -157,8 +157,8 @@ export function SecuritySettings({
         },
       ]);
     } catch (error) {
-      console.error("Error:", error);
-      console.error("Failed to load security data:", error);
+      
+      
       push({ message: "Failed to load security settings", type: "error" });
     } finally {
       setLoading(false);
@@ -213,7 +213,7 @@ export function SecuritySettings({
         });
       }
     } catch (error) {
-      console.error("Error:", error);
+      
       push({
         message: "Failed to disable two-factor authentication",
         type: "error",
@@ -246,7 +246,7 @@ export function SecuritySettings({
         });
       }
     } catch (error) {
-      console.error("Error:", error);
+      
       push({ message: "Failed to generate backup codes", type: "error" });
     }
   };

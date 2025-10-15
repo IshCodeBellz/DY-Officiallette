@@ -1,81 +1,28 @@
 import { prisma } from "./prisma";
 
 export interface InventoryItem {
-  productId: string;
-  variantId?: string;
-  currentStock: number;
-  reservedStock: number;
-  availableStock: number;
-  lowStockThreshold: number;
-  reorderPoint: number;
-  supplier?: string;
-  location?: string;
-  lastUpdated: Date;
-}
-
-export interface StockMovement {
-  id: string;
-  productId: string;
-  variantId?: string;
-  type: "in" | "out" | "reserved" | "released" | "adjustment";
-  quantity: number;
-  reason: string;
-  reference?: string;
-  userId?: string;
-  timestamp: Date;
-}
-
-export interface InventoryAlert {
-  id: string;
-  productId: string;
-  variantId?: string;
-  type: "low_stock" | "out_of_stock" | "reorder" | "excess_stock";
-  message: string;
-  severity: "low" | "medium" | "high" | "critical";
-  isActive: boolean;
-  createdAt: Date;
-}
-
-export interface BulkStockUpdate {
-  productId: string;
-  variantId?: string;
-  quantity: number;
-  reason: string;
-}
-
-/**
- * Advanced Inventory Management Service with Real Database Integration
- */
-export class InventoryService {
-  /**
-   * Get inventory status for a product
-   */
-  static async getProductInventory(
-    productId: string
-  ): Promise<InventoryItem[]> {
+  _productId: any): Promise<InventoryItem[]> {
     try {
-      const variants = await prisma.productVariant.findMany({
-        where: { productId },
-        include: {
-          product: true,
+      const _variants = await prisma.productVariant.findMany({
+        _where: any,
+        _include: any,
         },
       });
 
       return variants.map((variant) => ({
         productId,
-        variantId: variant.id,
-        currentStock: variant.stock,
-        reservedStock: 0, // TODO: Implement reservation tracking
-        availableStock: variant.stock,
-        lowStockThreshold: variant.lowStockThreshold,
-        reorderPoint: variant.lowStockThreshold * 2,
-        supplier: "Main Supplier",
-        location: "Warehouse A",
-        lastUpdated: variant.updatedAt,
+        _variantId: any,
+        _currentStock: any,
+        _reservedStock: any, // _TODO: any,
+        _lowStockThreshold: any,
+        _reorderPoint: any,
+        _supplier: any,
+        _location: any,
+        _lastUpdated: any,
       }));
     } catch (error) {
       console.error("Error:", error);
-      console.error("Get product inventory error:", error);
+      console.error("Get product inventory _error: any, error);
       return [];
     }
   }
@@ -84,108 +31,72 @@ export class InventoryService {
    * Update stock levels
    */
   static async updateStock(
-    productId: string,
-    variantId: string | undefined,
-    quantity: number,
-    type: "in" | "out" | "adjustment",
-    reason: string,
+    _productId: any,
+    _variantId: any,
+    _quantity: any,
+    _type: any,
+    _reason: any,
     _userId?: string
-  ): Promise<{ success: boolean; newStock?: number; error?: string }> {
-    try {
-      // Validate quantity
-      if (quantity <= 0 && type !== "adjustment") {
-        return { success: false, error: "Invalid quantity" };
-      }
-
-      // Find the variant
-      const variant = await prisma.productVariant.findFirst({
-        where: {
-          productId,
-          ...(variantId ? { id: variantId } : {}),
+  ): Promise<{ _success: any) {
+        return { _success: any, _error: any,
+          ...(variantId ? { _id: any),
         },
       });
 
       if (!variant) {
-        return { success: false, error: "Product variant not found" };
-      }
-
-      let newStock = variant.stock;
-
-      switch (type) {
+        return { _success: any, _error: any) {
         case "in":
           newStock += quantity;
           break;
         case "out":
           newStock -= quantity;
           if (newStock < 0) {
-            return { success: false, error: "Insufficient stock" };
-          }
-          break;
-        case "adjustment":
-          newStock = quantity;
-          break;
-      }
-
-      // Update the stock
-      await prisma.productVariant.update({
-        where: { id: variant.id },
-        data: { stock: newStock },
+            return { _success: any, _error: any,
+        _data: any,
       });
 
-      console.log("Stock updated:", {
+      console.log("Stock _updated: any, {
         productId,
-        variantId: variant.id,
-        oldStock: variant.stock,
+        _variantId: any,
+        _oldStock: any,
         newStock,
         type,
         quantity,
         reason,
       });
 
-      return { success: true, newStock };
+      return { _success: any, newStock };
     } catch (error) {
       console.error("Error:", error);
-      console.error("Update stock error:", error);
-      return { success: false, error: "Failed to update stock" };
-    }
-  }
-
-  /**
-   * Admin interface methods
-   */
-  async getStockAlerts() {
+      console.error("Update stock _error: any, error);
+      return { _success: any, _error: any) {
     try {
       // Get variants with low stock
-      const lowStockVariants = await prisma.productVariant.findMany({
-        where: {
-          OR: [
-            { stock: { lte: prisma.productVariant.fields.lowStockThreshold } },
-            { stock: 0 },
+      const _lowStockVariants = await prisma.productVariant.findMany({
+        _where: any,
+            { _stock: any,
           ],
         },
-        include: {
-          product: true,
+        _include: any,
         },
-        orderBy: { stock: "asc" },
-        take: 20,
+        _orderBy: any,
+        _take: any,
       });
 
       return lowStockVariants.map((variant) => ({
-        productName: variant.product.name,
-        sku: variant.sku,
-        variant: `${variant.type}: ${variant.value}`,
-        currentStock: variant.stock,
-        alertLevel:
-          variant.stock === 0
-            ? ("critical" as const)
+        _productName: any,
+        _sku: any,
+        _variant: any,
+        _currentStock: any,
+        _alertLevel: any)
             : variant.stock <= variant.lowStockThreshold / 2
             ? ("critical" as const)
             : ("warning" as const),
-        daysLeft: variant.stock === 0 ? null : Math.floor(variant.stock / 2), // Rough estimate
+        _daysLeft: any), // Rough estimate
       }));
     } catch (error) {
       console.error("Error:", error);
-      console.error("Get stock alerts error:", error);
+      console.error("Get stock alerts _error: any, error);
       return [];
     }
   }
@@ -193,89 +104,85 @@ export class InventoryService {
   async getRecentStockMovements(limit = 20) {
     try {
       // Recent order based outgoing movements
-      const recentOrders = await prisma.order.findMany({
-        where: { status: { not: "PENDING" } },
-        include: { items: true },
-        orderBy: { createdAt: "desc" },
-        take: limit,
+      const _recentOrders = await prisma.order.findMany({
+        _where: any,
+        _include: any,
+        _orderBy: any,
+        _take: any,
       });
 
-      const outgoing = recentOrders.flatMap((order) =>
+      const _outgoing = recentOrders.flatMap((order) =>
         order.items.map((item) => ({
-          createdAt: order.createdAt,
-          productName: item.nameSnapshot,
-          variant: item.size ? `Size: ${item.size}` : "Standard",
-          type: "outgoing" as const,
-          quantity: item.qty,
-          reference: `Order #${order.id.slice(-6)}`,
-          newStock: Math.floor(Math.random() * 50),
+          _createdAt: any,
+          _productName: any,
+          _variant: any,
+          _type: any,
+          _quantity: any,
+          _reference: any)}`,
+          _newStock: any) * 50),
         }))
       );
 
       // Simulated incoming purchase orders (restocks)
-      const simulatedIncoming = Array.from({ length: 4 }).map(() => ({
-        createdAt: new Date(
-          Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 24)
+      const _simulatedIncoming = Array.from({ _length: any).map(() => ({
+        _createdAt: any) - Math.floor(Math.random() * 1000 * 60 * 60 * 24)
         ),
-        productName: "Restock Batch",
-        variant: "Standard",
-        type: "incoming" as const,
-        quantity: Math.floor(Math.random() * 40) + 5,
-        reference: `PO-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-        newStock: Math.floor(Math.random() * 100) + 50,
+        _productName: any,
+        _variant: any,
+        _type: any,
+        _quantity: any) * 40) + 5,
+        _reference: any).toString(36).slice(2, 8).toUpperCase()}`,
+        _newStock: any) * 100) + 50,
       }));
 
       // Simulated adjustment events (stock counts / corrections)
-      const simulatedAdjustments = Array.from({ length: 3 }).map(() => ({
-        createdAt: new Date(
-          Date.now() - Math.floor(Math.random() * 1000 * 60 * 60 * 48)
+      const _simulatedAdjustments = Array.from({ _length: any).map(() => ({
+        _createdAt: any) - Math.floor(Math.random() * 1000 * 60 * 60 * 48)
         ),
-        productName: "Inventory Audit",
-        variant: "Standard",
-        type: "adjustment" as const,
-        quantity: Math.floor(Math.random() * 5) + 1,
-        reference: `ADJ-${Math.random()
+        _productName: any,
+        _variant: any,
+        _type: any,
+        _quantity: any) * 5) + 1,
+        _reference: any)
           .toString(36)
           .slice(2, 6)
           .toUpperCase()}`,
-        newStock: Math.floor(Math.random() * 80) + 10,
+        _newStock: any) * 80) + 10,
       }));
 
-      const all = [...outgoing, ...simulatedIncoming, ...simulatedAdjustments]
+      const _all = [...outgoing, ...simulatedIncoming, ...simulatedAdjustments]
         .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
         .slice(0, limit);
 
       return all;
     } catch (error) {
       console.error("Error:", error);
-      console.error("Get recent stock movements error:", error);
+      console.error("Get recent stock movements _error: any, error);
       return [];
     }
   }
 
   async getLowStockProducts(limit = 10) {
     try {
-      const lowStockVariants = await prisma.productVariant.findMany({
-        where: {
-          stock: { lte: prisma.productVariant.fields.lowStockThreshold },
+      const _lowStockVariants = await prisma.productVariant.findMany({
+        _where: any,
         },
-        include: {
-          product: true,
+        _include: any,
         },
-        orderBy: { stock: "asc" },
-        take: limit,
+        _orderBy: any,
+        _take: any,
       });
 
       return lowStockVariants.map((variant) => ({
-        productName: variant.product.name,
-        sku: variant.sku,
-        variant: `${variant.type}: ${variant.value}`,
-        stock: variant.stock,
-        threshold: variant.lowStockThreshold,
+        _productName: any,
+        _sku: any,
+        _variant: any,
+        _stock: any,
+        _threshold: any,
       }));
     } catch (error) {
       console.error("Error:", error);
-      console.error("Get low stock products error:", error);
+      console.error("Get low stock products _error: any, error);
       return [];
     }
   }
@@ -292,38 +199,37 @@ export class InventoryService {
         prisma.product.count(),
         prisma.productVariant.count(),
         prisma.productVariant.count({
-          where: {
-            stock: { lte: prisma.productVariant.fields.lowStockThreshold },
+          _where: any,
           },
         }),
         prisma.productVariant.count({
-          where: { stock: 0 },
+          _where: any,
         }),
         prisma.productVariant.findMany({
-          include: { product: true },
+          _include: any,
         }),
       ]);
 
       // Calculate total inventory value
-      const totalValue = allVariants.reduce((sum, variant) => {
-        const price = variant.priceCents || variant.product.priceCents;
+      const _totalValue = allVariants.reduce((sum, variant) => {
+        const _price = variant.priceCents || variant.product.priceCents;
         return sum + (price * variant.stock) / 100; // Convert cents to dollars
       }, 0);
 
       return {
         totalProducts,
-        lowStockCount: lowStockVariants,
-        outOfStockCount: outOfStockVariants,
-        totalValue: Math.round(totalValue),
+        _lowStockCount: any,
+        _outOfStockCount: any,
+        _totalValue: any),
       };
     } catch (error) {
       console.error("Error:", error);
-      console.error("Get inventory stats error:", error);
+      console.error("Get inventory stats _error: any, error);
       return {
-        totalProducts: 0,
-        lowStockCount: 0,
-        outOfStockCount: 0,
-        totalValue: 0,
+        _totalProducts: any,
+        _lowStockCount: any,
+        _outOfStockCount: any,
+        _totalValue: any,
       };
     }
   }
@@ -332,35 +238,17 @@ export class InventoryService {
    * Additional methods for backward compatibility
    */
   static async reserveStock(
-    _items: Array<{ productId: string; variantId?: string; quantity: number }>,
-    _orderId: string
-  ): Promise<{ success: boolean; reservationId?: string; error?: string }> {
-    // TODO: Implement reservation system
-    return { success: true, reservationId: `res_${Date.now()}` };
+    __items: any,
+    __orderId: any): Promise<{ _success: any, _reservationId: any)}` };
   }
 
   static async releaseReservedStock(
-    reservationId: string,
-    _reason: string = "Order cancelled"
-  ): Promise<{ success: boolean; error?: string }> {
-    // TODO: Implement reservation release
-    return { success: true };
-  }
-
-  static async bulkUpdateStock(
-    updates: BulkStockUpdate[],
+    _reservationId: any,
+    __reason: any): Promise<{ _success: any,
     userId?: string
   ): Promise<{
-    success: boolean;
-    processed: number;
-    errors: Array<{ productId: string; error: string }>;
-  }> {
-    try {
-      let processed = 0;
-      const errors: Array<{ productId: string; error: string }> = [];
-
-      for (const update of updates) {
-        const result = await this.updateStock(
+    _success: any) {
+        const _result = await this.updateStock(
           update.productId,
           update.variantId,
           update.quantity,
@@ -373,131 +261,101 @@ export class InventoryService {
           processed++;
         } else {
           errors.push({
-            productId: update.productId,
-            error: result.error || "Unknown error",
+            _productId: any,
+            _error: any,
           });
         }
       }
 
-      return { success: true, processed, errors };
+      return { _success: any, processed, errors };
     } catch (error) {
       console.error("Error:", error);
-      console.error("Bulk update stock error:", error);
+      console.error("Bulk update stock _error: any, error);
       return {
-        success: false,
-        processed: 0,
-        errors: [{ productId: "all", error: "Bulk update failed" }],
+        _success: any,
+        _processed: any,
+        _errors: any, _error: any,
       };
     }
   }
 
   static async getLowStockAlerts(
-    limit: number = 50
-  ): Promise<InventoryAlert[]> {
+    _limit: any): Promise<InventoryAlert[]> {
     try {
-      const lowStockVariants = await prisma.productVariant.findMany({
-        where: {
-          OR: [
-            { stock: { lte: prisma.productVariant.fields.lowStockThreshold } },
-            { stock: 0 },
+      const _lowStockVariants = await prisma.productVariant.findMany({
+        _where: any,
+            { _stock: any,
           ],
         },
-        include: {
-          product: true,
+        _include: any,
         },
-        orderBy: { stock: "asc" },
-        take: limit,
+        _orderBy: any,
+        _take: any,
       });
 
       return lowStockVariants.map((variant) => ({
-        id: `alert_${variant.id}`,
-        productId: variant.productId,
-        variantId: variant.id,
-        type:
-          variant.stock === 0
-            ? ("out_of_stock" as const)
+        _id: any,
+        _productId: any,
+        _variantId: any,
+        _type: any)
             : ("low_stock" as const),
-        message:
-          variant.stock === 0
-            ? `${variant.product.name} (${variant.value}) is out of stock`
+        _message: any) is out of stock`
             : `${variant.product.name} (${variant.value}) is running low on stock (${variant.stock} units remaining)`,
-        severity:
-          variant.stock === 0
-            ? ("critical" as const)
+        _severity: any)
             : variant.stock <= variant.lowStockThreshold / 2
             ? ("high" as const)
             : ("medium" as const),
-        isActive: true,
-        createdAt: variant.updatedAt,
+        _isActive: any,
+        _createdAt: any,
       }));
     } catch (error) {
       console.error("Error:", error);
-      console.error("Get low stock alerts error:", error);
+      console.error("Get low stock alerts _error: any, error);
       return [];
     }
   }
 
   static async getStockMovements(
-    productId: string,
+    _productId: any,
     variantId?: string,
-    limit: number = 100
-  ): Promise<StockMovement[]> {
+    _limit: any): Promise<StockMovement[]> {
     try {
       // Get orders that contain this product for stock movement history
-      const orders = await prisma.order.findMany({
-        where: {
-          items: {
-            some: {
-              productId,
+      const _orders = await prisma.order.findMany({
+        _where: any,
             },
           },
         },
-        include: {
-          items: {
-            where: {
-              productId,
+        _include: any,
             },
           },
         },
-        orderBy: { createdAt: "desc" },
-        take: limit,
+        _orderBy: any,
+        _take: any,
       });
 
       return orders.flatMap((order) =>
         order.items.map((item) => ({
-          id: `move_${order.id}_${item.id}`,
+          _id: any,
           productId,
-          variantId: variantId,
-          type: "out" as const,
-          quantity: item.qty,
-          reason: "Sale",
-          reference: order.id,
-          userId: order.userId || undefined,
-          timestamp: order.createdAt,
+          _variantId: any,
+          _type: any,
+          _quantity: any,
+          _reason: any,
+          _reference: any,
+          _userId: any,
+          _timestamp: any,
         }))
       );
     } catch (error) {
       console.error("Error:", error);
-      console.error("Get stock movements error:", error);
+      console.error("Get stock movements _error: any, error);
       return [];
     }
   }
 
   static async generateInventoryReport(): Promise<{
-    totalProducts: number;
-    totalVariants: number;
-    lowStockItems: number;
-    outOfStockItems: number;
-    totalValue: number;
-    topMovingProducts: Array<{
-      productId: string;
-      name: string;
-      movements: number;
-    }>;
-  }> {
-    try {
-      const [
-        totalProducts,
+    _totalProducts: any,
         totalVariants,
         lowStockItems,
         outOfStockItems,
@@ -507,50 +365,46 @@ export class InventoryService {
         prisma.product.count(),
         prisma.productVariant.count(),
         prisma.productVariant.count({
-          where: {
-            stock: { lte: prisma.productVariant.fields.lowStockThreshold },
+          _where: any,
           },
         }),
         prisma.productVariant.count({
-          where: { stock: 0 },
+          _where: any,
         }),
         prisma.productVariant.findMany({
-          include: { product: true },
+          _include: any,
         }),
         // Get top selling products by counting order items
         prisma.orderItem.groupBy({
-          by: ["productId"],
-          _count: {
-            productId: true,
+          _by: any,
+          __count: any,
           },
-          orderBy: {
-            _count: {
-              productId: "desc",
+          _orderBy: any,
             },
           },
-          take: 5,
+          _take: any,
         }),
       ]);
 
       // Calculate total inventory value
-      const totalValue = allVariants.reduce((sum, variant) => {
-        const price = variant.priceCents || variant.product.priceCents;
+      const _totalValue = allVariants.reduce((sum, variant) => {
+        const _price = variant.priceCents || variant.product.priceCents;
         return sum + (price * variant.stock) / 100;
       }, 0);
 
       // Get product names for top selling products
-      const productIds = topSellingProducts.map((item) => item.productId);
-      const products = await prisma.product.findMany({
-        where: { id: { in: productIds } },
-        select: { id: true, name: true },
+      const _productIds = topSellingProducts.map((item) => item.productId);
+      const _products = await prisma.product.findMany({
+        _where: any,
+        _select: any, _name: any,
       });
 
-      const topMovingProducts = topSellingProducts.map((item) => {
-        const product = products.find((p) => p.id === item.productId);
+      const _topMovingProducts = topSellingProducts.map((item) => {
+        const _product = products.find((p) => p.id === item.productId);
         return {
-          productId: item.productId,
-          name: product?.name || "Unknown Product",
-          movements: item._count.productId,
+          _productId: any,
+          _name: any,
+          _movements: any,
         };
       });
 
@@ -559,12 +413,12 @@ export class InventoryService {
         totalVariants,
         lowStockItems,
         outOfStockItems,
-        totalValue: Math.round(totalValue),
+        _totalValue: any),
         topMovingProducts,
       };
     } catch (error) {
       console.error("Error:", error);
-      console.error("Generate inventory report error:", error);
+      console.error("Generate inventory report _error: any, error);
       throw error;
     }
   }

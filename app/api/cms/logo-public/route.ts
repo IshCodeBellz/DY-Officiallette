@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { CMSService } from "@/lib/server/cmsService";
+import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +14,7 @@ export async function GET() {
       logoSettings,
     });
   } catch (error) {
-    console.error("Failed to get public logo settings:", error);
+    logger.error("Failed to get public logo settings:", error);
 
     // Return default settings on error
     return NextResponse.json({

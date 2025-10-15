@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
+import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
+import { logger } from "@/lib/server/logger";
 import { ReviewService } from "@/lib/server/reviewService";
+import { logger } from "@/lib/server/logger";
 import { z } from "zod";
+import { logger } from "@/lib/server/logger";
 
 export const dynamic = 'force-dynamic';
 
@@ -53,8 +58,8 @@ export async function POST(
       message: result.message,
     });
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Report review error:", error);
+      logger.error("Error:", error);
+    logger.error("Report review error:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

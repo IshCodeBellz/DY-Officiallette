@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
-import { prisma } from "@/lib/server/prisma";
-import { OrderTransitions, isOrderStatus } from "@/lib/status";
+import { isOrderStatus, type OrderStatus } from "@/lib/status";
+import { OrderStatusService } from "@/lib/server/orderStatusService";
 
 export const dynamic = "force-dynamic";
 
@@ -43,26 +43,27 @@ export async function POST(
   if (typeof status !== "string" || !isOrderStatus(status)) {
     return NextResponse.json({ error: "invalid_status" }, { status: 400 });
   }
-  const order = await prisma.order.findUnique({ where: { id: params.id } });
-  if (!order) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const current = order.status as keyof typeof OrderTransitions;
-  const allowedNext = OrderTransitions[current] || [];
-  if (!allowedNext.includes(status) && order.status !== status) {
+
+  // Use enhanced order status service with full validation
+  const result = await OrderStatusService.transitionOrderStatus(
+    params.id,
+    status as OrderStatus,
+    {
+      adminUserId: session.user.id,
+      reason: "Admin status change",
+      forceTransition: true, // Admin can force transitions
+    }
+  );
+
+  if (!result.success) {
     return NextResponse.json(
-      { error: "invalid_transition", from: order.status, to: status },
+      {
+        error: result.error || "transition_failed",
+        validTransitions: result.validTransitions,
+      },
       { status: 400 }
     );
   }
-  await prisma.$transaction(async (tx) => {
-    await tx.order.update({ where: { id: order.id }, data: { status } });
-    await tx.orderEvent.create({
-      data: {
-        orderId: order.id,
-        kind: "STATUS_CHANGE",
-        message: `Status ${order.status} -> ${status}`,
-        meta: JSON.stringify({ from: order.status, to: status }),
-      },
-    });
-  });
+
   return NextResponse.redirect(new URL("/admin/orders", req.url));
 }

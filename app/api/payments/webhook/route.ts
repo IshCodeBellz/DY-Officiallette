@@ -1,9 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
+import { logger } from "@/lib/server/logger";
 import { sendPaymentReceipt } from "@/lib/server/mailer";
-import { OrderStatus, PaymentStatus, OrderEventKind } from "@/lib/status";
+import { logger } from "@/lib/server/logger";
+import { OrderStatus, PaymentStatus } from "@/lib/status";
+import { logger } from "@/lib/server/logger";
 import { getStripe } from "@/lib/server/stripe";
+import { logger } from "@/lib/server/logger";
+import { restoreStock } from "@/lib/server/inventory";
+import { logger } from "@/lib/server/logger";
+import { WebhookService, type WebhookEvent } from "@/lib/server/webhookService";
+import { logger } from "@/lib/server/logger";
+import { OrderEventService } from "@/lib/server/orderEventService";
+import { logger } from "@/lib/server/logger";
+import { OrderNotificationHandler } from "@/lib/server/notifications/OrderNotificationHandler";
+import { logger } from "@/lib/server/logger";
 import Stripe from "stripe";
+import { logger } from "@/lib/server/logger";
 
 interface WebhookBody {
   paymentIntentId?: string;
@@ -13,57 +27,185 @@ interface WebhookBody {
   state?: string;
 }
 
+/**
+ * Process payment webhook event with retry logic
+ */
+async function processPaymentWebhook(event: WebhookEvent): Promise<void> {
+  const { paymentIntentId, status } = event.data;
+
+  // Type guard for safety
+  if (typeof paymentIntentId !== "string" || typeof status !== "string") {
+    throw new Error("Invalid webhook event data types");
+  }
+
+  const payment = await prisma.paymentRecord.findFirst({
+    where: { provider: "STRIPE", providerRef: paymentIntentId },
+  });
+  if (!payment) {
+    // Unknown payment intent - not an error for webhook processing
+    return;
+  }
+
+  const order = await prisma.order.findUnique({
+    where: { id: payment.orderId },
+  });
+  if (!order) {
+    throw new Error(`Order not found: ${payment.orderId}`);
+  }
+
+  if (status === "succeeded") {
+    // Skip if already captured / paid
+    if (
+      payment.status === PaymentStatus.CAPTURED ||
+      order.status === OrderStatus.PAID
+    ) {
+      return; // Idempotent - already processed
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.paymentRecord.update({
+        where: { id: payment.id },
+        data: { status: PaymentStatus.CAPTURED },
+      });
+      await tx.order.update({
+        where: { id: order.id },
+        data: { status: OrderStatus.PAID, paidAt: new Date() },
+      });
+      // Enhanced payment event will be created after transaction
+      if (order.userId) {
+        const cart = await tx.cart.findUnique({
+          where: { userId: order.userId },
+        });
+        if (cart) await tx.cartLine.deleteMany({ where: { cartId: cart.id } });
+      }
+    });
+
+    // Create enhanced payment success event
+    await OrderEventService.createPaymentEvent(order.id, "PAYMENT_SUCCEEDED", {
+      paymentId: payment.id,
+      amount: order.totalCents,
+      currency: "GBP", // Default currency for now
+      provider: payment.provider,
+    });
+
+    // Email user about payment capture (non-critical, don't fail webhook for this)
+    try {
+      if (order.userId) {
+        const user = await prisma.user.findUnique({
+          where: { id: order.userId },
+        });
+        if (user) await sendPaymentReceipt(user, order);
+      }
+    } catch (error) {
+      logger.error("Non-critical email error:", error);
+      // Don't throw - email failures shouldn't fail webhook processing
+    }
+  } else if (status === "failed") {
+    if (payment.status !== PaymentStatus.FAILED) {
+      await prisma.$transaction(async (tx) => {
+        await tx.paymentRecord.update({
+          where: { id: payment.id },
+          data: { status: PaymentStatus.FAILED },
+        });
+        // Enhanced payment event will be created after transaction
+      });
+
+      // Create enhanced payment failure event
+      await OrderEventService.createPaymentEvent(order.id, "PAYMENT_FAILED", {
+        paymentId: payment.id,
+        amount: order.totalCents,
+        currency: "GBP",
+        provider: payment.provider,
+        failureReason: "Payment processing failed",
+      });
+
+      // Restore stock for failed payment
+      const stockResult = await restoreStock(order.id, "PAYMENT_FAILED");
+      if (!stockResult.success) {
+        throw new Error(
+          `Stock restoration failed for order ${order.id}: ${stockResult.error}`
+        );
+      }
+
+      // Create stock restoration event if restoration was successful
+      if (stockResult.success && stockResult.restoredItems > 0) {
+        await OrderEventService.createEvent({
+          orderId: order.id,
+          kind: "STOCK_RESTORED",
+          message: `Stock restored for ${stockResult.restoredItems} items due to payment failure`,
+          metadata: {
+            statusChangeReason: "Payment failed - stock restored to inventory",
+            totalQuantity: stockResult.restoredItems,
+          },
+        });
+      }
+
+      // Send payment failure notification to customer (non-critical)
+      try {
+        await OrderNotificationHandler.sendPaymentFailureNotification(
+          order.id,
+          "Payment processing failed. Please update your payment method to complete your order."
+        );
+      } catch (error) {
+        logger.error("Failed to send payment failure notification:", error);
+        // Don't fail webhook processing for notification errors
+      }
+    }
+  }
+}
+
 // Handles both simulated (no Stripe key) and real Stripe webhook events.
 export async function POST(req: NextRequest) {
   const forceSim =
     process.env.NODE_ENV === "test" &&
     req.headers.get("x-test-simulate-webhook") === "1";
-  const stripe = forceSim ? null : getStripe();
+
   let paymentIntentId: string | undefined;
   let status: string | undefined;
+  let webhookId: string | undefined;
 
-  if (stripe) {
-    const sig = req.headers.get("stripe-signature");
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    if (!sig || !webhookSecret) {
-      return NextResponse.json({ error: "missing_signature" }, { status: 400 });
+  if (!forceSim && process.env.STRIPE_SECRET_KEY) {
+    // Real Stripe webhook
+    const stripe = getStripe();
+    if (!stripe) {
+      return NextResponse.json(
+        { error: "stripe_unavailable" },
+        { status: 500 }
+      );
     }
-    const rawBody = await req.text();
+
+    const signature = req.headers.get("stripe-signature");
+    if (!signature) {
+      return NextResponse.json({ error: "no_signature" }, { status: 400 });
+    }
+
     let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
-    } catch (err: unknown) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      return NextResponse.json(
-        { error: "invalid_signature", message: error.message },
-        { status: 400 }
+      const body = await req.text();
+      event = stripe.webhooks.constructEvent(
+        body,
+        signature,
+        process.env.STRIPE_WEBHOOK_SECRET!
       );
+    } catch (error: unknown) {
+      logger.error("Webhook signature verification failed:", error);
+      return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
     }
+
     if (
-      event.type === "payment_intent.succeeded" ||
-      event.type === "payment_intent.payment_failed"
+      event.type !== "payment_intent.succeeded" &&
+      event.type !== "payment_intent.payment_failed"
     ) {
-      const pi = event.data.object as Stripe.PaymentIntent;
-      paymentIntentId = pi.id;
-      status =
-        event.type === "payment_intent.succeeded" ? "succeeded" : "failed";
-    } else {
       return NextResponse.json({ received: true });
     }
+
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+    paymentIntentId = paymentIntent.id;
+    status = event.type === "payment_intent.succeeded" ? "succeeded" : "failed";
+    webhookId = event.id;
   } else {
-    // Fallback simulated mode - accept JSON only
-    let body: WebhookBody | null = null;
-    try {
-      body = (await req.json()) as WebhookBody;
-    } catch {
-      body = null;
-    }
-    if (!body)
-      return NextResponse.json(
-        { error: "invalid_payload", reason: "no_json" },
-        { status: 400 }
-      );
-    // Accept a few alias keys to make tests / tooling flexible
+    // Simulated webhook (for test mode / no Stripe key)
+    const body: WebhookBody = await req.json();
     paymentIntentId = [
       body.paymentIntentId,
       body.payment_intent_id,
@@ -79,7 +221,9 @@ export async function POST(req: NextRequest) {
     // Normalise to canonical succeeded/failed strings
     if (status === "success") status = "succeeded";
     if (status === "fail") status = "failed";
+    webhookId = `sim_${Date.now()}_${Math.random().toString(36).substring(7)}`;
   }
+
   if (!paymentIntentId || !status) {
     return NextResponse.json(
       { error: "missing_parameters", got: { paymentIntentId, status } },
@@ -93,89 +237,52 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Check for duplicate webhook
+  if (
+    webhookId &&
+    (await WebhookService.isDuplicateWebhook(webhookId, paymentIntentId))
+  ) {
+    return NextResponse.json({ ok: true, duplicate: true });
+  }
+
+  // Find the order ID for logging
   const payment = await prisma.paymentRecord.findFirst({
     where: { provider: "STRIPE", providerRef: paymentIntentId },
   });
+
+  const webhookEvent: WebhookEvent = {
+    id: webhookId || `unknown_${Date.now()}`,
+    type: `payment_intent.${status}`,
+    data: {
+      paymentIntentId,
+      status,
+      orderId: payment?.orderId,
+    },
+    created: Date.now(),
+  };
+
+  // Process webhook with retry logic
+  const result = await WebhookService.processWithRetry(
+    webhookEvent,
+    processPaymentWebhook
+  );
+
+  if (!result.success) {
+    logger.error("Webhook processing failed after all retries:", result.error);
+    return NextResponse.json(
+      { error: "processing_failed", attempts: result.attempts.length },
+      { status: 500 }
+    );
+  }
+
   if (!payment) {
-    // Gracefully ack unknown payment intent to keep webhook idempotent (could log)
+    // Gracefully ack unknown payment intent
     return NextResponse.json({ ok: true, ignored: true });
   }
 
-  const order = await prisma.order.findUnique({
-    where: { id: payment.orderId },
+  return NextResponse.json({
+    ok: true,
+    attempts: result.attempts.length,
+    processed: true,
   });
-  if (!order)
-    return NextResponse.json({ error: "order_not_found" }, { status: 404 });
-
-  if (status === "succeeded") {
-    // Skip if already captured / paid
-    if (
-      payment.status === PaymentStatus.CAPTURED ||
-      order.status === OrderStatus.PAID
-    ) {
-      return NextResponse.json({ ok: true, idempotent: true });
-    }
-    await prisma.$transaction(async (tx) => {
-      await tx.paymentRecord.update({
-        where: { id: payment.id },
-        data: { status: PaymentStatus.CAPTURED },
-      });
-      await tx.order.update({
-        where: { id: order.id },
-        data: { status: OrderStatus.PAID, paidAt: new Date() },
-      });
-      await tx.orderEvent.create({
-        data: {
-          orderId: order.id,
-          kind: OrderEventKind.PAYMENT_SUCCEEDED,
-          message: "Payment captured",
-          meta: JSON.stringify({
-            paymentId: payment.id,
-            providerRef: payment.providerRef,
-          }),
-        },
-      });
-      if (order.userId) {
-        const cart = await tx.cart.findUnique({
-          where: { userId: order.userId },
-        });
-        if (cart) await tx.cartLine.deleteMany({ where: { cartId: cart.id } });
-      }
-    });
-
-    // Email user about payment capture
-    try {
-      if (order.userId) {
-        const user = await prisma.user.findUnique({
-          where: { id: order.userId },
-        });
-        if (user) await sendPaymentReceipt(user, order);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      console.error("Error:", error);
-    }
-  } else if (status === "failed") {
-    if (payment.status !== PaymentStatus.FAILED) {
-      await prisma.$transaction(async (tx) => {
-        await tx.paymentRecord.update({
-          where: { id: payment.id },
-          data: { status: PaymentStatus.FAILED },
-        });
-        await tx.orderEvent.create({
-          data: {
-            orderId: order.id,
-            kind: OrderEventKind.PAYMENT_FAILED,
-            message: "Payment failed",
-            meta: JSON.stringify({
-              paymentId: payment.id,
-              providerRef: payment.providerRef,
-            }),
-          },
-        });
-      });
-    }
-  }
-
-  return NextResponse.json({ ok: true });
 }

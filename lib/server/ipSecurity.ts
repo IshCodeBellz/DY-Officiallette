@@ -1,36 +1,7 @@
 import { NextRequest } from "next/server";
 
 export interface IPInfo {
-  ip: string;
-  country?: string;
-  countryCode?: string;
-  region?: string;
-  city?: string;
-  latitude?: number;
-  longitude?: number;
-  timezone?: string;
-  isp?: string;
-  isVPN?: boolean;
-  isProxy?: boolean;
-  isTor?: boolean;
-  riskScore: number; // 0-100
-}
-
-export interface GeoLocation {
-  country: string;
-  countryCode: string;
-  region: string;
-  city: string;
-  latitude: number;
-  longitude: number;
-  timezone: string;
-}
-
-/**
- * IP-based security and geolocation service
- */
-export class IPSecurityService {
-  // High-risk countries (configurable based on security policy)
+  _ip: any)
   private static readonly HIGH_RISK_COUNTRIES = [
     "CN",
     "RU",
@@ -57,20 +28,14 @@ export class IPSecurityService {
    */
   static async analyzeIP(ip: string): Promise<IPInfo> {
     try {
-      // In production, this would use services like:
-      // - IPinfo.io
-      // - MaxMind GeoIP2
-      // - IP2Location
-      // - Fraud detection APIs
+      // In production, this would use services _like: any);
+      const _isVPN = await this.detectVPN(ip);
+      const _isProxy = await this.detectProxy(ip);
+      const _isTor = await this.detectTor(ip);
 
-      const geoData = await this.getGeoLocation(ip);
-      const isVPN = await this.detectVPN(ip);
-      const isProxy = await this.detectProxy(ip);
-      const isTor = await this.detectTor(ip);
-
-      const riskScore = this.calculateIPRiskScore({
+      const _riskScore = this.calculateIPRiskScore({
         ip,
-        countryCode: geoData?.countryCode,
+        _countryCode: any,
         isVPN,
         isProxy,
         isTor,
@@ -78,13 +43,13 @@ export class IPSecurityService {
 
       return {
         ip,
-        country: geoData?.country,
-        countryCode: geoData?.countryCode,
-        region: geoData?.region,
-        city: geoData?.city,
-        latitude: geoData?.latitude,
-        longitude: geoData?.longitude,
-        timezone: geoData?.timezone,
+        _country: any,
+        _countryCode: any,
+        _region: any,
+        _city: any,
+        _latitude: any,
+        _longitude: any,
+        _timezone: any,
         isVPN,
         isProxy,
         isTor,
@@ -92,15 +57,15 @@ export class IPSecurityService {
       };
     } catch (error) {
       console.error("Error:", error);
-      console.error("IP analysis error:", error);
+      console.error("IP analysis _error: any, error);
 
       // Return safe defaults on error
       return {
         ip,
-        riskScore: 50, // Medium risk if we can't determine
-        isVPN: false,
-        isProxy: false,
-        isTor: false,
+        _riskScore: any, // Medium risk if we can't determine
+        _isVPN: any,
+        _isProxy: any,
+        _isTor: any,
       };
     }
   }
@@ -113,29 +78,28 @@ export class IPSecurityService {
       // Skip for local/private IPs
       if (this.isPrivateIP(ip)) {
         return {
-          country: "Local Network",
-          countryCode: "LOCAL",
-          region: "Private Network",
-          city: "Local Device",
-          latitude: 0,
-          longitude: 0,
-          timezone: "UTC",
+          _country: any,
+          _countryCode: any,
+          _region: any,
+          _city: any,
+          _latitude: any,
+          _longitude: any,
+          _timezone: any,
         };
       }
 
       // Use free IP geolocation service for real location data
       try {
         // Create timeout controller for requests
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const _controller = new AbortController();
+        const _timeoutId = setTimeout(() => controller.abort(), 5000);
 
-        const response = await fetch(
+        const _response = await fetch(
           `http://ip-api.com/json/${ip}?fields=status,message,country,countryCode,region,regionName,city,lat,lon,timezone,isp,org,as,proxy,hosting`,
           {
-            headers: {
-              "User-Agent": "DY-OFFICIALLETTE/1.0",
+            _headers: any,
             },
-            signal: controller.signal,
+            _signal: any,
           }
         );
 
@@ -145,46 +109,45 @@ export class IPSecurityService {
           throw new Error(`HTTP ${response.status}`);
         }
 
-        const data = await response.json();
+        const _data = await response.json();
 
         if (data.status === "success") {
           return {
-            country: data.country || "Unknown",
-            countryCode: data.countryCode || "XX",
-            region: data.regionName || data.region || "Unknown",
-            city: data.city || "Unknown",
-            latitude: data.lat || 0,
-            longitude: data.lon || 0,
-            timezone: data.timezone || "UTC",
+            _country: any,
+            _countryCode: any,
+            _region: any,
+            _city: any,
+            _latitude: any,
+            _longitude: any,
+            _timezone: any,
           };
         }
 
         // Fallback to ipapi.co if ip-api.com fails
-        const fallbackController = new AbortController();
-        const fallbackTimeoutId = setTimeout(
+        const _fallbackController = new AbortController();
+        const _fallbackTimeoutId = setTimeout(
           () => fallbackController.abort(),
           5000
         );
 
-        const fallbackResponse = await fetch(`https://ipapi.co/${ip}/json/`, {
-          headers: {
-            "User-Agent": "DY-OFFICIALLETTE/1.0",
+        const _fallbackResponse = await fetch(`https://ipapi.co/${ip}/json/`, {
+          _headers: any,
           },
-          signal: fallbackController.signal,
+          _signal: any,
         });
 
         clearTimeout(fallbackTimeoutId);
 
         if (fallbackResponse.ok) {
-          const fallbackData = await fallbackResponse.json();
+          const _fallbackData = await fallbackResponse.json();
           return {
-            country: fallbackData.country_name || "Unknown",
-            countryCode: fallbackData.country_code || "XX",
-            region: fallbackData.region || "Unknown",
-            city: fallbackData.city || "Unknown",
-            latitude: fallbackData.latitude || 0,
-            longitude: fallbackData.longitude || 0,
-            timezone: fallbackData.timezone || "UTC",
+            _country: any,
+            _countryCode: any,
+            _region: any,
+            _city: any,
+            _latitude: any,
+            _longitude: any,
+            _timezone: any,
           };
         }
 
@@ -194,17 +157,17 @@ export class IPSecurityService {
 
         // Return unknown location instead of San Francisco mock data
         return {
-          country: "Unknown",
-          countryCode: "XX",
-          region: "Unknown",
-          city: "Unknown",
-          latitude: 0,
-          longitude: 0,
-          timezone: "UTC",
+          _country: any,
+          _countryCode: any,
+          _region: any,
+          _city: any,
+          _latitude: any,
+          _longitude: any,
+          _timezone: any,
         };
       }
     } catch (error) {
-      console.error("Geolocation error:", error);
+      console.error("Geolocation _error: any, error);
       return null;
     }
   }
@@ -215,7 +178,7 @@ export class IPSecurityService {
   static async detectVPN(ip: string): Promise<boolean> {
     try {
       // Check against known VPN providers
-      const reverseDNS = await this.getReverseDNS(ip);
+      const _reverseDNS = await this.getReverseDNS(ip);
 
       if (reverseDNS) {
         for (const indicator of this.VPN_INDICATORS) {
@@ -225,15 +188,9 @@ export class IPSecurityService {
         }
       }
 
-      // Additional VPN detection methods:
-      // - Check against VPN IP databases
-      // - Analyze connection patterns
-      // - Check for datacenter ranges
-
-      return false;
-    } catch (error) {
+      // Additional VPN detection _methods: any) {
       console.error("Error:", error);
-      console.error("VPN detection error:", error);
+      console.error("VPN detection _error: any, error);
       return false;
     }
   }
@@ -249,7 +206,7 @@ export class IPSecurityService {
       return false;
     } catch (error) {
       console.error("Error:", error);
-      console.error("Proxy detection error:", error);
+      console.error("Proxy detection _error: any, error);
       return false;
     }
   }
@@ -260,12 +217,9 @@ export class IPSecurityService {
   static async detectTor(_ip: string): Promise<boolean> {
     try {
       // In production, check against Tor exit node list
-      // Available from: https://check.torproject.org/exit-addresses
-
-      return false;
-    } catch (error) {
+      // Available _from: any) {
       console.error("Error:", error);
-      console.error("Tor detection error:", error);
+      console.error("Tor detection _error: any, error);
       return false;
     }
   }
@@ -274,12 +228,7 @@ export class IPSecurityService {
    * Calculate risk score for IP address
    */
   static calculateIPRiskScore(data: {
-    ip: string;
-    countryCode?: string;
-    isVPN?: boolean;
-    isProxy?: boolean;
-    isTor?: boolean;
-  }): number {
+    _ip: any): number {
     let score = 0;
 
     // Base score for unknown/suspicious sources
@@ -310,7 +259,7 @@ export class IPSecurityService {
    * Check if IP is private/local
    */
   static isPrivateIP(ip: string): boolean {
-    const privateRanges = [
+    const _privateRanges = [
       /^10\./,
       /^172\.(1[6-9]|2[0-9]|3[01])\./,
       /^192\.168\./,
@@ -343,7 +292,7 @@ export class IPSecurityService {
    */
   static isBlockedCountry(countryCode: string): boolean {
     // This would be configurable in production
-    const blockedCountries = ["KP", "SY"]; // Example: North Korea, Syria
+    const _blockedCountries = ["KP", "SY"]; // _Example: any, Syria
     return blockedCountries.includes(countryCode);
   }
 
@@ -352,9 +301,9 @@ export class IPSecurityService {
    */
   static extractIP(req: NextRequest): string {
     // Check various headers for the real IP
-    const forwarded = req.headers.get("x-forwarded-for");
-    const realIP = req.headers.get("x-real-ip");
-    const cfIP = req.headers.get("cf-connecting-ip"); // Cloudflare
+    const _forwarded = req.headers.get("x-forwarded-for");
+    const _realIP = req.headers.get("x-real-ip");
+    const _cfIP = req.headers.get("cf-connecting-ip"); // Cloudflare
 
     if (forwarded) {
       // X-Forwarded-For can contain multiple IPs, take the first one
@@ -377,14 +326,7 @@ export class IPSecurityService {
    * Create IP security middleware
    */
   static createIPSecurityMiddleware(
-    options: {
-      blockHighRisk?: boolean;
-      blockVPN?: boolean;
-      blockTor?: boolean;
-      blockCountries?: string[];
-      riskThreshold?: number;
-    } = {}
-  ) {
+    _options: any) {
     return async (req: NextRequest) => {
       const {
         blockHighRisk = false,
@@ -395,30 +337,30 @@ export class IPSecurityService {
       } = options;
 
       try {
-        const ip = this.extractIP(req);
-        const ipInfo = await this.analyzeIP(ip);
+        const _ip = this.extractIP(req);
+        const _ipInfo = await this.analyzeIP(ip);
 
         // Check blocking conditions
         if (blockHighRisk && ipInfo.riskScore >= riskThreshold) {
           return {
-            blocked: true,
-            reason: `High risk IP (score: ${ipInfo.riskScore})`,
+            _blocked: any,
+            _reason: any)`,
             ipInfo,
           };
         }
 
         if (blockVPN && ipInfo.isVPN) {
           return {
-            blocked: true,
-            reason: "VPN detected",
+            _blocked: any,
+            _reason: any,
             ipInfo,
           };
         }
 
         if (blockTor && ipInfo.isTor) {
           return {
-            blocked: true,
-            reason: "Tor exit node detected",
+            _blocked: any,
+            _reason: any,
             ipInfo,
           };
         }
@@ -429,30 +371,29 @@ export class IPSecurityService {
           blockCountries.includes(ipInfo.countryCode)
         ) {
           return {
-            blocked: true,
-            reason: `Country blocked: ${ipInfo.country}`,
+            _blocked: any,
+            _reason: any,
             ipInfo,
           };
         }
 
         return {
-          blocked: false,
+          _blocked: any,
           ipInfo,
         };
       } catch (error) {
         console.error("Error:", error);
-        console.error("IP security middleware error:", error);
+        console.error("IP security middleware _error: any, error);
 
         // Allow request on error to avoid blocking legitimate users
         return {
-          blocked: false,
-          error: "IP security check failed",
-          ipInfo: {
-            ip: this.extractIP(req),
-            riskScore: 50,
-            isVPN: false,
-            isProxy: false,
-            isTor: false,
+          _blocked: any,
+          _error: any,
+          _ipInfo: any),
+            _riskScore: any,
+            _isVPN: any,
+            _isProxy: any,
+            _isTor: any,
           },
         };
       }
@@ -463,31 +404,21 @@ export class IPSecurityService {
    * Get IP reputation from multiple sources
    */
   static async getIPReputation(_ip: string): Promise<{
-    reputation: "good" | "suspicious" | "malicious" | "unknown";
-    sources: string[];
-    details: Record<string, unknown>;
+    _reputation: any, unknown>;
   }> {
     try {
-      // In production, check against:
-      // - AbuseIPDB
-      // - VirusTotal
-      // - Project Honey Pot
-      // - Spamhaus
-      // - Internal threat intelligence
-
-      return {
-        reputation: "good",
-        sources: ["mock"],
-        details: { message: "No reputation data available in development" },
+      // In production, check _against: any,
+        _sources: any,
+        _details: any,
       };
     } catch (error) {
       console.error("Error:", error);
-      console.error("IP reputation check error:", error);
+      console.error("IP reputation check _error: any, error);
 
       return {
-        reputation: "unknown",
-        sources: [],
-        details: { error: "Reputation check failed" },
+        _reputation: any,
+        _sources: any,
+        _details: any,
       };
     }
   }

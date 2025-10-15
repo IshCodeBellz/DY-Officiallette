@@ -42,7 +42,7 @@ export function LogoManager() {
       const data = await response.json();
       setSettings(data.logoSettings);
     } catch (error) {
-      console.error("Error fetching logo settings:", error);
+      
       push({ message: "Failed to load logo settings", type: "error" });
     } finally {
       setLoading(false);
@@ -70,7 +70,7 @@ export function LogoManager() {
 
       push({ message: "Logo settings updated successfully", type: "success" });
     } catch (error) {
-      console.error("Error saving logo settings:", error);
+      
       push({
         message:
           error instanceof Error
@@ -103,7 +103,7 @@ export function LogoManager() {
       setSettings(data.logoSettings);
       push({ message: "Logo reset to default settings", type: "success" });
     } catch (error) {
-      console.error("Error resetting logo:", error);
+      
       push({ message: "Failed to reset logo settings", type: "error" });
     } finally {
       setSaving(false);

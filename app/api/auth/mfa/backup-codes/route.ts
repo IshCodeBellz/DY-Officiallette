@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth/next";
+import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
+import { logger } from "@/lib/server/logger";
 import { MFAService } from "@/lib/server/mfa";
+import { logger } from "@/lib/server/logger";
 import { z } from "zod";
+import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +56,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Log security event
-    console.log(`Backup codes regenerated for user ${session.user.email}`, {
+    logger.info(`Backup codes regenerated for user ${session.user.email}`, {
       timestamp: new Date().toISOString(),
       codesGenerated: newBackupCodes.length,
     });
@@ -67,8 +72,8 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Backup codes regeneration error:", error);
+    logger.error("Error:", error);
+    logger.error("Backup codes regeneration error:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

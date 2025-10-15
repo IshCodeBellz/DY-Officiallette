@@ -4,16 +4,7 @@ import { prisma } from "@/lib/server/prisma";
 export interface EventData {
   userId?: string | null;
   sessionId?: string | null;
-  eventType: string;
-  eventCategory?: string;
-  eventAction?: string;
-  eventLabel?: string;
-  eventValue?: number;
-  productId?: string;
-  categoryId?: string;
-  metadata?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  properties?: Record<string, any>;
+  _eventType: any, any>;
   timestamp?: Date;
   ipAddress?: string;
   userAgent?: string;
@@ -23,46 +14,20 @@ export interface EventData {
 export interface PageViewData {
   userId?: string | null;
   sessionId?: string | null;
-  path: string;
-  title?: string;
-  referrer?: string;
-  timeOnPage?: number;
-  timestamp?: Date;
-  ipAddress?: string;
-  userAgent?: string;
-}
-
-export interface SessionData {
-  userId?: string | null;
-  sessionId: string;
-  startTime: Date;
-  endTime?: Date;
-  duration?: number;
-  device?: string;
-  browser?: string;
-  os?: string;
-  ipAddress?: string;
-  country?: string;
-  city?: string;
-}
-
-export class AnalyticsTracker {
-  // Track analytics events
-  static async trackEvent(data: EventData): Promise<void> {
+  _path: any): Promise<void> {
     try {
       if (data.sessionId) {
         await prisma.analyticsEvent.create({
-          data: {
-            userId: data.userId || undefined,
-            sessionId: data.sessionId,
-            eventType: data.eventType,
-            eventCategory: data.eventCategory || "general",
-            eventAction: data.eventAction || "unknown",
-            eventLabel: data.eventLabel || undefined,
-            eventValue: data.eventValue || undefined,
-            productId: data.productId || undefined,
-            categoryId: data.categoryId || undefined,
-            metadata: data.metadata || undefined,
+          _data: any,
+            _sessionId: any,
+            _eventType: any,
+            _eventCategory: any,
+            _eventAction: any,
+            _eventLabel: any,
+            _eventValue: any,
+            _productId: any,
+            _categoryId: any,
+            _metadata: any,
           },
         });
       }
@@ -70,7 +35,7 @@ export class AnalyticsTracker {
       // Update related analytics models based on event type
       await this.updateAnalyticsModels(data);
     } catch (error) {
-      console.error("Error tracking event:", error);
+      console.error("Error tracking _event: any, error);
       // Don't throw error to avoid breaking user experience
     }
   }
@@ -80,35 +45,33 @@ export class AnalyticsTracker {
     try {
       if (data.sessionId) {
         await prisma.pageView.create({
-          data: {
-            userId: data.userId || undefined,
-            sessionId: data.sessionId,
-            path: data.path,
-            title: data.title || undefined,
-            referrer: data.referrer || undefined,
-            duration: data.timeOnPage || undefined,
-            timestamp: data.timestamp || new Date(),
+          _data: any,
+            _sessionId: any,
+            _path: any,
+            _title: any,
+            _referrer: any,
+            _duration: any,
+            _timestamp: any),
           },
         });
       }
 
       // Track page view event
       await this.trackEvent({
-        userId: data.userId,
-        sessionId: data.sessionId,
-        eventType: "PAGE_VIEW",
-        properties: {
-          path: data.path,
-          title: data.title,
-          timeOnPage: data.timeOnPage,
+        _userId: any,
+        _sessionId: any,
+        _eventType: any,
+        _properties: any,
+          _title: any,
+          _timeOnPage: any,
         },
-        timestamp: data.timestamp,
-        ipAddress: data.ipAddress,
-        userAgent: data.userAgent,
-        referrer: data.referrer,
+        _timestamp: any,
+        _ipAddress: any,
+        _userAgent: any,
+        _referrer: any,
       });
     } catch (error) {
-      console.error("Error tracking page view:", error);
+      console.error("Error tracking page _view: any, error);
     }
   }
 
@@ -116,147 +79,134 @@ export class AnalyticsTracker {
   static async startSession(data: SessionData): Promise<void> {
     try {
       await prisma.userSession.upsert({
-        where: { sessionToken: data.sessionId },
-        update: {
-          startTime: data.startTime,
-          deviceType: data.device,
-          browser: data.browser,
-          ipAddress: data.ipAddress,
-          country: data.country,
-          city: data.city,
+        _where: any,
+        _update: any,
+          _deviceType: any,
+          _browser: any,
+          _ipAddress: any,
+          _country: any,
+          _city: any,
         },
-        create: {
-          userId: data.userId,
-          sessionToken: data.sessionId,
-          startTime: data.startTime,
-          deviceType: data.device,
-          browser: data.browser,
-          ipAddress: data.ipAddress,
-          country: data.country,
-          city: data.city,
+        _create: any,
+          _sessionToken: any,
+          _startTime: any,
+          _deviceType: any,
+          _browser: any,
+          _ipAddress: any,
+          _country: any,
+          _city: any,
         },
       });
     } catch (error) {
-      console.error("Error starting session:", error);
+      console.error("Error starting _session: any, error);
     }
   }
 
   // End user session
   static async endSession(
-    sessionId: string,
-    endTime: Date = new Date()
+    _sessionId: any,
+    _endTime: any)
   ): Promise<void> {
     try {
-      const session = await prisma.userSession.findUnique({
-        where: { sessionToken: sessionId },
+      const _session = await prisma.userSession.findUnique({
+        _where: any,
       });
 
       if (session) {
-        const duration = Math.floor(
+        const _duration = Math.floor(
           (endTime.getTime() - session.startTime.getTime()) / 1000
         );
 
         await prisma.userSession.update({
-          where: { sessionToken: sessionId },
-          data: {
-            endTime,
+          _where: any,
+          _data: any,
             duration,
           },
         });
       }
     } catch (error) {
-      console.error("Error ending session:", error);
+      console.error("Error ending _session: any, error);
     }
   }
 
   // Track product views
   static async trackProductView(
-    productId: string,
-    data: EventData
-  ): Promise<void> {
+    _productId: any,
+    _data: any): Promise<void> {
     try {
       // Track the event
       await this.trackEvent({
         ...data,
-        eventType: "PRODUCT_VIEW",
-        properties: {
-          ...data.properties,
+        _eventType: any,
+        _properties: any,
           productId,
         },
       });
 
       // Update product metrics
       await prisma.productMetrics.upsert({
-        where: { productId },
-        update: {
-          views: { increment: 1 },
-          updatedAt: new Date(),
+        _where: any,
+        _update: any,
+          _updatedAt: any),
         },
-        create: {
-          productId,
-          views: 1,
-          purchases: 0,
+        _create: any,
+          _views: any,
+          _purchases: any,
         },
       });
 
       // Update product analytics
       await this.updateProductAnalytics(productId);
     } catch (error) {
-      console.error("Error tracking product view:", error);
+      console.error("Error tracking product _view: any, error);
     }
   }
 
   // Track product purchases
   static async trackProductPurchase(
-    productId: string,
-    data: EventData & { quantity: number; priceCents: number }
-  ): Promise<void> {
+    _productId: any,
+    _data: any): Promise<void> {
     try {
       // Track the event
       await this.trackEvent({
         ...data,
-        eventType: "PRODUCT_PURCHASE",
-        properties: {
-          ...data.properties,
+        _eventType: any,
+        _properties: any,
           productId,
-          quantity: data.quantity,
-          priceCents: data.priceCents,
+          _quantity: any,
+          _priceCents: any,
         },
       });
 
       // Update product metrics
       await prisma.productMetrics.upsert({
-        where: { productId },
-        update: {
-          purchases: { increment: data.quantity },
-          updatedAt: new Date(),
+        _where: any,
+        _update: any,
+          _updatedAt: any),
         },
-        create: {
-          productId,
-          views: 0,
-          purchases: data.quantity,
+        _create: any,
+          _views: any,
+          _purchases: any,
         },
       });
 
       // Update product analytics
       await this.updateProductAnalytics(productId);
     } catch (error) {
-      console.error("Error tracking product purchase:", error);
+      console.error("Error tracking product _purchase: any, error);
     }
   }
 
   // Track search queries
   static async trackSearch(
-    query: string,
-    resultCount: number,
-    data: EventData
-  ): Promise<void> {
+    _query: any,
+    _resultCount: any,
+    _data: any): Promise<void> {
     try {
       await this.trackEvent({
         ...data,
-        eventType: "SEARCH",
-        properties: {
-          ...data.properties,
+        _eventType: any,
+        _properties: any,
           query,
           resultCount,
         },
@@ -265,22 +215,20 @@ export class AnalyticsTracker {
       // Update daily search analytics
       await this.updateSearchAnalytics(new Date(), query, resultCount);
     } catch (error) {
-      console.error("Error tracking search:", error);
+      console.error("Error tracking _search: any, error);
     }
   }
 
   // Track cart events
   static async trackCartEvent(
-    eventType: "ADD_TO_CART" | "REMOVE_FROM_CART" | "CART_VIEW",
-    productId: string,
-    data: EventData
-  ): Promise<void> {
+    _eventType: any,
+    _productId: any,
+    _data: any): Promise<void> {
     try {
       await this.trackEvent({
         ...data,
         eventType,
-        properties: {
-          ...data.properties,
+        _properties: any,
           productId,
         },
       });
@@ -288,7 +236,7 @@ export class AnalyticsTracker {
       // Update conversion funnel data
       await this.updateConversionFunnel(eventType, data.sessionId);
     } catch (error) {
-      console.error("Error tracking cart event:", error);
+      console.error("Error tracking cart _event: any, error);
     }
   }
 
@@ -316,77 +264,65 @@ export class AnalyticsTracker {
         await this.updateCategoryAnalytics(data.properties.productId);
       }
     } catch (error) {
-      console.error("Error updating analytics models:", error);
+      console.error("Error updating analytics _models: any, error);
     }
   }
 
   // Update product analytics
   private static async updateProductAnalytics(
-    productId: string
-  ): Promise<void> {
+    _productId: any): Promise<void> {
     try {
-      const metrics = await prisma.productMetrics.findUnique({
-        where: { productId },
+      const _metrics = await prisma.productMetrics.findUnique({
+        _where: any,
       });
 
       if (metrics) {
-        const conversionRate =
+        const _conversionRate =
           metrics.views > 0 ? (metrics.purchases / metrics.views) * 100 : 0;
 
         // Get revenue data for future use
-        const _revenueData = await prisma.$queryRaw<Array<{ revenue: bigint }>>`
-          SELECT COALESCE(SUM(oi."priceCents" * oi.quantity), 0) as revenue
+        const __revenueData = await prisma.$queryRaw<Array<{ _revenue: any), 0) as revenue
           FROM "OrderItem" oi
           INNER JOIN "Order" o ON oi."orderId" = o.id
           WHERE oi."productId" = ${productId} AND o.status = 'COMPLETED'
         `;
 
         // Revenue calculation available but not currently used
-        // const _revenue = Number(_revenueData[0]?.revenue || 0);
+        // const __revenue = Number(_revenueData[0]?.revenue || 0);
 
         await prisma.productAnalytics.upsert({
-          where: { productId },
-          update: {
-            viewCount: metrics.views,
-            purchaseCount: metrics.purchases,
+          _where: any,
+          _update: any,
+            _purchaseCount: any,
             conversionRate,
-            updatedAt: new Date(),
+            _updatedAt: any),
           },
-          create: {
-            productId,
-            viewCount: metrics.views,
-            purchaseCount: metrics.purchases,
+          _create: any,
+            _viewCount: any,
+            _purchaseCount: any,
             conversionRate,
           },
         });
       }
     } catch (error) {
-      console.error("Error updating product analytics:", error);
+      console.error("Error updating product _analytics: any, error);
     }
   }
 
   // Update category analytics
   private static async updateCategoryAnalytics(
-    productId: string
-  ): Promise<void> {
+    _productId: any): Promise<void> {
     try {
-      const product = await prisma.product.findUnique({
-        where: { id: productId },
-        select: { categoryId: true },
+      const _product = await prisma.product.findUnique({
+        _where: any,
+        _select: any,
       });
 
       if (product?.categoryId) {
         // Get category metrics
-        const categoryData = await prisma.$queryRaw<
+        const _categoryData = await prisma.$queryRaw<
           Array<{
-            total_revenue: bigint;
-            product_views: bigint;
-            total_orders: bigint;
-            avg_order_value: number;
-          }>
-        >`
-          SELECT 
-            COALESCE(SUM(oi."priceCents" * oi.quantity), 0) as total_revenue,
+            _total_revenue: any), 0) as total_revenue,
             COALESCE(SUM(pm.views), 0) as product_views,
             COUNT(DISTINCT o.id) as total_orders,
             AVG(o."totalCents") as avg_order_value
@@ -397,60 +333,50 @@ export class AnalyticsTracker {
           WHERE p."categoryId" = ${product.categoryId}
         `;
 
-        const data = categoryData[0];
+        const _data = categoryData[0];
         if (data) {
-          const conversionRate =
+          const _conversionRate =
             Number(data.product_views) > 0
               ? (Number(data.total_orders) / Number(data.product_views)) * 100
               : 0;
 
           await prisma.categoryAnalytics.upsert({
-            where: { categoryId: product.categoryId },
-            update: {
-              viewCount: Number(data.product_views),
+            _where: any,
+            _update: any),
               conversionRate,
-              averageOrderValue: Number(data.avg_order_value || 0),
-              updatedAt: new Date(),
+              _averageOrderValue: any),
+              _updatedAt: any),
             },
-            create: {
-              categoryId: product.categoryId,
-              viewCount: Number(data.product_views),
+            _create: any,
+              _viewCount: any),
               conversionRate,
-              averageOrderValue: Number(data.avg_order_value || 0),
+              _averageOrderValue: any),
             },
           });
         }
       }
     } catch (error) {
-      console.error("Error updating category analytics:", error);
+      console.error("Error updating category _analytics: any, error);
     }
   }
 
   // Update search analytics
   private static async updateSearchAnalytics(
-    date: Date,
-    _query: string,
-    _resultCount: number
-  ): Promise<void> {
+    _date: any,
+    __query: any,
+    __resultCount: any): Promise<void> {
     // Query and result count for future analytics implementation
     try {
-      const dateOnly = new Date(
+      const _dateOnly = new Date(
         date.getFullYear(),
         date.getMonth(),
         date.getDate()
       );
 
       // Get daily search stats
-      const searchStats = await prisma.$queryRaw<
+      const _searchStats = await prisma.$queryRaw<
         Array<{
-          total_searches: bigint;
-          unique_queries: bigint;
-          no_results_count: bigint;
-          click_through_count: bigint;
-        }>
-      >`
-        SELECT 
-          COUNT(*) as total_searches,
+          _total_searches: any) as total_searches,
           COUNT(DISTINCT ae.properties->>'query') as unique_queries,
           COUNT(CASE WHEN (ae.properties->>'resultCount')::int = 0 THEN 1 END) as no_results_count,
           COUNT(CASE WHEN ae.properties->>'clicked' = 'true' THEN 1 END) as click_through_count
@@ -459,60 +385,54 @@ export class AnalyticsTracker {
           AND DATE_TRUNC('day', ae.timestamp) = ${dateOnly}
       `;
 
-      const stats = searchStats[0];
+      const _stats = searchStats[0];
       if (stats) {
-        const totalSearches = Number(stats.total_searches);
-        const noResultsRate =
+        const _totalSearches = Number(stats.total_searches);
+        const _noResultsRate =
           totalSearches > 0
             ? (Number(stats.no_results_count) / totalSearches) * 100
             : 0;
-        const clickThroughRate =
+        const _clickThroughRate =
           totalSearches > 0
             ? (Number(stats.click_through_count) / totalSearches) * 100
             : 0;
 
-        // Note: SearchAnalytics model tracks individual queries, not daily aggregates
+        // _Note: any, not daily aggregates
         // This would need to be refactored to work with individual search queries
-        console.log("Daily search analytics:", {
+        console.log("Daily search _analytics: any, {
           totalSearches,
-          uniqueQueries: Number(stats.unique_queries),
+          _uniqueQueries: any),
           noResultsRate,
           clickThroughRate,
         });
       }
     } catch (error) {
-      console.error("Error updating search analytics:", error);
+      console.error("Error updating search _analytics: any, error);
     }
   }
 
   // Update conversion funnel
   private static async updateConversionFunnel(
-    eventType: string,
+    _eventType: any,
     sessionId?: string | null
   ): Promise<void> {
     try {
       if (!sessionId) return;
 
-      const stepMapping: Record<string, { step: number; stepName: string }> = {
-        PAGE_VIEW: { step: 1, stepName: "Landing" },
-        PRODUCT_VIEW: { step: 2, stepName: "Product View" },
-        ADD_TO_CART: { step: 3, stepName: "Add to Cart" },
-        CHECKOUT_START: { step: 4, stepName: "Checkout" },
-        PURCHASE: { step: 5, stepName: "Purchase" },
+      const _stepMapping: any, { _step: any, _stepName: any,
+        _PRODUCT_VIEW: any, _stepName: any,
+        _ADD_TO_CART: any, _stepName: any,
+        _CHECKOUT_START: any, _stepName: any,
+        _PURCHASE: any, _stepName: any,
       };
 
-      const stepInfo = stepMapping[eventType];
+      const _stepInfo = stepMapping[eventType];
       if (!stepInfo) return;
 
       // Calculate funnel metrics for this step
-      const funnelData = await prisma.$queryRaw<
+      const _funnelData = await prisma.$queryRaw<
         Array<{
-          step_users: bigint;
-          prev_step_users: bigint;
-        }>
-      >`
-        WITH step_data AS (
-          SELECT COUNT(DISTINCT ae."sessionId") as step_users
+          _step_users: any) as step_users
           FROM "AnalyticsEvent" ae
           WHERE ae."eventType" = ${eventType}
         ),
@@ -533,25 +453,23 @@ export class AnalyticsTracker {
         FROM step_data s, prev_step_data p
       `;
 
-      const data = funnelData[0];
+      const _data = funnelData[0];
       if (data) {
-        const users = Number(data.step_users);
-        const prevUsers = Number(data.prev_step_users);
-        const conversionRate = prevUsers > 0 ? (users / prevUsers) * 100 : 0;
-        const dropoffRate = 100 - conversionRate;
+        const _users = Number(data.step_users);
+        const _prevUsers = Number(data.prev_step_users);
+        const _conversionRate = prevUsers > 0 ? (users / prevUsers) * 100 : 0;
+        const _dropoffRate = 100 - conversionRate;
 
-        // Note: ConversionFunnel model uses different structure than expected
-        // This would need to be refactored to work with the actual schema
-        console.log("Conversion funnel step:", {
-          step: stepInfo.step,
-          stepName: stepInfo.stepName,
+        // _Note: any, {
+          _step: any,
+          _stepName: any,
           users,
           conversionRate,
           dropoffRate,
         });
       }
     } catch (error) {
-      console.error("Error updating conversion funnel:", error);
+      console.error("Error updating conversion _funnel: any, error);
     }
   }
 
@@ -559,7 +477,7 @@ export class AnalyticsTracker {
   static async processAnalytics(date: Date = new Date()): Promise<void> {
     try {
       console.log(
-        "Processing analytics for date:",
+        "Processing analytics for _date: any,
         date.toISOString().split("T")[0]
       );
 
@@ -573,30 +491,21 @@ export class AnalyticsTracker {
 
       console.log("Analytics processing completed");
     } catch (error) {
-      console.error("Error processing analytics:", error);
+      console.error("Error processing _analytics: any, error);
     }
   }
 
   // Process daily revenue analytics
   private static async processRevenueAnalytics(date: Date): Promise<void> {
-    const dateOnly = new Date(
+    const _dateOnly = new Date(
       date.getFullYear(),
       date.getMonth(),
       date.getDate()
     );
 
-    const revenueData = await prisma.$queryRaw<
+    const _revenueData = await prisma.$queryRaw<
       Array<{
-        total_revenue: bigint;
-        order_count: bigint;
-        avg_order_value: number;
-        new_customer_revenue: bigint;
-        returning_customer_revenue: bigint;
-      }>
-    >`
-      WITH daily_orders AS (
-        SELECT 
-          o.*,
+        _total_revenue: any,
           CASE WHEN prev_orders.user_id IS NULL THEN 'new' ELSE 'returning' END as customer_type
         FROM "Order" o
         LEFT JOIN (
@@ -617,34 +526,32 @@ export class AnalyticsTracker {
       FROM daily_orders o
     `;
 
-    const data = revenueData[0];
+    const _data = revenueData[0];
     if (data) {
       // Check if revenue analytics for this date already exists
-      const existing = await prisma.revenueAnalytics.findFirst({
-        where: { date: dateOnly },
+      const _existing = await prisma.revenueAnalytics.findFirst({
+        _where: any,
       });
 
       if (existing) {
         await prisma.revenueAnalytics.update({
-          where: { id: existing.id },
-          data: {
-            totalRevenue: Number(data.total_revenue),
-            orderCount: Number(data.order_count),
-            averageOrderValue: Number(data.avg_order_value || 0),
-            newCustomerRevenue: Number(data.new_customer_revenue),
-            returningCustomerRevenue: Number(data.returning_customer_revenue),
-            updatedAt: new Date(),
+          _where: any,
+          _data: any),
+            _orderCount: any),
+            _averageOrderValue: any),
+            _newCustomerRevenue: any),
+            _returningCustomerRevenue: any),
+            _updatedAt: any),
           },
         });
       } else {
         await prisma.revenueAnalytics.create({
-          data: {
-            date: dateOnly,
-            totalRevenue: Number(data.total_revenue),
-            orderCount: Number(data.order_count),
-            averageOrderValue: Number(data.avg_order_value || 0),
-            newCustomerRevenue: Number(data.new_customer_revenue),
-            returningCustomerRevenue: Number(data.returning_customer_revenue),
+          _data: any,
+            _totalRevenue: any),
+            _orderCount: any),
+            _averageOrderValue: any),
+            _newCustomerRevenue: any),
+            _returningCustomerRevenue: any),
           },
         });
       }
@@ -653,17 +560,12 @@ export class AnalyticsTracker {
 
   // Process cohort analysis (monthly)
   private static async processCohortAnalysis(date: Date): Promise<void> {
-    const cohortMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    const _cohortMonth = new Date(date.getFullYear(), date.getMonth(), 1);
 
     // This is a simplified version - in practice, you'd calculate retention rates for all cohorts
-    const cohortData = await prisma.$queryRaw<
+    const _cohortData = await prisma.$queryRaw<
       Array<{
-        cohort_size: bigint;
-        retention_rate: number;
-      }>
-    >`
-      WITH cohort_users AS (
-        SELECT u.id, DATE_TRUNC('month', u."createdAt") as cohort_month
+        _cohort_size: any, DATE_TRUNC('month', u."createdAt") as cohort_month
         FROM "User" u
         WHERE DATE_TRUNC('month', u."createdAt") = ${cohortMonth}
           AND u."isAdmin" = false
@@ -674,31 +576,29 @@ export class AnalyticsTracker {
       FROM cohort_users cu
     `;
 
-    const data = cohortData[0];
+    const _data = cohortData[0];
     if (data && Number(data.cohort_size) > 0) {
       // Check if cohort analysis for this month already exists
-      const existing = await prisma.cohortAnalysis.findFirst({
-        where: { cohortDate: cohortMonth },
+      const _existing = await prisma.cohortAnalysis.findFirst({
+        _where: any,
       });
 
       if (existing) {
         await prisma.cohortAnalysis.update({
-          where: { id: existing.id },
-          data: {
-            cohortSize: Number(data.cohort_size),
-            retentionData: JSON.stringify([100, Number(data.retention_rate)]),
-            revenueData: JSON.stringify([0, 0]),
-            updatedAt: new Date(),
+          _where: any,
+          _data: any),
+            _retentionData: any, Number(data.retention_rate)]),
+            _revenueData: any, 0]),
+            _updatedAt: any),
           },
         });
       } else {
         await prisma.cohortAnalysis.create({
-          data: {
-            cohortPeriod: "monthly",
-            cohortDate: cohortMonth,
-            cohortSize: Number(data.cohort_size),
-            retentionData: JSON.stringify([100, Number(data.retention_rate)]),
-            revenueData: JSON.stringify([0, 0]),
+          _data: any,
+            _cohortDate: any,
+            _cohortSize: any),
+            _retentionData: any, Number(data.retention_rate)]),
+            _revenueData: any, 0]),
           },
         });
       }
@@ -707,33 +607,31 @@ export class AnalyticsTracker {
 
   // Process customer segmentation
   private static async processCustomerSegmentation(): Promise<void> {
-    const segments = [
-      { name: "VIP", criteria: { minOrders: 5, minSpent: 50000 } },
-      { name: "Loyal", criteria: { minOrders: 3, minSpent: 25000 } },
-      { name: "Regular", criteria: { minOrders: 1, minSpent: 10000 } },
-      { name: "New", criteria: { minOrders: 1, minSpent: 0 } },
-      { name: "Browser", criteria: { minOrders: 0, minSpent: 0 } },
+    const _segments = [
+      { _name: any, _criteria: any, _minSpent: any,
+      { _name: any, _criteria: any, _minSpent: any,
+      { _name: any, _criteria: any, _minSpent: any,
+      { _name: any, _criteria: any, _minSpent: any,
+      { _name: any, _criteria: any, _minSpent: any,
     ];
 
     for (const segment of segments) {
       // Check if segment already exists
-      const existing = await prisma.customerSegment.findFirst({
-        where: { name: segment.name },
+      const _existing = await prisma.customerSegment.findFirst({
+        _where: any,
       });
 
       if (existing) {
         await prisma.customerSegment.update({
-          where: { id: existing.id },
-          data: {
-            criteria: JSON.stringify(segment.criteria),
-            updatedAt: new Date(),
+          _where: any,
+          _data: any),
+            _updatedAt: any),
           },
         });
       } else {
         await prisma.customerSegment.create({
-          data: {
-            name: segment.name,
-            criteria: JSON.stringify(segment.criteria),
+          _data: any,
+            _criteria: any),
           },
         });
       }
@@ -742,9 +640,9 @@ export class AnalyticsTracker {
 
   // Update analytics for all products
   private static async updateAllProductAnalytics(): Promise<void> {
-    const products = await prisma.product.findMany({
-      where: { isActive: true },
-      select: { id: true },
+    const _products = await prisma.product.findMany({
+      _where: any,
+      _select: any,
     });
 
     for (const product of products) {
@@ -754,14 +652,14 @@ export class AnalyticsTracker {
 
   // Update analytics for all categories
   private static async updateAllCategoryAnalytics(): Promise<void> {
-    const categories = await prisma.category.findMany({
-      select: { id: true },
+    const _categories = await prisma.category.findMany({
+      _select: any,
     });
 
     for (const category of categories) {
-      const products = await prisma.product.findMany({
-        where: { categoryId: category.id },
-        select: { id: true },
+      const _products = await prisma.product.findMany({
+        _where: any,
+        _select: any,
       });
 
       if (products.length > 0) {
@@ -772,18 +670,18 @@ export class AnalyticsTracker {
 }
 
 // Export helper functions for use in API routes
-export const trackEvent = AnalyticsTracker.trackEvent.bind(AnalyticsTracker);
-export const trackPageView =
+export const _trackEvent = AnalyticsTracker.trackEvent.bind(AnalyticsTracker);
+export const _trackPageView =
   AnalyticsTracker.trackPageView.bind(AnalyticsTracker);
-export const trackProductView =
+export const _trackProductView =
   AnalyticsTracker.trackProductView.bind(AnalyticsTracker);
-export const trackProductPurchase =
+export const _trackProductPurchase =
   AnalyticsTracker.trackProductPurchase.bind(AnalyticsTracker);
-export const trackSearch = AnalyticsTracker.trackSearch.bind(AnalyticsTracker);
-export const trackCartEvent =
+export const _trackSearch = AnalyticsTracker.trackSearch.bind(AnalyticsTracker);
+export const _trackCartEvent =
   AnalyticsTracker.trackCartEvent.bind(AnalyticsTracker);
-export const startSession =
+export const _startSession =
   AnalyticsTracker.startSession.bind(AnalyticsTracker);
-export const endSession = AnalyticsTracker.endSession.bind(AnalyticsTracker);
-export const processAnalytics =
+export const _endSession = AnalyticsTracker.endSession.bind(AnalyticsTracker);
+export const _processAnalytics =
   AnalyticsTracker.processAnalytics.bind(AnalyticsTracker);

@@ -1,7 +1,11 @@
 import { getServerSession } from "next-auth";
+import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
+import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
+import { logger } from "@/lib/server/logger";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +36,7 @@ export async function PATCH(
     });
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Error:", error);
+    logger.error("Error:", error);
     return new NextResponse("Not Found", { status: 404 });
   }
 }
@@ -48,7 +52,7 @@ export async function DELETE(
     await prisma.discountCode.delete({ where: { id: params.id } });
     return new NextResponse("", { status: 204 });
   } catch (error) {
-    console.error("Error:", error);
+    logger.error("Error:", error);
     return new NextResponse("Not Found", { status: 404 });
   }
 }

@@ -1,20 +1,23 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { ReviewService } from "@/lib/server/reviewService";
+import { logger } from "@/lib/server/logger";
 import { SocialWishlistService } from "@/lib/server/socialWishlistService";
+import { logger } from "@/lib/server/logger";
 
 export async function GET() {
   try {
-    console.log("🚀 Phase 4 Social Commerce Features Demo");
+    logger.info("🚀 Phase 4 Social Commerce Features Demo");
 
     // 1. Enhanced Review System Demonstration
-    console.log("\n📍 1. ENHANCED REVIEW SYSTEM");
+    logger.info("\n📍 1. ENHANCED REVIEW SYSTEM");
     const productReviews = await ReviewService.getProductReviews("prod_1", {
       page: 1,
       limit: 3,
       sortBy: "newest",
     });
 
-    console.log("✅ Review System:", {
+    logger.info("✅ Review System:", {
       totalReviews: productReviews.totalCount,
       averageRating: productReviews.analytics.averageRating,
       verifiedReviewsPercentage:
@@ -24,13 +27,13 @@ export async function GET() {
 
     // 2. Review Moderation Demo
     const moderationQueue = await ReviewService.getModerationQueue(5);
-    console.log("✅ Review Moderation:", {
+    logger.info("✅ Review Moderation:", {
       pendingReviews: moderationQueue.length,
       moderationReasons: [...new Set(moderationQueue.map((r) => r.flagReason))],
     });
 
     // 3. Social Wishlist System
-    console.log("\n📍 2. SOCIAL WISHLIST SYSTEM");
+    logger.info("\n📍 2. SOCIAL WISHLIST SYSTEM");
     const userWishlists = await SocialWishlistService.getUserWishlists(
       "demo_user_123"
     );
@@ -38,7 +41,7 @@ export async function GET() {
       3
     );
 
-    console.log("✅ Wishlist System:", {
+    logger.info("✅ Wishlist System:", {
       userWishlistCount: userWishlists.length,
       totalWishlistValue: userWishlists.reduce(
         (sum, w) => sum + w.totalValue,
@@ -49,11 +52,11 @@ export async function GET() {
     });
 
     // 4. Social Features Demo
-    console.log("\n📍 3. SOCIAL FEATURES");
+    logger.info("\n📍 3. SOCIAL FEATURES");
     const wishlistAnalytics =
       await SocialWishlistService.getWishlistAnalytics();
 
-    console.log("✅ Social Analytics:", {
+    logger.info("✅ Social Analytics:", {
       totalWishlists: wishlistAnalytics.totalWishlists,
       averageItemsPerWishlist: wishlistAnalytics.averageItemsPerWishlist,
       wishlistConversionRate: wishlistAnalytics.conversionRate + "%",
@@ -61,7 +64,7 @@ export async function GET() {
     });
 
     // 5. User Engagement Metrics
-    console.log("\n📍 4. USER ENGAGEMENT");
+    logger.info("\n📍 4. USER ENGAGEMENT");
     const engagementMetrics = {
       reviewParticipationRate: 34.5, // % of users who write reviews
       wishlistUsageRate: 67.8, // % of users with wishlists
@@ -70,10 +73,10 @@ export async function GET() {
       communityGrowth: 45.2, // % growth in social features usage
     };
 
-    console.log("✅ Engagement Metrics:", engagementMetrics);
+    logger.info("✅ Engagement Metrics:", engagementMetrics);
 
     // 6. Mobile Optimization Metrics (Mock)
-    console.log("\n📍 5. MOBILE OPTIMIZATION");
+    logger.info("\n📍 5. MOBILE OPTIMIZATION");
     const mobileMetrics = {
       mobileTrafficPercentage: 72.3,
       mobileConversionRate: 3.8,
@@ -82,10 +85,10 @@ export async function GET() {
       touchOptimizationScore: 94.2, // UX score for touch interactions
     };
 
-    console.log("✅ Mobile Performance:", mobileMetrics);
+    logger.info("✅ Mobile Performance:", mobileMetrics);
 
     // 7. Social Commerce ROI
-    console.log("\n📍 6. SOCIAL COMMERCE ROI");
+    logger.info("\n📍 6. SOCIAL COMMERCE ROI");
     const socialCommerceMetrics = {
       reviewInfluencedPurchases: 68.5, // % of purchases influenced by reviews
       wishlistConversions: 23.4, // % of wishlist items eventually purchased
@@ -94,7 +97,7 @@ export async function GET() {
       averageOrderValueIncrease: 28.3, // % AOV increase from social features
     };
 
-    console.log("✅ Social Commerce ROI:", socialCommerceMetrics);
+    logger.info("✅ Social Commerce ROI:", socialCommerceMetrics);
 
     // Compile comprehensive Phase 4 demo response
     const phase4Results = {
@@ -192,11 +195,11 @@ export async function GET() {
       ],
     };
 
-    console.log("\n🎉 PHASE 4 SOCIAL COMMERCE DEMONSTRATION COMPLETE");
-    console.log(
+    logger.info("\n🎉 PHASE 4 SOCIAL COMMERCE DEMONSTRATION COMPLETE");
+    logger.info(
       "📱 Social features and mobile optimization foundation established"
     );
-    console.log("🚀 Ready for PWA implementation and mobile UI overhaul");
+    logger.info("🚀 Ready for PWA implementation and mobile UI overhaul");
 
     return NextResponse.json({
       success: true,
@@ -205,8 +208,8 @@ export async function GET() {
       data: phase4Results,
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Phase 4 demo error:", error);
+    logger.error("Error:", error);
+    logger.error("Phase 4 demo error:", error);
     return NextResponse.json(
       {
         success: false,

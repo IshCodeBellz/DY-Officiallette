@@ -1,20 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
+import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
+import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
+import { logger } from "@/lib/server/logger";
 import {
   sendOrderConfirmation,
   sendRichOrderConfirmation,
 } from "@/lib/server/mailer";
 import { z } from "zod";
+import { logger } from "@/lib/server/logger";
 import { rateLimit } from "@/lib/server/rateLimit";
+import { logger } from "@/lib/server/logger";
 import { buildDraftFromCart, calculateRates } from "@/lib/server/taxShipping";
+import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 import { decrementSizeStock } from "@/lib/server/inventory";
+import { logger } from "@/lib/server/logger";
 import { debug } from "@/lib/server/debug";
+import { logger } from "@/lib/server/logger";
 import { withRequest, error as logError } from "@/lib/server/logger";
+import { logger } from "@/lib/server/logger";
 import { ExtendedSession } from "@/lib/types";
+import { logger } from "@/lib/server/logger";
+import { OrderEventService } from "@/lib/server/orderEventService";
+import { logger } from "@/lib/server/logger";
 
 // Basic Phase 3 draft checkout endpoint:
 // 1. Reads authenticated user's cart
@@ -62,7 +75,9 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       expires: "",
     };
   } else {
-    session = (await getServerSession(authOptionsEnhanced)) as ExtendedSession | null;
+    session = (await getServerSession(
+      authOptionsEnhanced
+    )) as ExtendedSession | null;
     uid = session?.user?.id;
   }
   if (!uid) {
@@ -331,37 +346,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
         },
       });
 
-      await tx.orderEvent.create({
-        data: {
-          orderId: order.id,
-          kind: "CREATED",
-          message: "Order created and awaiting payment",
-          meta: JSON.stringify({
-            subtotalCents: subtotal,
-            discountCents,
-            taxCents,
-            shippingCents,
-            totalCents,
-            discountApplied: !!discountMeta.id,
-          }),
-        },
-      });
-
-      if (discountMeta.id) {
-        await tx.orderEvent.create({
-          data: {
-            orderId: order.id,
-            kind: "DISCOUNT_APPLIED",
-            message: `Discount code ${discountMeta.code} applied`,
-            meta: JSON.stringify({
-              code: discountMeta.code,
-              valueCents: discountMeta.valueCents,
-              percent: discountMeta.percent,
-              discountCents,
-            }),
-          },
-        });
-      }
+      // Enhanced order events will be created after transaction
 
       for (const line of cart.lines) {
         await tx.orderItem.create({
@@ -432,6 +417,43 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       );
     }
     throw error;
+  }
+
+  // Create enhanced order events after transaction
+  try {
+    await OrderEventService.createEvent({
+      orderId: result.id,
+      kind: "ORDER_CREATED",
+      message: "Order created and awaiting payment",
+      userId: session?.user?.id,
+      metadata: {
+        subtotalCents: subtotal,
+        discountCents,
+        taxCents,
+        shippingCents,
+        totalCents,
+        discountApplied: !!discountMeta.id,
+        paymentProvider: "STRIPE",
+      },
+    });
+
+    if (discountMeta.id) {
+      await OrderEventService.createEvent({
+        orderId: result.id,
+        kind: "DISCOUNT_APPLIED",
+        message: `Discount code ${discountMeta.code} applied`,
+        userId: session?.user?.id,
+        metadata: {
+          discountCode: discountMeta.code,
+          discountValueCents: discountMeta.valueCents,
+          discountPercent: discountMeta.percent,
+          totalDiscountCents: discountCents,
+        },
+      });
+    }
+  } catch (error) {
+    logger.error("Failed to create enhanced order events:", error);
+    // Don't fail the order creation for event logging issues
   }
 
   // Send rich order confirmation email (includes line items & addresses)

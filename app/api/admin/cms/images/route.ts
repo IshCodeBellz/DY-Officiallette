@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
+import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
+import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
+import { logger } from "@/lib/server/logger";
 import { withRequest } from "@/lib/server/logger";
+import { logger } from "@/lib/server/logger";
 import { CMSService } from "@/lib/server/cmsService";
+import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +36,7 @@ export const GET = withRequest(async function GET() {
     const images = await CMSService.getHomePageImages();
     return NextResponse.json({ images });
   } catch (error) {
-    console.error("Error fetching homepage images:", error);
+    logger.error("Error fetching homepage images:", error);
     return NextResponse.json(
       { error: "Failed to fetch images" },
       { status: 500 }
@@ -93,7 +99,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     const updatedImages = await CMSService.getHomePageImages();
     return NextResponse.json({ images: updatedImages });
   } catch (error) {
-    console.error("Error updating homepage images:", error);
+    logger.error("Error updating homepage images:", error);
     return NextResponse.json(
       { error: "Failed to update images" },
       { status: 500 }

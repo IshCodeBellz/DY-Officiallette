@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import {
   trackEvent,
   trackPageView,
@@ -7,6 +8,7 @@ import {
   trackCartEvent,
 } from "@/lib/server/analyticsTracker";
 import { captureError, trackPerformance } from "@/lib/server/errors";
+import { logger } from "@/lib/server/logger";
 
 // POST /api/analytics/events - Track analytics events
 export async function POST(req: NextRequest) {
@@ -113,7 +115,7 @@ export async function POST(req: NextRequest) {
 
           processedCount++;
         } catch (error) {
-          console.error("Error processing event:", error);
+          logger.error("Error processing event:", error);
           errorCount++;
         }
       });

@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
               }
             }
           } catch (error) {
-            console.warn("Failed to get location for session:", error);
+            logError("Failed to get location for session", error as Error);
           }
         }
 
@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
           }
         }
       } catch (error) {
-        console.warn("Failed to get current location:", error);
+        logError("Failed to get current location", error as Error);
       }
 
       sessions.push({

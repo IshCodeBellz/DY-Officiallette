@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
+import { logger } from "@/lib/server/logger";
 import { withRequest } from "@/lib/server/logger";
+import { logger } from "@/lib/server/logger";
 import {
   trackPerformance,
   reportHealthStatus,
@@ -36,7 +39,7 @@ async function checkDatabase(): Promise<HealthCheckResult> {
         prisma.order.count().catch(() => 0),
       ]);
     } catch (error) {
-      console.error("Error:", error);
+      logger.error("Error:", error);
       // ignore and keep counts at 0
     }
 
@@ -63,7 +66,7 @@ async function checkDatabase(): Promise<HealthCheckResult> {
       },
     };
   } catch (error) {
-    console.error("Error:", error);
+    logger.error("Error:", error);
     return {
       component: "database",
       status: "critical",
@@ -109,7 +112,7 @@ async function checkMemory(): Promise<HealthCheckResult> {
       },
     };
   } catch (error) {
-    console.error("Error:", error);
+    logger.error("Error:", error);
     return {
       component: "memory",
       status: "critical",
@@ -208,7 +211,7 @@ export const GET = withRequest(async function GET() {
       headers: { "cache-control": "no-store" },
     });
   } catch (error) {
-    console.error("Error:", error);
+    logger.error("Error:", error);
     perf.finish("error");
 
     return createErrorResponse(

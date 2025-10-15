@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { SearchService } from "@/lib/server/searchService";
+import { logger } from "@/lib/server/logger";
 import { PersonalizationService } from "@/lib/server/personalizationService";
+import { logger } from "@/lib/server/logger";
 import { InventoryService } from "@/lib/server/inventoryService";
+import { logger } from "@/lib/server/logger";
 
 export async function GET() {
   try {
-    console.log("🚀 Phase 3 Advanced E-Commerce Features Demo");
+    logger.info("🚀 Phase 3 Advanced E-Commerce Features Demo");
 
     // 1. Advanced Search Demonstration
-    console.log("\n📍 1. ADVANCED SEARCH SYSTEM");
+    logger.info("\n📍 1. ADVANCED SEARCH SYSTEM");
     const searchResults = await SearchService.searchProducts({
       query: "t-shirt",
       colors: ["Blue"],
@@ -18,21 +22,21 @@ export async function GET() {
       limit: 5,
     });
 
-    console.log("✅ Search Results:", {
+    logger.info("✅ Search Results:", {
       totalProducts: searchResults.totalCount,
       facets: Object.keys(searchResults.facets),
       hasRecommendations: (searchResults.suggestions?.length || 0) > 0,
     });
 
     // 2. Personalization Engine Demonstration
-    console.log("\n📍 2. PERSONALIZATION ENGINE");
+    logger.info("\n📍 2. PERSONALIZATION ENGINE");
     const recommendations =
       await PersonalizationService.getPersonalizedRecommendations(
         "demo_user_123",
         { limit: 8, strategy: "hybrid" }
       );
 
-    console.log("✅ Personalized Recommendations:", {
+    logger.info("✅ Personalized Recommendations:", {
       strategy: recommendations.strategy,
       productCount: recommendations.products.length,
       reasonTypes: recommendations.reasons.map((r) => r.type),
@@ -42,7 +46,7 @@ export async function GET() {
     });
 
     // 3. User Behavior Tracking
-    console.log("\n📍 3. USER BEHAVIOR TRACKING");
+    logger.info("\n📍 3. USER BEHAVIOR TRACKING");
     await PersonalizationService.trackUserInteraction(
       "demo_user_123",
       "prod_1",
@@ -52,7 +56,7 @@ export async function GET() {
       "demo_user_123"
     );
 
-    console.log("✅ User Preferences:", {
+    logger.info("✅ User Preferences:", {
       topCategories: userPreferences.categories.slice(0, 3).map((c) => c.name),
       topBrands: userPreferences.brands.slice(0, 2).map((b) => b.name),
       priceRange: userPreferences.priceRange,
@@ -60,18 +64,18 @@ export async function GET() {
     });
 
     // 4. Inventory Management Demonstration
-    console.log("\n📍 4. INVENTORY MANAGEMENT");
+    logger.info("\n📍 4. INVENTORY MANAGEMENT");
     const inventory = await InventoryService.getProductInventory("prod_1");
     const alerts = await InventoryService.getLowStockAlerts(5);
 
-    console.log("✅ Inventory System:", {
+    logger.info("✅ Inventory System:", {
       productInventoryItems: inventory.length,
       lowStockAlerts: alerts.length,
       alertTypes: [...new Set(alerts.map((a) => a.type))],
     });
 
     // 5. Stock Operations
-    console.log("\n📍 5. STOCK OPERATIONS");
+    logger.info("\n📍 5. STOCK OPERATIONS");
     const stockUpdate = await InventoryService.updateStock(
       "prod_1",
       "var_1",
@@ -86,7 +90,7 @@ export async function GET() {
       "order_demo_123"
     );
 
-    console.log("✅ Stock Operations:", {
+    logger.info("✅ Stock Operations:", {
       stockUpdateSuccess: stockUpdate.success,
       newStockLevel: stockUpdate.newStock,
       reservationSuccess: reservation.success,
@@ -94,11 +98,11 @@ export async function GET() {
     });
 
     // 6. Search Intelligence
-    console.log("\n📍 6. SEARCH INTELLIGENCE");
+    logger.info("\n📍 6. SEARCH INTELLIGENCE");
     const suggestions = await SearchService.getSearchSuggestions("jean", 5);
     const trending = await SearchService.getTrendingSearches(5);
 
-    console.log("✅ Search Intelligence:", {
+    logger.info("✅ Search Intelligence:", {
       suggestionsCount: suggestions.length,
       trendingSearches: trending.length,
       topSuggestion: suggestions[0]?.query,
@@ -106,7 +110,7 @@ export async function GET() {
     });
 
     // 7. Advanced Product Features (Mock demonstration)
-    console.log("\n📍 7. PRODUCT MANAGEMENT");
+    logger.info("\n📍 7. PRODUCT MANAGEMENT");
     const mockProductVariants = [
       { type: "color", value: "Blue", stock: 45 },
       { type: "color", value: "Red", stock: 8 },
@@ -114,7 +118,7 @@ export async function GET() {
       { type: "size", value: "L", stock: 34 },
     ];
 
-    console.log("✅ Product Variants:", {
+    logger.info("✅ Product Variants:", {
       variantTypes: [...new Set(mockProductVariants.map((v) => v.type))],
       totalVariants: mockProductVariants.length,
       lowStockVariants: mockProductVariants.filter((v) => v.stock < 10).length,
@@ -123,8 +127,8 @@ export async function GET() {
     // 8. Comprehensive Analytics
     const inventoryReport = await InventoryService.generateInventoryReport();
 
-    console.log("\n📍 8. BUSINESS INTELLIGENCE");
-    console.log("✅ Inventory Analytics:", {
+    logger.info("\n📍 8. BUSINESS INTELLIGENCE");
+    logger.info("✅ Inventory Analytics:", {
       totalProducts: inventoryReport.totalProducts,
       totalVariants: inventoryReport.totalVariants,
       lowStockItems: inventoryReport.lowStockItems,
@@ -261,11 +265,11 @@ export async function GET() {
       ],
     };
 
-    console.log("\n🎉 PHASE 3 DEMONSTRATION COMPLETE");
-    console.log(
+    logger.info("\n🎉 PHASE 3 DEMONSTRATION COMPLETE");
+    logger.info(
       "📊 All advanced e-commerce features are operational with comprehensive mock data"
     );
-    console.log(
+    logger.info(
       "🔄 Ready for database integration and frontend implementation"
     );
 
@@ -275,8 +279,8 @@ export async function GET() {
       data: demoResults,
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Phase 3 demo error:", error);
+    logger.error("Error:", error);
+    logger.error("Phase 3 demo error:", error);
     return NextResponse.json(
       {
         success: false,

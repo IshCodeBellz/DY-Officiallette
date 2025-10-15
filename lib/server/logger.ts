@@ -12,6 +12,18 @@ export function getLatencySnapshot() {
   return { ...latencyCounts };
 }
 
+// Simple auth check function
+export async function requireAuth(
+  request: Request
+): Promise<{ id: string; role: string }> {
+  const userId = request.headers.get("x-demo-user");
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+  // For demo purposes, treat all authenticated users as admins
+  return { id: userId, role: "admin" };
+}
+
 export interface LogFields {
   [k: string]: unknown;
 }

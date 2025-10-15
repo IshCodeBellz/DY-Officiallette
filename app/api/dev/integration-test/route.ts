@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
+import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
+import { logger } from "@/lib/server/logger";
 import { IntegrationTestService } from "@/lib/server/integrationTestService";
+import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -28,10 +32,10 @@ export async function GET(request: NextRequest) {
     const testUserId = searchParams.get("userId");
     const testType = searchParams.get("type") || "full";
 
-    console.log("🧪 Starting integration tests...");
-    console.log(`📋 Test type: ${testType}`);
+    logger.info("🧪 Starting integration tests...");
+    logger.info(`📋 Test type: ${testType}`);
     if (testUserId) {
-      console.log(`👤 Test user ID: ${testUserId}`);
+      logger.info(`👤 Test user ID: ${testUserId}`);
     }
 
     let testResults;
@@ -106,13 +110,13 @@ export async function GET(request: NextRequest) {
     };
 
     // Log results to console for debugging
-    console.log("✅ Integration test results:");
-    console.log(JSON.stringify(responseData, null, 2));
+    logger.info("✅ Integration test results:");
+    logger.info(JSON.stringify(responseData, null, 2));
 
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Integration test API error:", error);
+    logger.error("Error:", error);
+    logger.error("Integration test API error:", error);
     return NextResponse.json(
       {
         success: false,

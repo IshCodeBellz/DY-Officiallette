@@ -58,7 +58,7 @@ export function AccountNavigation({
     },
     {
       label: "Track My Order",
-      items: [{ href: "#tracking", text: "Tracking", disabled: true }],
+      items: [{ href: "/tracking", text: "Tracking", disabled: false }],
     },
     {
       label: "Wish List",

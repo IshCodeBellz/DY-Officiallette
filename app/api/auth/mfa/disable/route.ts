@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth/next";
+import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
+import { logger } from "@/lib/server/logger";
 import { MFAService } from "@/lib/server/mfa";
+import { logger } from "@/lib/server/logger";
 import { z } from "zod";
+import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +55,7 @@ export async function POST(request: NextRequest) {
     await MFAService.disableMFA(session.user.email);
 
     // Log security event
-    console.log(`MFA disabled for user ${session.user.email}`, {
+    logger.info(`MFA disabled for user ${session.user.email}`, {
       reason: reason || "User requested",
       timestamp: new Date().toISOString(),
     });
@@ -63,8 +68,8 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("MFA disable error:", error);
+    logger.error("Error:", error);
+    logger.error("MFA disable error:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

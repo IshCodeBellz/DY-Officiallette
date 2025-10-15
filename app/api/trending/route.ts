@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
+import { logger } from "@/lib/server/logger";
 
 interface TrendingItem {
   id: string;
@@ -82,7 +84,7 @@ export async function GET() {
 
     return NextResponse.json({ items });
   } catch (error) {
-    console.error("Error:", error);
+    logger.error("Error:", error);
     // On hard failure also fallback so homepage stays resilient
     try {
       const latest = await prisma.product.findMany({

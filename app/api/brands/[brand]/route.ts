@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
+import { logger } from "@/lib/server/logger";
 
 export async function GET(
   request: NextRequest,
@@ -90,8 +92,8 @@ export async function GET(
       },
     });
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Failed to fetch brand:", error);
+      logger.error("Error:", error);
+    logger.error("Failed to fetch brand:", error);
     return NextResponse.json(
       { error: "Failed to fetch brand" },
       { status: 500 }

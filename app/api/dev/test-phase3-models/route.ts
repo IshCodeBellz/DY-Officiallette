@@ -1,26 +1,28 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
+import { logger } from "@/lib/server/logger";
 
 export async function GET() {
   try {
     // Test if we can access our new Phase 3 models
-    console.log("Testing Prisma client with Phase 3 models...");
+    logger.info("Testing Prisma client with Phase 3 models...");
 
     // Test ProductVariant model
     const variantCount = await prisma.productVariant.count();
-    console.log("ProductVariant count:", variantCount);
+    logger.info("ProductVariant count:", variantCount);
 
     // Test UserBehavior model
     const behaviorCount = await prisma.userBehavior.count();
-    console.log("UserBehavior count:", behaviorCount);
+    logger.info("UserBehavior count:", behaviorCount);
 
     // Test ProductBundle model
     const bundleCount = await prisma.productBundle.count();
-    console.log("ProductBundle count:", bundleCount);
+    logger.info("ProductBundle count:", bundleCount);
 
     // Test InventoryAlert model
     const alertCount = await prisma.inventoryAlert.count();
-    console.log("InventoryAlert count:", alertCount);
+    logger.info("InventoryAlert count:", alertCount);
 
     return NextResponse.json({
       success: true,
@@ -35,8 +37,8 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Phase 3 model test error:", error);
+    logger.error("Error:", error);
+    logger.error("Phase 3 model test error:", error);
     return NextResponse.json(
       {
         success: false,

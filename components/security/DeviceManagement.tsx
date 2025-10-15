@@ -59,7 +59,7 @@ export function DeviceManagement() {
           )
         );
       } catch (err) {
-        console.error("Failed to fetch devices:", err);
+        
         setError(err instanceof Error ? err.message : "Failed to load devices");
       } finally {
         setLoading(false);
