@@ -1,7 +1,13 @@
 "use client";
 import { useCart } from "@/components/providers/CartProvider";
 import { useCurrency } from "@/components/providers/CurrencyProvider";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  PaymentRequestButtonElement,
+  useStripe,
+} from "@stripe/react-stripe-js";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
@@ -12,6 +18,11 @@ export default function BagPage() {
   const { status: authStatus } = useSession();
   const router = useRouter();
   const [checkingOut, setCheckingOut] = useState(false);
+  const stripePromise =
+    typeof window !== "undefined" &&
+    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+      ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+      : null;
 
   async function handleCheckout() {
     if (items.length === 0 || checkingOut) return;
@@ -39,6 +50,117 @@ export default function BagPage() {
       // Do not reset immediately to avoid double-click during navigation
       setTimeout(() => setCheckingOut(false), 800);
     }
+  }
+
+  // Express Pay Button component scoped inside bag page
+  function ExpressPay() {
+    const stripe = useStripe();
+    const [available, setAvailable] = useState(false);
+    const prRef = useRef<import("@stripe/stripe-js").PaymentRequest | null>(
+      null
+    );
+
+    useEffect(() => {
+      if (!stripe) return;
+      const pr = stripe.paymentRequest({
+        country: "US",
+        currency: "usd",
+        total: {
+          label: "DY OFFICIALETTE",
+          amount: Math.round(subtotal * 100),
+        },
+        requestPayerName: true,
+        requestPayerEmail: true,
+      });
+      pr.canMakePayment().then((res) => {
+        if (res) {
+          prRef.current = pr;
+          setAvailable(true);
+        }
+      });
+      pr.on("paymentmethod", async (ev) => {
+        try {
+          // Ensure user is authenticated or redirect
+          if (authStatus !== "authenticated") {
+            ev.complete("fail");
+            router.push(
+              `/login?callbackUrl=${encodeURIComponent("/checkout")}`
+            );
+            return;
+          }
+          // Persist cart first
+          await fetch("/api/cart", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              lines: items.map((i) => ({
+                productId: i.productId,
+                size: i.size,
+                qty: i.qty,
+              })),
+            }),
+          });
+          // Create order + intent
+          const checkoutRes = await fetch("/api/checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              shippingAddress: {
+                fullName: "Wallet Customer",
+                line1: "Unknown",
+                city: "Unknown",
+                postalCode: "00000",
+                country: "US",
+              },
+              idempotencyKey: crypto.randomUUID(),
+              lines: items.map((i) => ({
+                productId: i.productId,
+                size: i.size,
+                qty: i.qty,
+              })),
+            }),
+          });
+          if (!checkoutRes.ok) throw new Error("Checkout failed");
+          const c = await checkoutRes.json();
+          const piRes = await fetch("/api/payments/intent", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderId: c.orderId }),
+          });
+          if (!piRes.ok) throw new Error("Intent failed");
+          const pi = await piRes.json();
+          const { error, paymentIntent } = await stripe.confirmCardPayment(
+            pi.clientSecret,
+            { payment_method: ev.paymentMethod.id },
+            { handleActions: true }
+          );
+          if (error) {
+            await ev.complete("fail");
+            return;
+          }
+          await ev.complete("success");
+          if (paymentIntent && paymentIntent.status === "succeeded") {
+            clear();
+            router.push("/checkout/success");
+          } else {
+            clear();
+            router.push("/checkout/success");
+          }
+        } catch {
+          await ev.complete("fail");
+        }
+      });
+    }, [stripe, authStatus, items, subtotal, router, clear]);
+
+    if (!available || !prRef.current) return null;
+    return (
+      <div className="mt-2">
+        <PaymentRequestButtonElement
+          options={{ paymentRequest: prRef.current }}
+        />
+        <p className="text-xs text-neutral-500 mt-2">Or continue to checkout</p>
+      </div>
+    );
   }
   return (
     <div className="container mx-auto px-4 py-12">
@@ -120,6 +242,13 @@ export default function BagPage() {
                 : "Redirecting to sign in..."
               : "Checkout"}
           </button>
+          {stripePromise && (
+            <div className="mt-2">
+              <Elements stripe={stripePromise}>
+                <ExpressPay />
+              </Elements>
+            </div>
+          )}
         </aside>
       </div>
     </div>

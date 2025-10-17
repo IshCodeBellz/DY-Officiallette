@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptionsEnhanced);
 
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // First verify the user can regenerate backup codes
     const verifyResult = await MFAService.verifyMFA(
-      session.user.email,
+      session.user.id,
       confirmationToken
     );
 
@@ -48,11 +48,11 @@ export async function POST(request: NextRequest) {
 
     // Regenerate backup codes
     const newBackupCodes = await MFAService.regenerateBackupCodes(
-      session.user.email
+      session.user.id
     );
 
     // Log security event
-    logger.info(`Backup codes regenerated for user ${session.user.email}`, {
+    logger.info(`Backup codes regenerated for user ${session.user.id}`, {
       timestamp: new Date().toISOString(),
       codesGenerated: newBackupCodes.length,
     });

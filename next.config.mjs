@@ -12,6 +12,8 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   images: {
+    // Disable Next.js Image Optimization so external domains don't need to be whitelisted
+    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "images.asos-media.com" },
       { protocol: "https", hostname: "static.asosservices.com" },
@@ -23,6 +25,7 @@ const nextConfig = {
       { protocol: "https", hostname: "example.com" },
       { protocol: "https", hostname: "i.pravatar.cc" },
       { protocol: "https", hostname: "media.about.nike.com" },
+      { protocol: "https", hostname: "static.runnea.com" },
     ],
   },
 };

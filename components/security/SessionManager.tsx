@@ -90,8 +90,6 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
 
       setSessions(parsedSessions);
     } catch (error) {
-      
-      
       setError("Failed to load session information");
 
       // Mock data for development
@@ -164,8 +162,6 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
       // Remove session from list
       setSessions((prev) => prev.filter((session) => session.id !== sessionId));
     } catch (error) {
-      
-      
       setError("Failed to terminate session");
     } finally {
       setTerminating((prev) => {
@@ -190,12 +186,9 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
     });
 
     try {
-      const response = await fetch(
-        "/api/account/sessions/terminate-all",
-        {
-          method: "POST",
-        }
-      );
+      const response = await fetch("/api/account/sessions/terminate-all", {
+        method: "POST",
+      });
 
       if (!response.ok) {
         const data = await response.json();
@@ -205,8 +198,6 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
       // Remove other sessions from list
       setSessions((prev) => prev.filter((session) => session.isCurrent));
     } catch (error) {
-      
-      
       setError("Failed to terminate other sessions");
     } finally {
       setTerminating(new Set());

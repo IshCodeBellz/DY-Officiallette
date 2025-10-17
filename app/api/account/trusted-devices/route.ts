@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true, deviceId, trusted: body.trust });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { message: "Failed to update trusted device" },
       { status: 500 }
@@ -160,7 +160,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { message: "Failed to untrust device" },
       { status: 500 }

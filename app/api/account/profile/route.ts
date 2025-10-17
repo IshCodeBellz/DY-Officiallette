@@ -64,8 +64,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
 
   try {
+    // Default to update_profile when no explicit action provided
+    const action = body.action || "update_profile";
+
     // Handle comprehensive profile update
-    if (body.action === "update_profile") {
+    if (action === "update_profile") {
       const updateData: Record<string, string | Date | null> = {};
 
       // Handle name field
@@ -106,7 +109,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Handle password update
-    if (body.action === "update_password") {
+    if (action === "update_password") {
       const { newPassword } = body;
       if (!newPassword || newPassword.length < 6) {
         return NextResponse.json(
@@ -124,7 +127,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Handle contact preferences update
-    if (body.action === "update_preferences") {
+    if (action === "update_preferences") {
       const { contactPreferences } = body;
       if (!contactPreferences || typeof contactPreferences !== "object") {
         return NextResponse.json(
@@ -154,7 +157,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Handle account deletion
-    if (body.action === "delete_account") {
+    if (action === "delete_account") {
       // Delete user and all related data
       await prisma.user.delete({
         where: { id: uid },
@@ -165,6 +168,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // If we reached here, the action is not supported
     return NextResponse.json({ error: "invalid_action" }, { status: 400 });
   } catch (error) {
     logError("profile_update_error", {

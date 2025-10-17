@@ -90,6 +90,14 @@ npm run prisma:seed
 3. Select events: `payment_intent.succeeded`, `payment_intent.payment_failed`
 4. Copy webhook secret to Vercel environment variables
 
+### 6. Apple Pay Domain Verification (If using Apple Pay)
+
+1. In Stripe Dashboard → Payments → Apple Pay, add your domain
+2. Download the association file provided
+3. Replace the contents of `public/.well-known/apple-developer-merchantid-domain-association` with that file (no extra whitespace)
+4. Deploy and verify the domain in Stripe
+5. Test Apple Pay on Safari/iOS/macOS with Wallet configured
+
 ### 6. Email Setup (Optional)
 
 1. Sign up for [Resend](https://resend.com)
@@ -137,6 +145,7 @@ npx prisma db push
 - [ ] EMAIL_FROM (optional, for emails)
 - [ ] RESEND_API_KEY (optional, for emails)
 - [ ] Stripe keys (if using payments)
+- [ ] Apple Pay domain association file deployed and verified (if using Apple Pay)
 
 ## Next Steps
 
@@ -146,6 +155,7 @@ npx prisma db push
 4. Run database migrations
 5. Test core functionality
 6. Set up monitoring (optional)
+7. Verify wallets (Apple Pay / Google Pay) on supported devices
 
 ## Enterprise Production Deployment
 

@@ -155,8 +155,6 @@ model User {
   emailVerified           Boolean                 @default(false)
   emailVerifiedAt         DateTime?
   mfaEnabled              Boolean                 @default(false)
-  mfaSecret               String?
-  mfaBackupCodes          String?
   createdAt               DateTime                @default(now())
   updatedAt               DateTime                @updatedAt
   lastLoginAt             DateTime?

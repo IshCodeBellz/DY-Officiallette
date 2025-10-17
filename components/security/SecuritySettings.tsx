@@ -221,7 +221,8 @@ export function SecuritySettings({
 
       if (response.ok) {
         const result = await response.json();
-        setBackupCodes(result.backupCodes);
+        const codes = result?.data?.backupCodes || result?.backupCodes || [];
+        setBackupCodes(codes);
         push({ message: "New backup codes generated", type: "success" });
       } else {
         const error = await response.json();

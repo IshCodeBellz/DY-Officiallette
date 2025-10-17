@@ -254,7 +254,7 @@ export async function DELETE(request: NextRequest) {
           blocked: false,
         },
       });
-    } catch (_) {
+    } catch {
       // Non-critical; ignore logging errors
     }
 

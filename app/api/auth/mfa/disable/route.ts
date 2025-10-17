@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptionsEnhanced);
 
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     // First verify the user can disable MFA with their current token
     const verifyResult = await MFAService.verifyMFA(
-      session.user.email,
+      session.user.id,
       confirmationToken
     );
 
@@ -48,10 +48,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Disable MFA
-    await MFAService.disableMFA(session.user.email);
+    await MFAService.disableMFA(session.user.id);
 
     // Log security event
-    logger.info(`MFA disabled for user ${session.user.email}`, {
+    logger.info(`MFA disabled for user ${session.user.id}`, {
       reason: reason || "User requested",
       timestamp: new Date().toISOString(),
     });

@@ -1,9 +1,11 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { loadStripe } from "@stripe/stripe-js";
+import type { PaymentRequest } from "@stripe/stripe-js";
 import {
   Elements,
   PaymentElement,
+  PaymentRequestButtonElement,
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
@@ -24,6 +26,7 @@ interface PrimedOrderData {
   subtotalCents: number;
   discountCents: number;
   totalCents: number;
+  currency: string;
 }
 
 export default function CheckoutClient() {
@@ -185,6 +188,7 @@ export default function CheckoutClient() {
         subtotalCents: checkoutData.subtotalCents,
         discountCents: checkoutData.discountCents,
         totalCents: checkoutData.totalCents,
+        currency: checkoutData.currency || "USD",
       });
       setStep("payment");
     } catch (err) {
@@ -472,6 +476,69 @@ function PaymentStep({
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [prAvailable, setPrAvailable] = useState(false);
+  const paymentRequestRef = useRef<PaymentRequest | null>(null);
+
+  // Initialize Payment Request Button (Apple Pay / Google Pay)
+  useEffect(() => {
+    if (!stripe || !primed) return;
+    const country = primed.currency?.toUpperCase() === "GBP" ? "GB" : "US";
+    const currency = (primed.currency || "USD").toLowerCase();
+    const pr = stripe.paymentRequest({
+      country,
+      currency,
+      total: { label: "DY OFFICIALETTE Order", amount: primed.totalCents },
+      requestPayerName: true,
+      requestPayerEmail: true,
+      requestShipping: false,
+    });
+
+    pr.canMakePayment().then((result) => {
+      if (result) {
+        paymentRequestRef.current = pr;
+        setPrAvailable(true);
+      } else {
+        setPrAvailable(false);
+      }
+    });
+
+    // Handle wallet payment method
+    pr.on("paymentmethod", async (ev) => {
+      try {
+        setSubmitting(true);
+        setErr(null);
+        const { error, paymentIntent } = await stripe.confirmCardPayment(
+          primed.clientSecret,
+          {
+            payment_method: ev.paymentMethod.id,
+          },
+          { handleActions: true }
+        );
+        if (error) {
+          await ev.complete("fail");
+          setErr(error.message || "Payment error");
+          setSubmitting(false);
+          return;
+        }
+        await ev.complete("success");
+        if (paymentIntent && paymentIntent.status === "succeeded") {
+          onSuccess();
+        } else {
+          // If additional actions were required and completed, consider it success
+          onSuccess();
+        }
+      } catch (e) {
+        await ev.complete("fail");
+        setErr(e instanceof Error ? e.message : "Payment error");
+      } finally {
+        setSubmitting(false);
+      }
+    });
+
+    return () => {
+      // No explicit teardown required; element unmount handles listeners
+    };
+  }, [stripe, primed, onSuccess]);
 
   async function handlePay(e: React.FormEvent) {
     e.preventDefault();
@@ -501,6 +568,16 @@ function PaymentStep({
     <div className="container mx-auto px-4 py-12 max-w-lg">
       <h1 className="text-2xl font-semibold mb-6">Payment</h1>
       <form onSubmit={handlePay} className="space-y-4">
+        {prAvailable && paymentRequestRef.current && (
+          <div className="mb-2">
+            <PaymentRequestButtonElement
+              options={{ paymentRequest: paymentRequestRef.current }}
+            />
+            <div className="text-xs text-neutral-500 mt-2">
+              Or pay with your card below
+            </div>
+          </div>
+        )}
         <PaymentElement />
         {err && (
           <div className="bg-red-100 text-red-600 p-2 rounded text-sm">
