@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
-import { logger } from "@/lib/server/logger";
 import { withRequest } from "@/lib/server/logger";
-import { logger } from "@/lib/server/logger";
 import { trackPerformance } from "@/lib/server/errors";
-import { logger } from "@/lib/server/logger";
 
 export const runtime = "nodejs";
 
@@ -31,7 +28,7 @@ export const GET = withRequest(async function GET() {
       ]);
 
     // Test write operation (non-destructive)
-        await prisma.user.count(); // Write test
+    await prisma.user.count(); // Write test
 
     const responseTime = Date.now() - start;
     const status =

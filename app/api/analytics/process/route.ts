@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { withRequest } from "@/lib/server/logger";
-import { logger } from "@/lib/server/logger";
 import { captureError, trackPerformance } from "@/lib/server/errors";
-import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
-import { logger } from "@/lib/server/logger";
 
 // POST /api/analytics/process - Process analytics data (for cron jobs)
 export const POST = withRequest(async function POST(req: NextRequest) {

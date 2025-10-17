@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { AccountNavigation } from "@/components/account/AccountNavigation";
 
@@ -54,7 +54,7 @@ interface TrackingData {
   };
 }
 
-export default function TrackingPage() {
+function TrackingPageContent() {
   const [trackingData, setTrackingData] = useState<TrackingData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
@@ -63,6 +63,73 @@ export default function TrackingPage() {
   const [emailInput, setEmailInput] = useState("");
 
   const searchParams = useSearchParams();
+
+  const handleTrackingSearch = useCallback(
+    async (trackingNumber?: string) => {
+      const tracking = trackingNumber || searchInput;
+      if (!tracking.trim()) return;
+
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await fetch(
+          `/api/tracking?tracking=${encodeURIComponent(tracking.trim())}`
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch tracking information");
+        }
+
+        setTrackingData(data);
+      } catch (err: unknown) {
+        setError(
+          (err as Error).message || "Failed to fetch tracking information"
+        );
+        setTrackingData(null);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [searchInput]
+  );
+
+  const handleOrderSearch = useCallback(
+    async (orderId?: string, email?: string) => {
+      const order = orderId || orderIdInput;
+      const orderEmail = email || emailInput;
+
+      if (!order.trim() || !orderEmail.trim()) {
+        setError("Please provide both order ID and email address");
+        return;
+      }
+
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await fetch(
+          `/api/tracking?order=${encodeURIComponent(
+            order.trim()
+          )}&email=${encodeURIComponent(orderEmail.trim())}`
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch order information");
+        }
+
+        setTrackingData(data);
+      } catch (err: unknown) {
+        setError((err as Error).message || "Failed to fetch order information");
+        setTrackingData(null);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [orderIdInput, emailInput]
+  );
 
   useEffect(() => {
     // Check URL parameters for tracking info
@@ -78,66 +145,8 @@ export default function TrackingPage() {
       setEmailInput(email);
       handleOrderSearch(orderId, email);
     }
+    // Only re-run when URL params change or the callbacks change
   }, [searchParams, handleOrderSearch, handleTrackingSearch]);
-
-  const handleTrackingSearch = async (trackingNumber?: string) => {
-    const tracking = trackingNumber || searchInput;
-    if (!tracking.trim()) return;
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch(
-        `/api/tracking?tracking=${encodeURIComponent(tracking.trim())}`
-      );
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch tracking information");
-      }
-
-      setTrackingData(data);
-    } catch (err: unknown) {
-      setError((err as Error).message || "Failed to fetch tracking information");
-      setTrackingData(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOrderSearch = async (orderId?: string, email?: string) => {
-    const order = orderId || orderIdInput;
-    const orderEmail = email || emailInput;
-
-    if (!order.trim() || !orderEmail.trim()) {
-      setError("Please provide both order ID and email address");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch(
-        `/api/tracking?order=${encodeURIComponent(
-          order.trim()
-        )}&email=${encodeURIComponent(orderEmail.trim())}`
-      );
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch order information");
-      }
-
-      setTrackingData(data);
-    } catch (err: unknown) {
-      setError((err as Error).message || "Failed to fetch order information");
-      setTrackingData(null);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-GB", {
@@ -547,5 +556,14 @@ export default function TrackingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Wrap the component that uses useSearchParams in Suspense to satisfy Next.js requirements
+export default function TrackingPage() {
+  return (
+    <Suspense fallback={<div className="p-8">Loading tracking page…</div>}>
+      <TrackingPageContent />
+    </Suspense>
   );
 }

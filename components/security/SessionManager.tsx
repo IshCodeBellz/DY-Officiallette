@@ -150,8 +150,10 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
     setTerminating((prev) => new Set(prev).add(sessionId));
 
     try {
-      const response = await fetch(`/api/account/sessions/${sessionId}`, {
+      const response = await fetch(`/api/account/sessions`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
       });
 
       if (!response.ok) {
@@ -188,9 +190,12 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
     });
 
     try {
-      const response = await fetch("/api/account/sessions/terminate-others", {
-        method: "POST",
-      });
+      const response = await fetch(
+        "/api/account/sessions/terminate-all",
+        {
+          method: "POST",
+        }
+      );
 
       if (!response.ok) {
         const data = await response.json();

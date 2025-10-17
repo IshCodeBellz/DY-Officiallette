@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth/next";
-import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
-import { logger } from "@/lib/server/logger";
 import { MFAService } from "@/lib/server/mfa";
-import { logger } from "@/lib/server/logger";
 import { z } from "zod";
-import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 

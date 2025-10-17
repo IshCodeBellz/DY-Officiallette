@@ -12,6 +12,17 @@ export function getLatencySnapshot() {
   return { ...latencyCounts };
 }
 
+// Create logger object for backward compatibility
+export const logger = {
+  info: log,
+  warn,
+  error,
+  debug: log,
+};
+
+// Export individual functions with their original names
+export { log as logInfo, warn as logWarn, error as logError };
+
 // Simple auth check function
 export async function requireAuth(
   request: Request
@@ -41,9 +52,17 @@ export function warn(msg: string, fields: LogFields = {}) {
   if (silent()) return;
   console.warn(base({ level: "warn", msg, ...fields }));
 }
-export function error(msg: string, fields: LogFields = {}) {
+export function error(msg: string, fields?: unknown) {
   if (silent()) return;
-  console.error(base({ level: "error", msg, ...fields }));
+  let extra: LogFields = {};
+  if (fields instanceof Error) {
+    extra = { err: fields.message, stack: fields.stack };
+  } else if (fields && typeof fields === "object" && !Array.isArray(fields)) {
+    extra = fields as LogFields;
+  } else if (fields !== undefined) {
+    extra = { err: String(fields) };
+  }
+  console.error(base({ level: "error", msg, ...extra }));
 }
 
 interface RequestLike {

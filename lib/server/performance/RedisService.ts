@@ -51,21 +51,24 @@ class RedisService {
     try {
       this.redis = new Redis(process.env.REDIS_URL, {
         maxRetriesPerRequest: 3,
-        retryDelayOnFailover: 100,
-        enableReadyCheck: true,
-        lazyConnect: true,
-        onConnectError: (error) => {
-          console.error("Redis connection error:", error);
-          alerts
-            .createAlert(
-              "redis_connection_failed",
-              "high",
-              "Redis Connection Failed",
-              `Failed to connect to Redis: ${error.message}`,
-              { error: error.message }
-            )
-            .catch(console.error);
+        retryStrategy: (times) => {
+          const delay = Math.min(times * 50, 2000);
+          return delay;
         },
+        lazyConnect: true,
+      });
+
+      this.redis.on("error", (error: Error) => {
+        console.error("Redis connection error:", error);
+        alerts
+          .createAlert(
+            "redis_connection_failed",
+            "high",
+            "Redis Connection Failed",
+            `Failed to connect to Redis: ${error.message}`,
+            { error: error.message }
+          )
+          .catch(console.error);
       });
 
       this.redis.on("connect", () => {

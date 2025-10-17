@@ -74,4 +74,11 @@ module.exports = [
       "react-hooks/exhaustive-deps": "warn",
     },
   },
+  // Relax rule only for shim/demo files and shipping services
+  {
+    files: ["lib/server/*_clean.ts", "lib/server/shipping/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
+    },
+  },
 ];

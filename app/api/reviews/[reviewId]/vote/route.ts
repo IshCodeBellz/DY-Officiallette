@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
-import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
-import { logger } from "@/lib/server/logger";
 import { ReviewService } from "@/lib/server/reviewService";
-import { logger } from "@/lib/server/logger";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 /**
  * POST /api/reviews/[reviewId]/vote
@@ -41,7 +38,7 @@ export async function POST(
       newVoteCount: result.newVoteCount,
     });
   } catch (error) {
-      logger.error("Error:", error);
+    logger.error("Error:", error);
     logger.error("Vote review error:", error);
     return NextResponse.json(
       { error: "Failed to record vote" },

@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { withRequest } from "@/lib/server/logger";
-import { logger } from "@/lib/server/logger";
 import { trackPerformance } from "@/lib/server/errors";
-import { logger } from "@/lib/server/logger";
 
 export const runtime = "nodejs";
 
@@ -51,7 +49,7 @@ export const GET = withRequest(async function GET() {
       const retrievedValue = await redis.get(testKey);
 
       // Test DELETE operation
-      await redis.delete(testKey);
+      await redis.del(testKey);
 
       const responseTime = Date.now() - start;
       const status =

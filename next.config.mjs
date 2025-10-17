@@ -1,8 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Relax build blockers so we can produce artifacts while fixing lint/type issues
   eslint: {
-    // ESLint will run during builds to catch errors
+    // Skip ESLint errors during production builds
+    // ignoreDuringBuilds: true,
     ignoreDuringBuilds: false,
+  },
+  typescript: {
+    // Skip TypeScript type errors during production builds
+    // ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   images: {
     remotePatterns: [

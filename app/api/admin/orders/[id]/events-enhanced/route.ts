@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { OrderEventService } from "@/lib/server/orderEventService";
-import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
-import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
-import { logger } from "@/lib/server/logger";
 
 export async function GET(
   req: NextRequest,

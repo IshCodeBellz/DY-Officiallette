@@ -253,6 +253,17 @@ class PerformanceMonitor {
 export const perfMonitor = {
   getInstance: () => PerformanceMonitor.getInstance(),
 
+  // Generic function timing
+  async timeFunction<T>(
+    name: string,
+    fn: () => Promise<T>,
+    tags: Record<string, string> = {},
+    metadata: Record<string, any> = {}
+  ): Promise<T> {
+    const monitor = PerformanceMonitor.getInstance();
+    return monitor.timeFunction(name, fn, tags, metadata);
+  },
+
   // Database operations
   async timeQuery<T>(
     queryName: string,

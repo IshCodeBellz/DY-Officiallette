@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
-import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
-import { logger } from "@/lib/server/logger";
 import { TrackingService } from "@/lib/server/shipping/TrackingService";
-import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
-import { logger } from "@/lib/server/logger";
 
 export async function GET(request: NextRequest) {
   // Check admin authentication
@@ -31,7 +27,14 @@ export async function GET(request: NextRequest) {
         to: new Date(),
       });
     } catch (error) {
-      logger.warn("TrackingService not available:", error);
+      logger.warn("TrackingService not available:", {
+        error:
+          error instanceof Error
+            ? error.message
+            : typeof error === "string"
+            ? error
+            : "unknown",
+      });
       metrics = {
         totalShipments: 0,
         deliveredShipments: 0,
@@ -43,9 +46,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Get shipment status breakdown (with fallback)
-    let statusBreakdown = [];
+    type StatusBreakdown = { status: string; _count: { status: number } };
+    let statusBreakdown: StatusBreakdown[] = [];
     try {
-      statusBreakdown = await prisma.shipment.groupBy({
+      const statusBreakdownRaw = await prisma.shipment.groupBy({
         by: ["status"],
         _count: {
           status: true,
@@ -56,15 +60,28 @@ export async function GET(request: NextRequest) {
           },
         },
       });
+      statusBreakdown = statusBreakdownRaw as unknown as StatusBreakdown[];
     } catch (error) {
-      logger.warn("Shipment status breakdown not available:", error);
+      logger.warn("Shipment status breakdown not available:", {
+        error:
+          error instanceof Error
+            ? error.message
+            : typeof error === "string"
+            ? error
+            : "unknown",
+      });
       statusBreakdown = [];
     }
 
     // Get carrier volume (with fallback)
-    let carrierVolume = [];
+    type CarrierVolume = {
+      carrier: string;
+      _count: { carrier: number };
+      _sum: { cost: number | null };
+    };
+    let carrierVolume: CarrierVolume[] = [];
     try {
-      carrierVolume = await prisma.shipment.groupBy({
+      const carrierVolumeRaw = await prisma.shipment.groupBy({
         by: ["carrier"],
         _count: {
           carrier: true,
@@ -78,13 +95,22 @@ export async function GET(request: NextRequest) {
           },
         },
       });
+      carrierVolume = carrierVolumeRaw as unknown as CarrierVolume[];
     } catch (error) {
-      logger.warn("Carrier volume not available:", error);
+      logger.warn("Carrier volume not available:", {
+        error:
+          error instanceof Error
+            ? error.message
+            : typeof error === "string"
+            ? error
+            : "unknown",
+      });
       carrierVolume = [];
     }
 
     // Get daily shipment volume (with fallback)
-    let dailyVolume = [];
+    type DailyVolume = { createdAt: Date; status: string };
+    let dailyVolume: DailyVolume[] = [];
     try {
       dailyVolume = await prisma.shipment.findMany({
         select: {
@@ -101,25 +127,55 @@ export async function GET(request: NextRequest) {
         },
       });
     } catch (error) {
-      logger.warn("Daily volume not available:", error);
+      logger.warn("Daily volume not available:", {
+        error:
+          error instanceof Error
+            ? error.message
+            : typeof error === "string"
+            ? error
+            : "unknown",
+      });
       dailyVolume = [];
     }
 
     // Process daily volume data
-    const dailyStats = dailyVolume.reduce((acc: Record<string, { date: string; shipped: number; delivered: number }>, shipment: { createdAt: Date; status: string }) => {
-      const date = shipment.createdAt.toISOString().split("T")[0];
-      if (!acc[date]) {
-        acc[date] = { date, shipped: 0, delivered: 0 };
-      }
-      acc[date].shipped++;
-      if (shipment.status === "DELIVERED") {
-        acc[date].delivered++;
-      }
-      return acc;
-    }, {});
+    const dailyStats = dailyVolume.reduce(
+      (
+        acc: Record<
+          string,
+          { date: string; shipped: number; delivered: number }
+        >,
+        shipment: DailyVolume
+      ) => {
+        const date = shipment.createdAt.toISOString().split("T")[0];
+        if (!acc[date]) {
+          acc[date] = { date, shipped: 0, delivered: 0 };
+        }
+        acc[date].shipped++;
+        if (shipment.status === "DELIVERED") {
+          acc[date].delivered++;
+        }
+        return acc;
+      },
+      {}
+    );
 
     // Get recent issues (delayed or failed deliveries) (with fallback)
-    let issues = [];
+    type IssueRecord = {
+      id: string;
+      orderId: string;
+      trackingNumber: string | null;
+      carrier: string;
+      status: string;
+      estimatedDelivery: Date | null;
+      createdAt: Date;
+      order: {
+        id: string;
+        email: string | null;
+        user: { firstName: string | null; lastName: string | null } | null;
+      };
+    };
+    let issues: IssueRecord[] = [];
     try {
       issues = await prisma.shipment.findMany({
         where: {
@@ -152,7 +208,14 @@ export async function GET(request: NextRequest) {
         take: 10,
       });
     } catch (error) {
-      logger.warn("Issues query not available:", error);
+      logger.warn("Issues query not available:", {
+        error:
+          error instanceof Error
+            ? error.message
+            : typeof error === "string"
+            ? error
+            : "unknown",
+      });
       issues = [];
     }
 
@@ -164,18 +227,18 @@ export async function GET(request: NextRequest) {
         avgDeliveryTimeHours: metrics?.avgDeliveryTimeHours || 0,
         onTimeDeliveryRate: metrics?.onTimeDeliveryRate || 0,
       },
-      statusBreakdown: statusBreakdown.map((item: { status: string; _count: { status: number } }) => ({
+      statusBreakdown: statusBreakdown.map((item: StatusBreakdown) => ({
         status: item.status,
         count: item._count.status,
       })),
       carrierPerformance: metrics?.carrierPerformance || [],
-      carrierVolume: carrierVolume.map((item: { carrier: string; _count: { carrier: number }; _sum: { cost: number | null } }) => ({
+      carrierVolume: carrierVolume.map((item: CarrierVolume) => ({
         carrier: item.carrier,
         shipments: item._count.carrier,
-        totalCost: item._sum.cost || 0,
+        totalCost: Number(item._sum.cost ?? 0),
       })),
       dailyVolume: Object.values(dailyStats),
-      issues: issues.map((issue: { id: string; orderId: string; description: string; severity: string; createdAt: Date }) => ({
+      issues: issues.map((issue: IssueRecord) => ({
         id: issue.id,
         orderId: issue.orderId,
         trackingNumber: issue.trackingNumber,
@@ -185,10 +248,10 @@ export async function GET(request: NextRequest) {
         createdAt: issue.createdAt,
         customer: {
           name:
-            `${issue.order.user?.firstName || ""} ${
-              issue.order.user?.lastName || ""
+            `${issue.order?.user?.firstName || ""} ${
+              issue.order?.user?.lastName || ""
             }`.trim() || "Guest",
-          email: issue.order.email,
+          email: issue.order?.email,
         },
       })),
     });

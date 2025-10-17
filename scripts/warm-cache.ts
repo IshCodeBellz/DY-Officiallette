@@ -70,11 +70,8 @@ async function main() {
         },
         include: {
           images: true,
-          variants: {
-            include: {
-              sizeVariants: true,
-            },
-          },
+          variants: true,
+          sizeVariants: true,
           brand: true,
           category: true,
         },

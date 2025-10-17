@@ -80,6 +80,8 @@ async function createProductionTestShipments() {
     console.log(`📦 Found ${orders.length} orders suitable for shipments`);
 
     const createdShipments = [];
+    const carriers = ["ROYAL_MAIL", "DPD", "FEDEX", "UPS"];
+    const services = ["Standard", "Express", "Next Day"];
     const statuses = [
       "PENDING",
       "SHIPPED",

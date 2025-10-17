@@ -35,7 +35,9 @@ export const POST = withRequest(async function POST() {
       message: "Images reset to defaults successfully",
     });
   } catch (error) {
-    logError("Error resetting homepage images", error as Error);
+    logError("Error resetting homepage images", {
+      err: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Failed to reset images" },
       { status: 500 }

@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
-import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
-import { logger } from "@/lib/server/logger";
 import { TrackingService } from "@/lib/server/shipping/TrackingService";
-import { logger } from "@/lib/server/logger";
 import { ShippingService } from "@/lib/server/shipping/ShippingService";
-import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
-import { logger } from "@/lib/server/logger";
+import type { Prisma } from "@prisma/client";
 
 interface ShipmentRecord {
   id: string;
@@ -33,6 +29,28 @@ interface ShipmentRecord {
   };
 }
 
+type ShipmentRow = {
+  id: string;
+  orderId: string;
+  trackingNumber: string;
+  carrier: string;
+  service: string;
+  status: string;
+  cost: number;
+  estimatedDelivery: Date | null;
+  actualDelivery: Date | null;
+  createdAt: Date;
+  lastTrackedAt: Date | null;
+  order: {
+    id: string;
+    email: string | null;
+    status: string;
+    totalCents: number;
+    createdAt: Date;
+    user: { firstName: string | null; lastName: string | null } | null;
+  };
+};
+
 export async function GET(request: NextRequest) {
   // Check admin authentication
   const session = await getServerSession(authOptionsEnhanced);
@@ -48,20 +66,8 @@ export async function GET(request: NextRequest) {
     const carrier = searchParams.get("carrier");
     const search = searchParams.get("search");
 
-    // Build where clause
-    interface WhereClause {
-      status?: string;
-      carrier?: string;
-      OR?: Array<{
-        trackingNumber?: { contains: string; mode: string };
-        order?: { 
-          email?: { contains: string; mode: string };
-          id?: { contains: string; mode: string };
-        };
-      }>;
-    }
-    
-    const whereClause: WhereClause = {};
+    // Build where clause using Prisma types
+    const whereClause: Prisma.ShipmentWhereInput = {};
 
     if (status) {
       whereClause.status = status;
@@ -72,19 +78,42 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      whereClause.OR = [
-        { trackingNumber: { contains: search, mode: "insensitive" } },
-        { order: { email: { contains: search, mode: "insensitive" } } },
-        { order: { id: { contains: search, mode: "insensitive" } } },
-      ];
+      const or: Prisma.ShipmentWhereInput[] = [];
+      or.push({
+        trackingNumber: {
+          contains: search,
+          mode: "insensitive" as Prisma.QueryMode,
+        },
+      });
+      or.push({
+        order: {
+          is: {
+            email: {
+              contains: search,
+              mode: "insensitive" as Prisma.QueryMode,
+            },
+          },
+        },
+      });
+      or.push({
+        order: {
+          is: {
+            id: {
+              contains: search,
+              mode: "insensitive" as Prisma.QueryMode,
+            },
+          },
+        },
+      });
+      whereClause.OR = or;
     }
 
     // Check if shipment table exists and get shipments with pagination
-    let shipments = [];
+    let shipmentsRaw: ShipmentRow[] = [];
     let total = 0;
 
     try {
-      [shipments, total] = await Promise.all([
+      const [resultShipments, resultTotal] = await Promise.all([
         prisma.shipment.findMany({
           where: whereClause,
           include: {
@@ -110,15 +139,24 @@ export async function GET(request: NextRequest) {
         }),
         prisma.shipment.count({ where: whereClause }),
       ]);
+      shipmentsRaw = resultShipments as unknown as ShipmentRow[];
+      total = resultTotal;
     } catch (error) {
-      logger.warn("Shipment table not available yet:", error);
+      logger.warn("Shipment table not available yet:", {
+        error:
+          error instanceof Error
+            ? error.message
+            : typeof error === "string"
+            ? error
+            : "unknown",
+      });
       // Return empty data if shipment table doesn't exist
-      shipments = [];
+      shipmentsRaw = [];
       total = 0;
     }
 
     return NextResponse.json({
-      shipments: shipments.map((shipment: ShipmentRecord) => ({
+      shipments: shipmentsRaw.map((shipment) => ({
         id: shipment.id,
         orderId: shipment.orderId,
         trackingNumber: shipment.trackingNumber,
@@ -131,15 +169,15 @@ export async function GET(request: NextRequest) {
         createdAt: shipment.createdAt,
         lastTrackedAt: shipment.lastTrackedAt,
         order: {
-          id: shipment.order.id,
-          email: shipment.order.email,
-          status: shipment.order.status,
-          total: shipment.order.totalCents / 100,
+          id: shipment.order?.id ?? "",
+          email: shipment.order?.email ?? "",
+          status: shipment.order?.status ?? "UNKNOWN",
+          total: (shipment.order?.totalCents ?? 0) / 100,
           customerName:
-            `${shipment.order.user?.firstName || ""} ${
-              shipment.order.user?.lastName || ""
+            `${shipment.order?.user?.firstName || ""} ${
+              shipment.order?.user?.lastName || ""
             }`.trim() || "Guest",
-          createdAt: shipment.order.createdAt,
+          createdAt: shipment.order?.createdAt ?? shipment.createdAt,
         },
       })),
       pagination: {

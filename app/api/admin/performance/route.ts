@@ -1,15 +1,10 @@
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { withRequest, requireAuth } from "@/lib/server/logger";
-import { logger } from "@/lib/server/logger";
 import { trackPerformance } from "@/lib/server/errors";
-import { logger } from "@/lib/server/logger";
 import { DatabaseOptimizer } from "@/lib/server/performance/DatabaseOptimizer";
-import { logger } from "@/lib/server/logger";
 import { RedisService } from "@/lib/server/performance/RedisService";
-import { logger } from "@/lib/server/logger";
 import { connectionPool } from "@/lib/server/performance/ConnectionPool";
-import { logger } from "@/lib/server/logger";
 
 interface PerformanceMetrics {
   database: {
@@ -32,7 +27,7 @@ interface PerformanceMetrics {
       type: string;
       reason: string;
       estimatedImprovement: number;
-      priority: 'high' | 'medium' | 'low';
+      priority: "high" | "medium" | "low";
     }>;
     tableBloat: Array<{
       table: string;
@@ -239,15 +234,45 @@ export const GET = withRequest(async function GET(request) {
 
     const metrics: PerformanceMetrics = {
       database: {
-        connectionPool: connectionPoolMetrics,
-        slowQueries: slowQueries.slice(0, 10), // Limit for response size
+        connectionPool: {
+          active: connectionPoolMetrics.activeConnections,
+          idle: connectionPoolMetrics.idleConnections,
+          total: connectionPoolMetrics.totalConnections,
+          maxConnections: connectionPoolMetrics.maxConnections,
+        },
+        slowQueries: slowQueries.slice(0, 10).map((q) => ({
+          query: q.query,
+          avgTime: q.duration,
+          calls: 0, // calls not available from QueryAnalysis; default to 0
+          totalTime: q.cost,
+          table: q.table,
+        })), // Limit for response size and map to expected shape
         missingIndexes: missingIndexes.slice(0, 10),
         tableBloat: tableBloat.slice(0, 10),
-        metrics: databaseMetrics,
+        metrics: {
+          connectionPool: databaseMetrics.connectionPool,
+          queryPerformance: databaseMetrics.queryPerformance,
+          tableStats: databaseMetrics.tableStats.map((t) => ({
+            tableName: t.table,
+            rowCount: t.rowCount,
+            sizeBytes: t.sizeBytes,
+            indexCount: t.indexCount,
+          })),
+        },
       },
       cache: {
         isHealthy: redisService.isHealthy(),
-        stats: cacheStats,
+        stats: {
+          connected: redisService.isHealthy(),
+          usedMemory: cacheStats.memoryUsage,
+          totalKeys: cacheStats.keyCount,
+          hitRate: cacheStats.hitRate,
+          missRate:
+            cacheStats.hits + cacheStats.misses > 0
+              ? (cacheStats.misses / (cacheStats.hits + cacheStats.misses)) *
+                100
+              : 0,
+        },
       },
       recommendations: recommendations.sort((a, b) => {
         const priorityOrder = { high: 3, medium: 2, low: 1 };

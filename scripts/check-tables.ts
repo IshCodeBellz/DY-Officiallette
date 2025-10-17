@@ -32,28 +32,34 @@ async function main() {
     console.log("\n🔎 Checking specific table existence:");
     for (const tableName of expectedTables) {
       try {
-        const result = await prisma.$queryRaw`
+        const result = (await prisma.$queryRaw`
           SELECT EXISTS (
             SELECT FROM information_schema.tables 
             WHERE table_schema = 'public' 
             AND table_name = ${tableName}
           );
-        `;
+        `) as unknown;
+        const resultRow = (result as any[])[0] as
+          | { exists?: boolean }
+          | undefined;
         console.log(
-          `${tableName}: ${result[0]?.exists ? "✅ exists" : "❌ not found"}`
+          `${tableName}: ${resultRow?.exists ? "✅ exists" : "❌ not found"}`
         );
 
         // Also try lowercase version
-        const lowerResult = await prisma.$queryRaw`
+        const lowerResult = (await prisma.$queryRaw`
           SELECT EXISTS (
             SELECT FROM information_schema.tables 
             WHERE table_schema = 'public' 
             AND table_name = ${tableName.toLowerCase()}
           );
-        `;
+        `) as unknown;
+        const lowerResultRow = (lowerResult as any[])[0] as
+          | { exists?: boolean }
+          | undefined;
         console.log(
           `${tableName.toLowerCase()}: ${
-            lowerResult[0]?.exists ? "✅ exists" : "❌ not found"
+            lowerResultRow?.exists ? "✅ exists" : "❌ not found"
           }`
         );
       } catch (error) {

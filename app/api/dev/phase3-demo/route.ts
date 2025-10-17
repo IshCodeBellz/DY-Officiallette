@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
-import { SearchService } from "@/lib/server/searchService";
-import { logger } from "@/lib/server/logger";
+import { SearchService } from "@/lib/server/searchService_clean";
 import { PersonalizationService } from "@/lib/server/personalizationService";
-import { logger } from "@/lib/server/logger";
 import { InventoryService } from "@/lib/server/inventoryService";
-import { logger } from "@/lib/server/logger";
 
 export async function GET() {
   try {
@@ -15,7 +12,7 @@ export async function GET() {
     logger.info("\n📍 1. ADVANCED SEARCH SYSTEM");
     const searchResults = await SearchService.searchProducts({
       query: "t-shirt",
-      colors: ["Blue"],
+      color: "Blue",
       priceMin: 20,
       priceMax: 50,
       sortBy: "relevance",
@@ -105,7 +102,7 @@ export async function GET() {
     logger.info("✅ Search Intelligence:", {
       suggestionsCount: suggestions.length,
       trendingSearches: trending.length,
-      topSuggestion: suggestions[0]?.query,
+      topSuggestion: suggestions[0] ?? null,
       topTrending: trending[0],
     });
 
@@ -279,13 +276,14 @@ export async function GET() {
       data: demoResults,
     });
   } catch (error) {
-    logger.error("Error:", error);
-    logger.error("Phase 3 demo error:", error);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    logger.error("Error: " + errMsg);
+    logger.error("Phase 3 demo error: " + errMsg);
     return NextResponse.json(
       {
         success: false,
         error: "Phase 3 demonstration failed",
-        details: error instanceof Error ? error.message : String(error),
+        details: errMsg,
       },
       { status: 500 }
     );

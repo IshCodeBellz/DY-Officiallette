@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
-import { logger } from "@/lib/server/logger";
 import { hashPassword } from "@/lib/server/auth";
-import { logger } from "@/lib/server/logger";
 import { z } from "zod";
-import { logger } from "@/lib/server/logger";
 import crypto from "crypto";
-import { logger } from "@/lib/server/logger";
 import { sendEmailVerification } from "@/lib/server/mailer";
-import { logger } from "@/lib/server/logger";
 import { Prisma } from "@prisma/client";
-import { logger } from "@/lib/server/logger";
 
 const schema = z.object({
   email: z.string().email(),

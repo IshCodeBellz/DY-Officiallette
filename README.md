@@ -138,6 +138,10 @@ Reviews (create/vote/report), advanced variant management, bundles, product rela
 
 See `ARCHITECTURE.md` (deep data models, algorithms, roadmap, activation steps).
 
+Operational runbooks:
+
+- Daily shipping report (10pm CSV): `docs/daily-shipping-report.md` — endpoint, auth header, required env, scheduling, and local run scripts.
+
 ## ⚖️ License / Attribution
 
 Educational project. Validate security & compliance before production use.

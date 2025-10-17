@@ -9,6 +9,7 @@ import type {
   Product,
   ProductVariant,
   ProductImage,
+  SizeVariant,
   Brand,
   Category,
   Prisma,
@@ -36,11 +37,8 @@ export class CacheManager {
             where: { id: productId },
             include: {
               images: true,
-              variants: {
-                include: {
-                  sizeVariants: true,
-                },
-              },
+              variants: true,
+              sizeVariants: true,
               brand: true,
               category: true,
             },
@@ -94,13 +92,8 @@ export class CacheManager {
               brand: {
                 select: { name: true },
               },
-              variants: {
-                include: {
-                  sizeVariants: {
-                    where: { isActive: true },
-                  },
-                },
-              },
+              variants: true,
+              sizeVariants: true,
             },
             orderBy: { createdAt: "desc" },
             take: filters?.limit || 50,
@@ -251,19 +244,22 @@ export class CacheManager {
 
         const cachedProducts = await redis.mget(cacheKeys);
         const results: Array<
-          Product & {
-            variants?: ProductVariant[];
-            images?: ProductImage[];
-            brand?: Brand;
-            category?: Category;
-          }
+          | (Product & {
+              variants?: ProductVariant[];
+              images?: ProductImage[];
+              brand?: Brand | null;
+              category?: Category | null;
+              sizeVariants?: SizeVariant[];
+            })
+          | null
         > = [];
         const missingIds: string[] = [];
 
         // Identify cache hits and misses
         cachedProducts.forEach((product, index) => {
           if (product !== null) {
-            results[index] = product;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            results[index] = product as any;
           } else {
             missingIds.push(productIds[index]);
             results[index] = null;
@@ -276,31 +272,22 @@ export class CacheManager {
             where: { id: { in: missingIds } },
             include: {
               images: true,
-              variants: {
-                include: {
-                  sizeVariants: true,
-                },
-              },
+              variants: true,
+              sizeVariants: true,
               brand: true,
               category: true,
             },
           });
 
           // Cache the fetched products and update results
-          const cacheData: Record<
-            string,
-            Product & {
-              variants?: ProductVariant[];
-              images?: ProductImage[];
-              brand?: Brand;
-              category?: Category;
-            }
-          > = {};
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const cacheData: Record<string, any> = {};
 
           missingProducts.forEach((product) => {
             const index = productIds.indexOf(product.id);
             if (index !== -1) {
-              results[index] = product;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              results[index] = product as any;
               cacheData[`product:${product.id}`] = product;
             }
           });
@@ -326,11 +313,8 @@ export class CacheManager {
       where: { isActive: true },
       include: {
         images: true,
-        variants: {
-          include: {
-            sizeVariants: true,
-          },
-        },
+        variants: true,
+        sizeVariants: true,
         brand: true,
         category: true,
       },

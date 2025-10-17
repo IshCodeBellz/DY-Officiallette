@@ -51,7 +51,9 @@ export async function GET(request: NextRequest) {
                 }
               }
             } catch (error) {
-              logError("Failed to get location for event", error as Error);
+              logError("Failed to get location for event", {
+                err: error instanceof Error ? error.message : String(error),
+              });
             }
           }
 
@@ -122,7 +124,9 @@ export async function GET(request: NextRequest) {
           }
         }
       } catch (error) {
-        logError("Failed to get current location", error as Error);
+        logError("Failed to get current location", {
+          err: error instanceof Error ? error.message : String(error),
+        });
       }
 
       // Add current login event

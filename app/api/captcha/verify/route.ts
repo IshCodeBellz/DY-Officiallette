@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { CaptchaService } from "@/lib/server/captcha";
-import { logger } from "@/lib/server/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,16 +13,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const context = {
-      userAgent: request.headers.get("user-agent") || "unknown",
-      ipAddress: request.headers.get("x-forwarded-for") || "unknown",
-      endpoint: "captcha-verify",
-    };
+    // Determine client IP in the shape expected by CaptchaService
+    const ipHeader =
+      request.headers.get("x-forwarded-for") ||
+      request.headers.get("x-real-ip") ||
+      request.headers.get("cf-connecting-ip");
+    const ip = ipHeader
+      ? ipHeader.split(",")[0].trim()
+      : /* eslint-disable-next-line */
+        (request as any).ip || "unknown";
+
+    // Narrow config key to supported values; default to 'login'
+    const allowedKeys = ["login", "register", "checkout", "contact"] as const;
+    const captchaKey = (allowedKeys as readonly string[]).includes(configKey)
+      ? (configKey as (typeof allowedKeys)[number])
+      : "login";
 
     const verification = await CaptchaService.verifyCaptcha(
       token,
-      context,
-      configKey
+      { ip },
+      captchaKey
     );
 
     if (!verification.success) {

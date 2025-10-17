@@ -9,45 +9,52 @@ import { SecurityEventType } from "../security";
 
 // Extend the User interface
 interface ExtendedUser extends NextAuthUser {
-  _id: any);
-export const _authOptionsEnhanced: any), // Commented out - install @next-auth/prisma-adapter if needed
-  _providers: any,
-      _credentials: any, _type: any,
-        _password: any, _type: any,
-        _mfaToken: any, _type: any, _optional: any,
+  id: string;
+  isAdmin: boolean;
+  emailVerified: boolean;
+}
+
+export const authOptionsEnhanced: NextAuthOptions = {
+  // adapter: PrismaAdapter(prisma), // Commented out - install @next-auth/prisma-adapter if needed
+  providers: [
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+        mfaToken: { label: "MFA Token", type: "text", optional: true },
       },
       async authorize(credentials, req) {
         // Use multiple logging methods to ensure visibility
         console.log(
-          "🔐 Enhanced _Auth: any,
+          "🔐 Enhanced Auth: Attempting login for",
           credentials?.email
         );
         console.error(
-          "🔐 Enhanced _Auth: any,
+          "🔐 Enhanced Auth: Attempting login for",
           credentials?.email
         );
-        process.stdout.write(
-          "🔐 Enhanced _Auth: any);
+        process.stdout.write("🔐 Enhanced Auth: Attempting login\n");
 
         if (!credentials?.email || !credentials?.password) {
-          console.log("❌ Enhanced _Auth: any);
-          console.error("❌ Enhanced _Auth: any);
+          console.log("❌ Enhanced Auth: Missing credentials");
+          console.error("❌ Enhanced Auth: Missing credentials");
           return null;
         }
 
         try {
           // Find user
-          const _user = await prisma.user.findUnique({
-            _where: any,
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
           });
 
           console.log(
-            "👤 Enhanced _Auth: any,
+            "👤 Enhanced Auth: Found user:",
             !!user,
             user
               ? `(attempts: ${
                   user.failedLoginAttempts
-                }, _locked: any)`
+                }, locked: ${!!user.lockedAt})`
               : ""
           );
 
@@ -73,27 +80,29 @@ export const _authOptionsEnhanced: any), // Commented out - install @next-auth/p
           }
 
           // Verify password
-          const _isValidPassword = await compare(
+          const isValidPassword = await compare(
             credentials.password,
             user.passwordHash
           );
 
           if (!isValidPassword) {
             console.log(
-              "❌ Enhanced _Auth: any, incrementing failed attempts"
+              "❌ Enhanced Auth: Invalid password, incrementing failed attempts"
             );
 
             // Increment failed attempts
-            const _updatedUser = await prisma.user.update({
-              _where: any,
-              _data: any,
+            const updatedUser = await prisma.user.update({
+              where: { id: user.id },
+              data: {
+                failedLoginAttempts: user.failedLoginAttempts + 1,
                 // Lock account after 5 failed attempts
-                _lockedAt: any) : user.lockedAt,
+                lockedAt:
+                  user.failedLoginAttempts >= 4 ? new Date() : user.lockedAt,
               },
             });
 
             console.log(
-              "🚫 Enhanced _Auth: any,
+              "🚫 Enhanced Auth: Failed attempts:",
               updatedUser.failedLoginAttempts,
               "Locked:",
               !!updatedUser.lockedAt
@@ -119,20 +128,21 @@ export const _authOptionsEnhanced: any), // Commented out - install @next-auth/p
           // }
 
           console.log(
-            "✅ Enhanced _Auth: any, resetting failed attempts"
+            "✅ Enhanced Auth: Password valid, resetting failed attempts"
           );
 
           // Reset failed attempts on successful login
           await prisma.user.update({
-            _where: any,
-            _data: any,
-              _lockedAt: any,
-              _lastLoginAt: any),
+            where: { id: user.id },
+            data: {
+              failedLoginAttempts: 0,
+              lockedAt: null,
+              lastLoginAt: new Date(),
             },
           });
 
           console.log(
-            "🎉 Enhanced _Auth: any, updated lastLoginAt"
+            "🎉 Enhanced Auth: Login successful, updated lastLoginAt"
           );
 
           // Log successful login
@@ -147,29 +157,32 @@ export const _authOptionsEnhanced: any), // Commented out - install @next-auth/p
           }
 
           return {
-            _id: any,
-            _email: any,
-            _name: any,
-            _isAdmin: any,
-            _emailVerified: any,
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            isAdmin: user.isAdmin,
+            emailVerified: user.emailVerified,
           };
         } catch (error) {
           console.error("Error:", error);
-          console.error("Authentication _error: any, error);
+          console.error("Authentication error:", error);
           return null;
         }
       },
     }),
   ],
-  _session: any,
-    _maxAge: any, // 24 hours
-    _updateAge: any, // Update every 4 hours
+  session: {
+    strategy: "jwt",
+    maxAge: 24 * 60 * 60, // 24 hours
+    updateAge: 4 * 60 * 60, // Update every 4 hours
   },
-  _jwt: any, // 24 hours
+  jwt: {
+    maxAge: 24 * 60 * 60, // 24 hours
   },
-  _callbacks: any, user, _account: any) {
+  callbacks: {
+    async jwt({ token, user, account }) {
       if (user) {
-        const _extendedUser = user as ExtendedUser;
+        const extendedUser = user as ExtendedUser;
         token.id = extendedUser.id;
         token.isAdmin = extendedUser.isAdmin;
         token.emailVerified = Boolean(extendedUser.emailVerified);
@@ -196,21 +209,19 @@ export const _authOptionsEnhanced: any), // Commented out - install @next-auth/p
       return session;
     },
   },
-  _pages: any,
-    _error: any,
+  pages: {
+    signIn: "/auth/signin",
+    error: "/auth/error",
   },
-  _events: any,
-      _account: any,
-      _profile: any,
-      _isNewUser: any,
-    }) {
+  events: {
+    async signIn({ user, account, profile, isNewUser }) {
       // Log successful sign-in event
-      console.log(`User signed _in: any);
+      console.log(`User signed in: ${user?.email}`);
     },
-    async signOut({ session, _token: any) {
+    async signOut({ session, token }) {
       // Log sign-out event
       if (session?.user?.email) {
-        console.log(`User signed _out: any);
+        console.log(`User signed out: ${session.user.email}`);
       }
     },
   },

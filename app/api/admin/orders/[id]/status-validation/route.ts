@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
-import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
-import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
-import { logger } from "@/lib/server/logger";
 import { isOrderStatus, type OrderStatus } from "@/lib/status";
-import { logger } from "@/lib/server/logger";
 import { OrderStatusService } from "@/lib/server/orderStatusService";
-import { logger } from "@/lib/server/logger";
 
 export async function GET(
   req: NextRequest,

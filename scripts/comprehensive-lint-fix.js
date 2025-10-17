@@ -22,7 +22,6 @@ const fixUnusedVariables = () => {
     "lib/server/inventoryService.ts",
     "lib/server/ipSecurity.ts",
     "lib/server/personalizationService.ts",
-    "lib/server/productManagement.ts",
     "lib/server/reviewService.ts",
     "lib/server/searchService.ts",
   ];

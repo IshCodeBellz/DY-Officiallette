@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
-import { logger } from "@/lib/server/logger";
 import { withRequest } from "@/lib/server/logger";
-import { logger } from "@/lib/server/logger";
 import {
   trackPerformance,
   reportHealthStatus,

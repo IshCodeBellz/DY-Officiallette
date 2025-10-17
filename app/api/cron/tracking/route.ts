@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { TrackingService } from "@/lib/server/shipping/TrackingService";
-import { logger } from "@/lib/server/logger";
-import {} from "@/lib/server/shipping/";
-import { logger } from "@/lib/server/logger";
 
 /**
  * Automated tracking update endpoint

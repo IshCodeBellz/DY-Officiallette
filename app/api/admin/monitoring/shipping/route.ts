@@ -1,13 +1,16 @@
-// NextRequest import removed - not used
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
-import { logger } from "@/lib/server/logger";
-import { withRequest, requireAuth } from "@/lib/server/logger";
-import { logger } from "@/lib/server/logger";
+import { logger, withRequest, requireAuth } from "@/lib/server/logger";
 import { trackPerformance } from "@/lib/server/errors";
-import { logger } from "@/lib/server/logger";
 
 // Define shipment status and carrier types based on our implementation
-type ShipmentStatus = "LABEL_CREATED" | "IN_TRANSIT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "EXCEPTION";
+type ShipmentStatus =
+  | "LABEL_CREATED"
+  | "IN_TRANSIT"
+  | "OUT_FOR_DELIVERY"
+  | "DELIVERED"
+  | "EXCEPTION"
+  | "FAILED";
 type CarrierType = "ROYAL_MAIL" | "DPD" | "DHL" | "FEDEX" | "UPS";
 
 interface ShippingMetrics {
@@ -108,12 +111,35 @@ export const GET = withRequest(async function GET(request) {
       _count: { id: true },
       _avg: {
         // Calculate average delivery time in hours
-        deliveredAt: true,
+        cost: true,
       },
       where: {
         createdAt: { gte: last7Days },
       },
     });
+
+    const CARRIERS: CarrierType[] = [
+      "ROYAL_MAIL",
+      "DPD",
+      "DHL",
+      "FEDEX",
+      "UPS",
+    ];
+    const toCarrierType = (c: string): CarrierType =>
+      (CARRIERS.includes(c as CarrierType) ? c : "UPS") as CarrierType;
+
+    const STATUSES: ShipmentStatus[] = [
+      "LABEL_CREATED",
+      "IN_TRANSIT",
+      "OUT_FOR_DELIVERY",
+      "DELIVERED",
+      "EXCEPTION",
+      "FAILED",
+    ];
+    const toShipmentStatus = (s: string): ShipmentStatus =>
+      (STATUSES.includes(s as ShipmentStatus)
+        ? s
+        : "EXCEPTION") as ShipmentStatus;
 
     const carrierPerformance = await Promise.all(
       carrierStats.map(async (stat) => {
@@ -147,33 +173,32 @@ export const GET = withRequest(async function GET(request) {
         `;
 
         return {
-          carrier: stat.carrier,
-          total_shipments: stat._count.id,
+          carrier: toCarrierType(String(stat.carrier)),
+          total_shipments: stat._count?.id || 0,
           success_rate:
-            stat._count.id > 0 ? (successCount / stat._count.id) * 100 : 0,
+            stat._count?.id && stat._count.id > 0
+              ? (successCount / stat._count.id) * 100
+              : 0,
           avg_delivery_time_hours: avgDeliveryTime[0]?.avg_hours || null,
           failed_shipments: failedCount,
         };
       })
     );
 
-    // Recent failures
+    // Get recent failures
     const recentFailures = await prisma.shipment.findMany({
       where: {
-        status: "FAILED",
-        createdAt: { gte: last24Hours },
+        createdAt: { gte: last7Days },
+        status: { in: ["EXCEPTION", "FAILED"] },
       },
       select: {
         id: true,
         trackingNumber: true,
         carrier: true,
         status: true,
-        errorMessage: true,
         createdAt: true,
         orderId: true,
       },
-      orderBy: { createdAt: "desc" },
-      take: 20,
     });
 
     // Delivery performance
@@ -181,12 +206,12 @@ export const GET = withRequest(async function GET(request) {
       where: {
         status: "DELIVERED",
         createdAt: { gte: last7Days },
-        deliveredAt: { not: null },
+        actualDelivery: { not: null },
       },
       select: {
         createdAt: true,
-        deliveredAt: true,
-        estimatedDeliveryDate: true,
+        actualDelivery: true,
+        estimatedDelivery: true,
       },
     });
 
@@ -195,13 +220,13 @@ export const GET = withRequest(async function GET(request) {
     let slaBreaches = 0;
 
     deliveredShipmentsLast7Days.forEach((shipment) => {
-      if (shipment.deliveredAt) {
+      if (shipment.actualDelivery) {
         const deliveryTime =
-          shipment.deliveredAt.getTime() - shipment.createdAt.getTime();
+          shipment.actualDelivery.getTime() - shipment.createdAt.getTime();
         totalDeliveryTimeHours += deliveryTime / (1000 * 60 * 60);
 
-        if (shipment.estimatedDeliveryDate) {
-          if (shipment.deliveredAt <= shipment.estimatedDeliveryDate) {
+        if (shipment.estimatedDelivery) {
+          if (shipment.actualDelivery <= shipment.estimatedDelivery) {
             onTimeDeliveries++;
           } else {
             slaBreaches++;
@@ -282,9 +307,9 @@ export const GET = withRequest(async function GET(request) {
       recent_failures: recentFailures.map((failure) => ({
         id: failure.id,
         tracking_number: failure.trackingNumber || "N/A",
-        carrier: failure.carrier,
-        status: failure.status,
-        error_message: failure.errorMessage,
+        carrier: toCarrierType(String(failure.carrier)),
+        status: toShipmentStatus(String(failure.status)),
+        error_message: null, // No error message field in schema
         created_at: failure.createdAt.toISOString(),
         order_id: failure.orderId,
       })),

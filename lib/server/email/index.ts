@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import type Mail from "nodemailer/lib/mailer";
 
 export interface EmailConfig {
   host: string;
@@ -15,13 +16,14 @@ export interface EmailMessage {
   subject: string;
   text?: string;
   html?: string;
+  attachments?: Mail.Attachment[];
 }
 
 export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor(config: EmailConfig) {
-    this.transporter = nodemailer.createTransporter(config);
+    this.transporter = nodemailer.createTransport(config);
   }
 
   async sendEmail(message: EmailMessage): Promise<void> {

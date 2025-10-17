@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from "@jest/globals";
-import { NextRequest } from "next/server";
+// NextRequest import removed
 import { resetDb, createOrderForTest } from "../helpers/testServer";
 import * as metricsRoute from "@/app/api/metrics/route";
 import { prisma } from "@/lib/server/prisma";
@@ -10,11 +10,7 @@ beforeEach(async () => {
 
 describe("metrics endpoint", () => {
   test("returns basic system metrics for empty database", async () => {
-    const req = new NextRequest("http://localhost:3000/api/metrics", {
-      method: "GET",
-    });
-
-    const res = await metricsRoute.GET(req);
+    const res = await metricsRoute.GET();
     expect(res.status).toBe(200);
 
     const data = await res.json();
@@ -79,11 +75,7 @@ describe("metrics endpoint", () => {
       },
     });
 
-    const req = new NextRequest("http://localhost:3000/api/metrics", {
-      method: "GET",
-    });
-
-    const res = await metricsRoute.GET(req);
+    const res = await metricsRoute.GET();
     const data = await res.json();
 
     // Order metrics
@@ -111,11 +103,7 @@ describe("metrics endpoint", () => {
     // Close the database connection to simulate an error
     await prisma.$disconnect();
 
-    const req = new NextRequest("http://localhost:3000/api/metrics", {
-      method: "GET",
-    });
-
-    const res = await metricsRoute.GET(req);
+    const res = await metricsRoute.GET();
     expect(res.status).toBe(500);
 
     const data = await res.json();
@@ -124,12 +112,8 @@ describe("metrics endpoint", () => {
   });
 
   test("includes performance timing in response", async () => {
-    const req = new NextRequest("http://localhost:3000/api/metrics", {
-      method: "GET",
-    });
-
     const start = Date.now();
-    const res = await metricsRoute.GET(req);
+    const res = await metricsRoute.GET();
     const end = Date.now();
 
     const data = await res.json();

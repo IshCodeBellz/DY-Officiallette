@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { withRequest } from "@/lib/server/logger";
-import { logger } from "@/lib/server/logger";
 import { CMSService } from "@/lib/server/cmsService";
-import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 

@@ -142,10 +142,13 @@ class AlertManager {
       // This would integrate with your email service (Resend, SendGrid, etc.)
       const emailService = await import("@/lib/server/email");
 
-      await emailService.sendAlert({
-        to: process.env.ADMIN_EMAIL || "admin@example.com",
-        subject: `[${alert.severity.toUpperCase()}] ${alert.title}`,
-        body: `
+      const recipients = process.env.ADMIN_EMAIL?.split(",") || [
+        "admin@example.com",
+      ];
+
+      await emailService.emailService.sendAlert(
+        `[${alert.severity.toUpperCase()}] ${alert.title}`,
+        `
           Alert: ${alert.title}
           Severity: ${alert.severity}
           Time: ${alert.timestamp.toISOString()}
@@ -156,7 +159,8 @@ class AlertManager {
           
           Alert ID: ${alert.id}
         `,
-      });
+        recipients
+      );
     } catch (error) {
       console.error("Failed to send alert email:", error);
     }
@@ -326,6 +330,25 @@ export const SHIPPING_ALERT_RULES: AlertRule[] = [
 
 // Convenience functions for common alerts
 export const alerts = {
+  createAlert: async (
+    type: string,
+    severity: AlertSeverity,
+    title: string,
+    message: string,
+    metadata: Record<string, unknown> = {},
+    channels: AlertChannel[] = ["sentry"]
+  ) => {
+    const alertManager = AlertManager.getInstance();
+    return await alertManager.createAlert(
+      type,
+      severity,
+      title,
+      message,
+      metadata,
+      channels
+    );
+  },
+
   async shipmentFailed(shipmentId: string, carrier: string, error: string) {
     const alertManager = AlertManager.getInstance();
     return await alertManager.createAlert(

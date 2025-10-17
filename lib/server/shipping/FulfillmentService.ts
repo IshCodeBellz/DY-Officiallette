@@ -1,7 +1,6 @@
 import { prisma } from "../prisma";
 import { ShippingService, PackageDimensions } from "./ShippingService";
 import { OrderEventService } from "../orderEventService";
-import {} from "../notifications/";
 import type {
   Order,
   OrderItem,

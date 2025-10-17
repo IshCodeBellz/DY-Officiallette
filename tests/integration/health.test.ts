@@ -1,5 +1,4 @@
 import { describe, test, expect, beforeEach } from "@jest/globals";
-import { NextRequest } from "next/server";
 import { resetDb } from "../helpers/testServer";
 import * as healthRoute from "@/app/api/health/route";
 
@@ -9,11 +8,7 @@ beforeEach(async () => {
 
 describe("health endpoint", () => {
   test("returns comprehensive health status when all systems healthy", async () => {
-    const req = new NextRequest("http://localhost:3000/api/health", {
-      method: "GET",
-    });
-
-    const res = await healthRoute.GET(req);
+    const res = await healthRoute.GET();
 
     // Debug output to see what we're getting
     const debugData = await res.json();
@@ -64,11 +59,7 @@ describe("health endpoint", () => {
 
   test("returns degraded status when database is slow", async () => {
     // Note: This test is conceptual - in real scenarios you'd mock slow DB responses
-    const req = new NextRequest("http://localhost:3000/api/health", {
-      method: "GET",
-    });
-
-    const res = await healthRoute.GET(req);
+    const res = await healthRoute.GET();
     const data = await res.json();
 
     // Even if DB is slow, it should still respond
@@ -82,22 +73,14 @@ describe("health endpoint", () => {
   });
 
   test("includes proper cache headers for load balancer health checks", async () => {
-    const req = new NextRequest("http://localhost:3000/api/health", {
-      method: "GET",
-    });
-
-    const res = await healthRoute.GET(req);
+    const res = await healthRoute.GET();
 
     // Should include cache-control header to prevent caching
     expect(res.headers.get("cache-control")).toBe("no-store");
   });
 
   test("sets appropriate HTTP status based on overall health", async () => {
-    const req = new NextRequest("http://localhost:3000/api/health", {
-      method: "GET",
-    });
-
-    const res = await healthRoute.GET(req);
+    const res = await healthRoute.GET();
 
     // Should return 200 for healthy/degraded, 503 for critical
     expect([200, 503]).toContain(res.status);
@@ -112,11 +95,7 @@ describe("health endpoint", () => {
   });
 
   test("includes environment and version information", async () => {
-    const req = new NextRequest("http://localhost:3000/api/health", {
-      method: "GET",
-    });
-
-    const res = await healthRoute.GET(req);
+    const res = await healthRoute.GET();
     const data = await res.json();
 
     expect(data.environment).toBe("test");
@@ -128,11 +107,7 @@ describe("health endpoint", () => {
   test("handles errors gracefully", async () => {
     // Disconnect database to simulate failure
     // Note: In a real test environment, you might mock Prisma to throw errors
-    const req = new NextRequest("http://localhost:3000/api/health", {
-      method: "GET",
-    });
-
-    const res = await healthRoute.GET(req);
+    const res = await healthRoute.GET();
 
     // Should still return a response even if some checks fail
     expect(res.status).toBeGreaterThanOrEqual(200);

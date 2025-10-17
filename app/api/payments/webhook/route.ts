@@ -1,23 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
-import { logger } from "@/lib/server/logger";
 import { sendPaymentReceipt } from "@/lib/server/mailer";
-import { logger } from "@/lib/server/logger";
 import { OrderStatus, PaymentStatus } from "@/lib/status";
-import { logger } from "@/lib/server/logger";
 import { getStripe } from "@/lib/server/stripe";
-import { logger } from "@/lib/server/logger";
 import { restoreStock } from "@/lib/server/inventory";
-import { logger } from "@/lib/server/logger";
 import { WebhookService, type WebhookEvent } from "@/lib/server/webhookService";
-import { logger } from "@/lib/server/logger";
 import { OrderEventService } from "@/lib/server/orderEventService";
-import { logger } from "@/lib/server/logger";
 import { OrderNotificationHandler } from "@/lib/server/notifications/OrderNotificationHandler";
-import { logger } from "@/lib/server/logger";
 import Stripe from "stripe";
-import { logger } from "@/lib/server/logger";
 
 interface WebhookBody {
   paymentIntentId?: string;

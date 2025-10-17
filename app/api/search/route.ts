@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
-import { logger } from "@/lib/server/logger";
 
 // Type definitions for search functionality
 interface SearchBreakdown {
@@ -312,10 +311,7 @@ export async function GET(req: NextRequest) {
       } catch (error) {
         logger.error("Error:", error);
         // eslint-disable-next-line no-console
-        logger.error(
-          "[search:fuzzy-fallback-error]",
-          (error as Error).message
-        );
+        logger.error("[search:fuzzy-fallback-error]", (error as Error).message);
       }
     }
   }
@@ -508,7 +504,9 @@ export async function GET(req: NextRequest) {
 
   if (!diagLogged) {
     // eslint-disable-next-line no-console
-    logger.info("[search:env] DATABASE_URL=", process.env.DATABASE_URL);
+    logger.info("[search:env] DATABASE_URL", {
+      databaseUrl: process.env.DATABASE_URL,
+    });
     diagLogged = true;
   }
   if (!includeFacets) {

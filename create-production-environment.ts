@@ -180,7 +180,8 @@ async function createProductionTestData() {
             email: customer.email,
             firstName: customer.firstName,
             lastName: customer.lastName,
-            isEmailVerified: true,
+            passwordHash: "placeholder_hash", // Placeholder for production
+            emailVerified: true,
             createdAt: new Date(
               Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000
             ), // Random date in last 30 days
@@ -232,37 +233,48 @@ async function createProductionTestData() {
       const shippingCost = Math.floor(Math.random() * 800) + 400; // £4-12 shipping
       totalCents += shippingCost;
 
+      // Create address for shipping
+      const shippingAddr = await prisma.address.create({
+        data: {
+          fullName: `${customer.firstName} ${customer.lastName}`,
+          line1: `${Math.floor(Math.random() * 999) + 1} ${
+            [
+              "High Street",
+              "Main Road",
+              "Church Lane",
+              "Victoria Road",
+              "Oak Avenue",
+            ][Math.floor(Math.random() * 5)]
+          }`,
+          city: customer.city,
+          postalCode: `${
+            ["SW", "NW", "SE", "NE", "W", "E", "N", "S"][
+              Math.floor(Math.random() * 8)
+            ]
+          }${Math.floor(Math.random() * 20) + 1} ${
+            Math.floor(Math.random() * 9) + 1
+          }${["AA", "BB", "DD", "FF", "GG"][Math.floor(Math.random() * 5)]}`,
+          country: customer.country,
+          userId: user.id,
+        },
+      });
+
       const order = await prisma.order.create({
         data: {
           userId: user.id,
           email: user.email,
           status:
             orderStatuses[Math.floor(Math.random() * orderStatuses.length)],
+          subtotalCents: totalCents - shippingCost,
+          shippingCents: shippingCost,
+          taxCents: 0,
+          discountCents: 0,
           totalCents,
           currency: "GBP",
           createdAt: orderDate,
           paidAt: orderDate,
-          shippingAddress: {
-            fullName: `${customer.firstName} ${customer.lastName}`,
-            line1: `${Math.floor(Math.random() * 999) + 1} ${
-              [
-                "High Street",
-                "Main Road",
-                "Church Lane",
-                "Victoria Road",
-                "Oak Avenue",
-              ][Math.floor(Math.random() * 5)]
-            }`,
-            city: customer.city,
-            postalCode: `${
-              ["SW", "NW", "SE", "NE", "W", "E", "N", "S"][
-                Math.floor(Math.random() * 8)
-              ]
-            }${Math.floor(Math.random() * 20) + 1} ${
-              Math.floor(Math.random() * 9) + 1
-            }${["AA", "BB", "DD", "FF", "GG"][Math.floor(Math.random() * 5)]}`,
-            country: customer.country,
-          },
+          shippingAddressId: shippingAddr.id,
+          billingAddressId: shippingAddr.id,
           items: {
             create: orderItems,
           },
@@ -338,7 +350,7 @@ async function createProductionTestData() {
       const [minCost, maxCost] = carrierConfig.costRange;
       const baseCost =
         minCost + Math.floor(Math.random() * (maxCost - minCost));
-      const itemWeightFactor = Math.min(order.items.length * 0.1, 0.5);
+      const itemWeightFactor = 0.3; // Estimated weight factor
       const shippingCost = Math.floor(baseCost * (1 + itemWeightFactor));
 
       // Delivery timing

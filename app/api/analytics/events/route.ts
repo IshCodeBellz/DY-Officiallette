@@ -8,7 +8,6 @@ import {
   trackCartEvent,
 } from "@/lib/server/analyticsTracker";
 import { captureError, trackPerformance } from "@/lib/server/errors";
-import { logger } from "@/lib/server/logger";
 
 // POST /api/analytics/events - Track analytics events
 export async function POST(req: NextRequest) {
@@ -68,7 +67,7 @@ export async function POST(req: NextRequest) {
                 ...eventData,
                 path: event.properties?.path || "/",
                 title: event.properties?.title,
-                timeOnPage: event.properties?.timeOnPage,
+                duration: event.properties?.timeOnPage,
               });
               break;
 

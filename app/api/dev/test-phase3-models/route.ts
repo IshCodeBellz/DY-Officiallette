@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
-import { logger } from "@/lib/server/logger";
 
 export async function GET() {
   try {
@@ -10,19 +9,19 @@ export async function GET() {
 
     // Test ProductVariant model
     const variantCount = await prisma.productVariant.count();
-    logger.info("ProductVariant count:", variantCount);
+    logger.info("ProductVariant count:", { count: variantCount });
 
     // Test UserBehavior model
     const behaviorCount = await prisma.userBehavior.count();
-    logger.info("UserBehavior count:", behaviorCount);
+    logger.info("UserBehavior count:", { count: behaviorCount });
 
     // Test ProductBundle model
     const bundleCount = await prisma.productBundle.count();
-    logger.info("ProductBundle count:", bundleCount);
+    logger.info("ProductBundle count:", { count: bundleCount });
 
     // Test InventoryAlert model
     const alertCount = await prisma.inventoryAlert.count();
-    logger.info("InventoryAlert count:", alertCount);
+    logger.info("InventoryAlert count:", { count: alertCount });
 
     return NextResponse.json({
       success: true,

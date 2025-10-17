@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { RateLimitService, RateLimitConfigs } from "@/lib/server/rateLimit";
-import { logger } from "@/lib/server/logger";
 import { IPSecurityService } from "@/lib/server/ipSecurity";
-import { logger } from "@/lib/server/logger";
 import { CaptchaService } from "@/lib/server/captcha";
-import { logger } from "@/lib/server/logger";
 import { PasswordSecurity } from "@/lib/server/passwordSecurity";
-import { logger } from "@/lib/server/logger";
 import { SecurityService } from "@/lib/server/security";
-import { logger } from "@/lib/server/logger";
 import { SecurityEventType } from "@/lib/security";
-import { logger } from "@/lib/server/logger";
 import { z } from "zod";
-import { logger } from "@/lib/server/logger";
 
 const securityTestSchema = z.object({
   action: z.enum(["login", "register", "password_check", "ip_analysis"]),

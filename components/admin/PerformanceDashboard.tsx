@@ -10,8 +10,8 @@ import {
   Zap,
   CheckCircle,
   AlertTriangle,
-  XCircle
-  Server
+  XCircle,
+  Server,
 } from "lucide-react";
 
 interface PerformanceMetrics {
@@ -110,7 +110,10 @@ const PerformanceDashboard: React.FC = () => {
     }
   };
 
-  const applyOptimization = async (action: string, parameters: any) => {
+  const applyOptimization = async (
+    action: string,
+    parameters: Record<string, unknown>
+  ) => {
     setOptimizing(action);
     try {
       const response = await fetch("/api/admin/performance/optimize", {

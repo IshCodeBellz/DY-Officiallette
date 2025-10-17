@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { ReviewService } from "@/lib/server/reviewService";
-import { logger } from "@/lib/server/logger";
 import { SocialWishlistService } from "@/lib/server/socialWishlistService";
-import { logger } from "@/lib/server/logger";
 
 export async function GET() {
   try {
@@ -22,14 +20,12 @@ export async function GET() {
       averageRating: productReviews.analytics.averageRating,
       verifiedReviewsPercentage:
         productReviews.analytics.verifiedReviewsPercentage,
-      reviewsWithMedia: productReviews.analytics.reviewsWithMedia,
     });
 
     // 2. Review Moderation Demo
     const moderationQueue = await ReviewService.getModerationQueue(5);
     logger.info("✅ Review Moderation:", {
       pendingReviews: moderationQueue.length,
-      moderationReasons: [...new Set(moderationQueue.map((r) => r.flagReason))],
     });
 
     // 3. Social Wishlist System

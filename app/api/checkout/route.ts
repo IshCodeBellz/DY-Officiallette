@@ -1,33 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
-import { logger } from "@/lib/server/logger";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
-import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
-import { logger } from "@/lib/server/logger";
 import {
   sendOrderConfirmation,
   sendRichOrderConfirmation,
 } from "@/lib/server/mailer";
 import { z } from "zod";
-import { logger } from "@/lib/server/logger";
 import { rateLimit } from "@/lib/server/rateLimit";
-import { logger } from "@/lib/server/logger";
 import { buildDraftFromCart, calculateRates } from "@/lib/server/taxShipping";
-import { logger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 import { decrementSizeStock } from "@/lib/server/inventory";
-import { logger } from "@/lib/server/logger";
 import { debug } from "@/lib/server/debug";
-import { logger } from "@/lib/server/logger";
 import { withRequest, error as logError } from "@/lib/server/logger";
-import { logger } from "@/lib/server/logger";
 import { ExtendedSession } from "@/lib/types";
-import { logger } from "@/lib/server/logger";
 import { OrderEventService } from "@/lib/server/orderEventService";
-import { logger } from "@/lib/server/logger";
 
 // Basic Phase 3 draft checkout endpoint:
 // 1. Reads authenticated user's cart
@@ -359,6 +348,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
             qty: line.qty,
             unitPriceCents: line.priceCentsSnapshot,
             lineTotalCents: line.priceCentsSnapshot * line.qty,
+            priceCentsSnapshot: line.priceCentsSnapshot,
           },
         });
         if (line.size) {

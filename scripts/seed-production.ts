@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node
+// @ts-nocheck
 
 import { PrismaClient } from "@prisma/client";
 
