@@ -1,7 +1,4 @@
 import path from "path";
-import { fileURLToPath } from "url";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Relax build blockers so we can produce artifacts while fixing lint/type issues
@@ -36,7 +33,7 @@ const nextConfig = {
     // Ensure TS path alias '@/*' works in all environments (e.g., Vercel)
     config.resolve = config.resolve || {};
     config.resolve.alias = config.resolve.alias || {};
-    const projectRoot = path.resolve(__dirname);
+    const projectRoot = process.cwd();
     config.resolve.alias["@"] = projectRoot;
     return config;
   },
