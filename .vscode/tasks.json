@@ -155,6 +155,99 @@
 			"command": "npm run -s build",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "Type Check",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Type Check",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Type Check",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Type Check",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Type Check (one-off)",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Type Check (one-off)",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Type Check",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Type Check (one-off)",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Type Check (one-off)",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Type Check (one-off)",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Type Check (one-off)",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Type Check (one-off)",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

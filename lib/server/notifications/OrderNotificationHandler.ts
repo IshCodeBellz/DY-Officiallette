@@ -56,13 +56,13 @@ export class OrderNotificationHandler {
 
       switch (toStatus) {
         case OrderStatus.AWAITING_PAYMENT:
-          // Send order confirmation
-          await this.sendOrderConfirmation(orderId);
+          // Checkout flow already sends the rich order confirmation.
+          // Avoid duplicate emails here.
           break;
 
         case OrderStatus.PAID:
-          // Send payment confirmation and processing notification
-          await this.sendPaymentConfirmation(orderId);
+          // Payment receipt is sent by the webhook handler; avoid duplicate here.
+          // Still send processing notification to keep customer informed.
           await this.sendOrderProcessing(orderId);
           break;
 

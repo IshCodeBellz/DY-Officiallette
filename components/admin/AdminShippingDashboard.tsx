@@ -144,7 +144,6 @@ export function AdminShippingDashboard() {
       setShipments(data.shipments);
       setTotalPages(data.pagination.pages);
     } catch (error) {
-      
     } finally {
       setLoading(false);
     }
@@ -157,9 +156,7 @@ export function AdminShippingDashboard() {
 
       const data = await response.json();
       setMetrics(data);
-    } catch (error) {
-      
-    }
+    } catch (error) {}
   };
 
   const handleRefreshAll = async () => {
@@ -176,7 +173,6 @@ export function AdminShippingDashboard() {
       // Refresh data
       await Promise.all([fetchShipments(), fetchMetrics()]);
     } catch (error) {
-      
     } finally {
       setRefreshing(false);
     }
@@ -224,6 +220,13 @@ export function AdminShippingDashboard() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  // Normalize a ratio or percentage into a clamped 0..100 percentage
+  const toPercent = (value: number | undefined | null) => {
+    const v = typeof value === "number" && Number.isFinite(value) ? value : 0;
+    const pct = v <= 1 ? v * 100 : v; // accept 0..1 (ratio) or 0..100 (percent)
+    return Math.max(0, Math.min(100, pct));
   };
 
   if (loading) {
@@ -322,7 +325,7 @@ export function AdminShippingDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {(metrics.summary.deliveryRate * 100).toFixed(1)}%
+                {toPercent(metrics.summary.deliveryRate).toFixed(1)}%
               </div>
               <p className="text-xs text-muted-foreground">
                 {metrics.summary.deliveredShipments} delivered
@@ -356,7 +359,7 @@ export function AdminShippingDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {(metrics.summary.onTimeDeliveryRate * 100).toFixed(1)}%
+                {toPercent(metrics.summary.onTimeDeliveryRate).toFixed(1)}%
               </div>
               <p className="text-xs text-muted-foreground">
                 Within estimated time
@@ -410,12 +413,15 @@ export function AdminShippingDashboard() {
                     />
                   </div>
                 </div>
-                <Select value={status} onValueChange={setStatus}>
+                <Select
+                  value={status}
+                  onValueChange={(v) => setStatus(v === "ALL" ? "" : v)}
+                >
                   <SelectTrigger className="w-48">
                     <SelectValue placeholder="by status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Statuses</SelectItem>
+                    <SelectItem value="ALL">All Statuses</SelectItem>
                     <SelectItem value="PENDING">Pending</SelectItem>
                     <SelectItem value="SHIPPED">Shipped</SelectItem>
                     <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
@@ -426,12 +432,15 @@ export function AdminShippingDashboard() {
                     <SelectItem value="EXCEPTION">Exception</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={carrier} onValueChange={setCarrier}>
+                <Select
+                  value={carrier}
+                  onValueChange={(v) => setCarrier(v === "ALL" ? "" : v)}
+                >
                   <SelectTrigger className="w-48">
                     <SelectValue placeholder="by carrier" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Carriers</SelectItem>
+                    <SelectItem value="ALL">All Carriers</SelectItem>
                     <SelectItem value="ROYAL_MAIL">Royal Mail</SelectItem>
                     <SelectItem value="DPD">DPD</SelectItem>
                     <SelectItem value="FEDEX">FedEx</SelectItem>
@@ -618,30 +627,33 @@ export function AdminShippingDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {metrics.carrierPerformance.map((carrier) => (
-                        <div key={carrier.carrier} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <Badge variant="outline">
-                              {carrier.carrier.replace("_", " ")}
-                            </Badge>
-                            <span className="text-sm font-medium">
-                              {(carrier.deliveryRate * 100).toFixed(1)}%
-                            </span>
+                      {metrics.carrierPerformance.map((carrier) => {
+                        const pct = toPercent(carrier.deliveryRate);
+                        return (
+                          <div key={carrier.carrier} className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Badge variant="outline">
+                                {carrier.carrier.replace("_", " ")}
+                              </Badge>
+                              <span className="text-sm font-medium">
+                                {pct.toFixed(1)}%
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-blue-600 h-2 rounded-full"
+                                style={{
+                                  width: `${pct}%`,
+                                }}
+                              />
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {carrier.deliveredShipments} of{" "}
+                              {carrier.totalShipments} delivered
+                            </p>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-blue-600 h-2 rounded-full"
-                              style={{
-                                width: `${carrier.deliveryRate * 100}%`,
-                              }}
-                            />
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {carrier.deliveredShipments} of{" "}
-                            {carrier.totalShipments} delivered
-                          </p>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>

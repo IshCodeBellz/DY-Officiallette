@@ -174,7 +174,7 @@ export default function BagPage() {
             <div key={line.id} className="flex gap-4 border-b pb-4">
               <div className="relative w-28 h-36 bg-neutral-100 rounded overflow-hidden">
                 <Image
-                  src={line.image}
+                  src={line.image || "/placeholder.svg"}
                   alt={line.name}
                   fill
                   className="object-cover"

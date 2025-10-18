@@ -16,6 +16,68 @@ export function Header() {
   const prevAuth = useRef<boolean>(!!session);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const [paidCount, setPaidCount] = useState<number | null>(null);
+
+  // Fetch admin orders summary for PAID count
+  useEffect(() => {
+    let ignore = false;
+    async function load() {
+      try {
+        if (!session?.user?.isAdmin) {
+          setPaidCount(null);
+          return;
+        }
+        const res = await fetch("/api/admin/orders/summary", {
+          cache: "no-store",
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as { totalPaid?: number };
+        if (!ignore)
+          setPaidCount(typeof data.totalPaid === "number" ? data.totalPaid : 0);
+      } catch {
+        if (!ignore) setPaidCount(null);
+      }
+    }
+    load();
+    const id = setInterval(load, 60_000); // refresh every minute
+    return () => {
+      ignore = true;
+      clearInterval(id);
+    };
+  }, [session?.user?.isAdmin]);
+
+  // Listen to admin SSE events for real-time badge updates and notifications
+  useEffect(() => {
+    if (!session?.user?.isAdmin) return;
+    const es = new EventSource("/api/admin/events");
+    es.addEventListener("order-status", () => {
+      // Refresh paid count quickly when an order changes status
+      fetch("/api/admin/orders/summary", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (d && typeof d.totalPaid === "number") setPaidCount(d.totalPaid);
+        })
+        .catch(() => {});
+    });
+    es.addEventListener("new-paid-order", (evt: MessageEvent) => {
+      try {
+        const data = JSON.parse(evt.data || "{}");
+        if ("Notification" in window) {
+          if (Notification.permission === "granted") {
+            new Notification("New PAID order", {
+              body: `Order ${String(data.orderId || "").slice(
+                0,
+                8
+              )} is ready to fulfill`,
+            });
+          } else if (Notification.permission !== "denied") {
+            Notification.requestPermission();
+          }
+        }
+      } catch {}
+    });
+    return () => es.close();
+  }, [session?.user?.isAdmin]);
 
   // Clear local state when auth ends
   useEffect(() => {
@@ -79,12 +141,29 @@ export function Header() {
               {session ? (
                 <div className="flex items-center gap-2 text-sm">
                   {session.user?.isAdmin && (
-                    <Link
-                      href="/admin"
-                      className="hover:underline font-medium text-neutral-900 dark:text-white text-xs px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded"
-                    >
-                      Admin
-                    </Link>
+                    <>
+                      <Link
+                        href="/admin"
+                        className="hover:underline font-medium text-neutral-900 dark:text-white text-xs px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded"
+                      >
+                        Admin
+                      </Link>
+                      <Link
+                        href="/admin/orders?status=PAID"
+                        className="relative hover:underline font-medium text-neutral-900 dark:text-white text-xs px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded"
+                        title="Manage orders"
+                      >
+                        Orders
+                        {typeof paidCount === "number" && (
+                          <span
+                            className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full text-[9px] leading-none h-4 min-w-4 px-1 flex items-center justify-center"
+                            aria-label={`${paidCount} paid orders`}
+                          >
+                            {paidCount}
+                          </span>
+                        )}
+                      </Link>
+                    </>
                   )}
                   <div className="relative group">
                     <button className="text-neutral-900 dark:text-white font-medium hover:text-red-600 dark:hover:text-red-400 text-xs truncate max-w-20">
@@ -304,13 +383,22 @@ export function Header() {
                     {session.user?.name || session.user?.email}
                   </div>
                   {session.user?.isAdmin && (
-                    <Link
-                      href="/admin"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
-                    >
-                      Admin Dashboard
-                    </Link>
+                    <div className="space-y-1">
+                      <Link
+                        href="/admin"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
+                      >
+                        Admin Dashboard
+                      </Link>
+                      <Link
+                        href="/admin/orders?status=PAID"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
+                      >
+                        Orders
+                      </Link>
+                    </div>
                   )}
                   <Link
                     href="/account"

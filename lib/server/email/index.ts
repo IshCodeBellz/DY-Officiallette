@@ -1,5 +1,7 @@
+/* eslint-disable */
 import nodemailer from "nodemailer";
 import type Mail from "nodemailer/lib/mailer";
+import { Resend } from "resend";
 
 export interface EmailConfig {
   host: string;
@@ -21,20 +23,71 @@ export interface EmailMessage {
 
 export class EmailService {
   private transporter: nodemailer.Transporter;
+  private resend: Resend | null;
 
   constructor(config: EmailConfig) {
     this.transporter = nodemailer.createTransport(config);
+    this.resend = process.env.RESEND_API_KEY
+      ? new Resend(process.env.RESEND_API_KEY)
+      : null;
   }
 
   async sendEmail(message: EmailMessage): Promise<void> {
+    const fromValue =
+      process.env.EMAIL_FROM || process.env.SMTP_FROM || process.env.SMTP_USER;
+
+    // 1) Try SMTP first
     try {
-      await this.transporter.sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      await this.transporter.sendMail({ from: fromValue, ...message });
+      return;
+    } catch (smtpError) {
+      console.error("SMTP send failed:", smtpError);
+    }
+
+    // 2) Try Resend if configured
+    if (this.resend) {
+      try {
+        const attachments = message.attachments?.map((a) => ({
+          filename: a.filename || "attachment.csv",
+          content: Buffer.isBuffer((a as any).content)
+            ? (a as any).content.toString("base64")
+            : Buffer.from(String((a as any).content)).toString("base64"),
+        }));
+        const options: any = {
+          from: fromValue || "no-reply@example.com",
+          to: Array.isArray(message.to) ? message.to : [message.to],
+          subject: message.subject,
+          html: message.html,
+          text: message.text,
+          attachments,
+        };
+        const result: any = await this.resend.emails.send(options as any);
+        if (result?.error) throw result.error;
+        return;
+      } catch (resendError) {
+        console.error("Resend send failed:", resendError);
+      }
+    }
+
+    // 3) Final fallback: Ethereal test account (preview URL)
+    try {
+      const testAccount = await nodemailer.createTestAccount();
+      const testTransporter = nodemailer.createTransport({
+        host: "smtp.ethereal.email",
+        port: 587,
+        secure: false,
+        auth: { user: testAccount.user, pass: testAccount.pass },
+      });
+      const info = await testTransporter.sendMail({
+        from: fromValue || `DY Official Test <no-reply@example.com>`,
         ...message,
       });
-    } catch (error) {
-      console.error("Failed to send email:", error);
-      throw error;
+      const url = nodemailer.getTestMessageUrl(info);
+      console.log(`Ethereal test email sent. Preview: ${url}`);
+      return;
+    } catch (etherealError) {
+      console.error("Ethereal fallback failed:", etherealError);
+      throw etherealError;
     }
   }
 

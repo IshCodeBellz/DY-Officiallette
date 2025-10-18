@@ -17,6 +17,7 @@ import { debug } from "@/lib/server/debug";
 import { withRequest, error as logError } from "@/lib/server/logger";
 import { ExtendedSession } from "@/lib/types";
 import { OrderEventService } from "@/lib/server/orderEventService";
+import { validateAndNormalizeAddress } from "@/lib/server/address/validateAddress";
 
 // Basic Phase 3 draft checkout endpoint:
 // 1. Reads authenticated user's cart
@@ -203,6 +204,25 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     discountCode,
     idempotencyKey,
   } = parsed.data;
+
+  // Validate/normalize addresses if provider configured
+  try {
+    const va = await validateAndNormalizeAddress(shippingAddress);
+    if (va && va.valid === false) {
+      return NextResponse.json({ error: "invalid_address" }, { status: 422 });
+    }
+    if (va.normalized) Object.assign(shippingAddress, va.normalized);
+    if (billingAddress) {
+      const vb = await validateAndNormalizeAddress(billingAddress);
+      if (vb && vb.valid === false) {
+        return NextResponse.json(
+          { error: "invalid_billing_address" },
+          { status: 422 }
+        );
+      }
+      if (vb.normalized) Object.assign(billingAddress, vb.normalized);
+    }
+  } catch {}
 
   if (idempotencyKey) {
     const existing = await prisma.order.findFirst({

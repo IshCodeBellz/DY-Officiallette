@@ -24,10 +24,10 @@ export default async function AdminOrdersPage({
   const session = await getServerSession(authOptionsEnhanced);
   const isAdmin = (session?.user as { isAdmin: boolean })?.isAdmin;
   if (!isAdmin) return <div className="p-6">Unauthorized</div>;
+  // Default to PAID when no status is provided to highlight orders ready to fulfill
+  const statusParam = searchParams?.status;
   const status =
-    searchParams?.status && ALLOWED.includes(searchParams.status)
-      ? searchParams.status
-      : undefined;
+    statusParam && ALLOWED.includes(statusParam) ? statusParam : "PAID";
   const orders = await prisma.order.findMany({
     where: { status: status || undefined },
     orderBy: { createdAt: "desc" },
@@ -82,7 +82,7 @@ export default async function AdminOrdersPage({
           <div className="flex gap-2 flex-wrap text-sm">
             <Link
               href="/admin/orders"
-              className={!status ? "font-semibold underline" : ""}
+              className={statusParam ? "" : "font-semibold underline"}
             >
               All
             </Link>
@@ -185,26 +185,39 @@ export default async function AdminOrdersPage({
                           : "-"}
                       </td>
                       <td className="py-4 px-6">
-                        <form
-                          action={`/api/admin/orders/${o.id}/status`}
-                          method="post"
-                          className="flex gap-2 items-center"
-                        >
-                          <select
-                            name="status"
-                            defaultValue={o.status}
-                            className="border border-gray-300 rounded px-2 py-1 text-xs bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        <div className="flex gap-2 items-center">
+                          {/* Quick start fulfillment when order is PAID */}
+                          {o.status === "PAID" && (
+                            <form
+                              action={`/api/admin/orders/${o.id}/fulfill/start`}
+                              method="post"
+                            >
+                              <button className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-semibold">
+                                Start Fulfillment
+                              </button>
+                            </form>
+                          )}
+                          <form
+                            action={`/api/admin/orders/${o.id}/status`}
+                            method="post"
+                            className="flex gap-2 items-center"
                           >
-                            {ALLOWED.map((s) => (
-                              <option key={s} value={s}>
-                                {s}
-                              </option>
-                            ))}
-                          </select>
-                          <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
-                            Save
-                          </button>
-                        </form>
+                            <select
+                              name="status"
+                              defaultValue={o.status}
+                              className="border border-gray-300 rounded px-2 py-1 text-xs bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              {ALLOWED.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                            <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
+                              Save
+                            </button>
+                          </form>
+                        </div>
                       </td>
                     </tr>
                   ))

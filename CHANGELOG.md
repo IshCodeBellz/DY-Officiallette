@@ -1,6 +1,7 @@
 ## Unreleased
 
 ### Wallets: Apple Pay & Google Pay (October 17, 2025)
+
 - Removed deprecated user-level MFA fields (mfaSecret, mfaBackupCodes); MFA data now stored exclusively in MfaDevice. Migration: `remove-user-mfa-fields`.
 
 - Added Payment Request Button to checkout and cart pages
