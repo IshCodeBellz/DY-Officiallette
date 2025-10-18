@@ -54,6 +54,20 @@ export default async function ProductPage({
   //   images: product.images.map((i: ProductImage) => i.url),
   // };
 
+  // Shape lightweight product payload for the client component to avoid undefined lengths
+  const clientProduct = {
+    id: product.id as string,
+    name: product.name as string,
+    priceCents: product.priceCents as number,
+    image: (product.images?.[0]?.url as string) || "",
+    description: (product.description as string) || "",
+    sizes:
+      (product.sizeVariants?.map(
+        (s: { label: string }) => s.label
+      ) as string[]) || [],
+    images: (product.images?.map((i: ProductImage) => i.url) as string[]) || [],
+  };
+
   return (
     <div className="container mx-auto px-4 py-10 grid gap-12 lg:grid-cols-2">
       <script
@@ -352,7 +366,7 @@ export default async function ProductPage({
           {product.description}
         </p>
         <Suspense>
-          <ProductClient product={product} />
+          <ProductClient product={clientProduct} />
         </Suspense>
         <div className="text-xs text-neutral-500 space-y-2">
           <p>Free delivery and returns (Ts&Cs apply).</p>

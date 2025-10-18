@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
 import { hashPassword } from "@/lib/server/auth";
 import { z } from "zod";
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: unknown) {
     // Centralized logging with a stable prefix so we can grep in logs
-    console.error("[REGISTER:error]", error);
+    logger.error("[REGISTER:error]", error);
 
     // Map common Prisma / DB issues to clearer diagnostics (only exposed outside production)
     const isProd = process.env.NODE_ENV === "production";

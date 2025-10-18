@@ -510,6 +510,7 @@ async function createSampleOrders() {
             size: variant.value,
             qty: quantity,
             unitPriceCents: product.priceCents,
+            priceCentsSnapshot: product.priceCents,
             lineTotalCents: product.priceCents * quantity,
           },
         },
@@ -787,7 +788,7 @@ export async function seedDatabase() {
       console.log(`  ${key}: ${count}`);
     });
   } catch (error) {
-      console.error("Error:", error);
+    console.error("Error:", error);
     console.error("❌ Error seeding database:", error);
     throw error;
   }

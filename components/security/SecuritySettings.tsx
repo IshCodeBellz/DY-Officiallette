@@ -106,59 +106,45 @@ export function SecuritySettings({
         setMfaStatus(mfaData.data); // Changed from mfaData.status to mfaData.data
       }
 
-      // Mock data for demonstration
-      setDevices([
-        {
-          id: "1",
-          name: "MacBook Pro (Chrome)",
-          type: "desktop",
-          browser: "Chrome",
-          os: "macOS",
-          ipAddress: "192.168.1.100",
-          location: "San Francisco, CA",
-          lastUsed: new Date(),
-          isCurrent: true,
-          isTrusted: true,
-          riskScore: 15,
-        },
-        {
-          id: "2",
-          name: "iPhone (Safari)",
-          type: "mobile",
-          browser: "Safari",
-          os: "iOS",
-          ipAddress: "192.168.1.101",
-          location: "San Francisco, CA",
-          lastUsed: new Date(Date.now() - 1000 * 60 * 60 * 2),
-          isCurrent: false,
-          isTrusted: true,
-          riskScore: 20,
-        },
-      ]);
+      // Load real active sessions as devices
+      const sessionsRes = await fetch("/api/account/sessions");
+      if (sessionsRes.ok) {
+        const { sessions } = await sessionsRes.json();
+        /* eslint-disable-next-line */
+        const mappedDevices: Device[] = (sessions || []).map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          type: s.type || "desktop",
+          browser: s.browser,
+          os: s.os,
+          ipAddress: s.ipAddress,
+          location: s.location,
+          lastUsed: new Date(s.lastActive || s.updatedAt || Date.now()),
+          isCurrent: !!s.isCurrent,
+          // Use server-provided trusted flag derived from TrustedDevice records
+          isTrusted: !!s.isTrusted,
+          riskScore: typeof s.riskScore === "number" ? s.riskScore : undefined,
+        }));
+        setDevices(mappedDevices);
+      }
 
-      setSecurityEvents([
-        {
-          id: "1",
-          type: "LOGIN_SUCCESS",
-          description: "Successful login",
-          timestamp: new Date(),
-          ipAddress: "192.168.1.100",
-          location: "San Francisco, CA",
-          riskScore: 15,
-        },
-        {
-          id: "2",
-          type: "MFA_ENABLED",
-          description: "Two-factor authentication enabled",
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
-          ipAddress: "192.168.1.100",
-          location: "San Francisco, CA",
-          riskScore: 0,
-        },
-      ]);
+      // Load recent security events for Activity tab
+      const eventsRes = await fetch("/api/account/security-events?limit=20");
+      if (eventsRes.ok) {
+        const { events } = await eventsRes.json();
+        /* eslint-disable-next-line */
+        const mappedEvents: SecurityEvent[] = (events || []).map((e: any) => ({
+          id: e.id,
+          type: e.type || e.eventType,
+          description: e.displayName || e.details?.description || e.type,
+          timestamp: new Date(e.timestamp),
+          ipAddress: e.ipAddress || "Unknown",
+          location: e.location,
+          riskScore: typeof e.riskScore === "number" ? e.riskScore : undefined,
+        }));
+        setSecurityEvents(mappedEvents);
+      }
     } catch (error) {
-      console.error("Error:", error);
-      console.error("Failed to load security data:", error);
       push({ message: "Failed to load security settings", type: "error" });
     } finally {
       setLoading(false);
@@ -213,7 +199,6 @@ export function SecuritySettings({
         });
       }
     } catch (error) {
-      console.error("Error:", error);
       push({
         message: "Failed to disable two-factor authentication",
         type: "error",
@@ -236,7 +221,8 @@ export function SecuritySettings({
 
       if (response.ok) {
         const result = await response.json();
-        setBackupCodes(result.backupCodes);
+        const codes = result?.data?.backupCodes || result?.backupCodes || [];
+        setBackupCodes(codes);
         push({ message: "New backup codes generated", type: "success" });
       } else {
         const error = await response.json();
@@ -246,7 +232,6 @@ export function SecuritySettings({
         });
       }
     } catch (error) {
-      console.error("Error:", error);
       push({ message: "Failed to generate backup codes", type: "error" });
     }
   };
@@ -520,18 +505,43 @@ export function SecuritySettings({
         {activeTab === "devices" && (
           <DeviceManager
             devices={devices}
-            onRevokeDevice={(deviceId) => {
-              setDevices(devices.filter((d) => d.id !== deviceId));
+            onRevokeDevice={async (deviceId) => {
+              // Only send sessionId; server will derive fingerprint
+              await fetch("/api/account/trusted-devices", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sessionId: deviceId }),
+              }).catch(() => undefined);
+              setDevices((prev) => prev.filter((d) => d.id !== deviceId));
             }}
-            onTrustDevice={(deviceId, trust) => {
-              setDevices(
-                devices.map((d) =>
-                  d.id === deviceId ? { ...d, isTrusted: trust } : d
+            onTrustDevice={async (deviceId, trust) => {
+              const res = await fetch("/api/account/trusted-devices", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sessionId: deviceId, trust }),
+              }).catch(() => undefined);
+              if (res && res.ok) {
+                setDevices((prev) =>
+                  prev.map((d) =>
+                    d.id === deviceId ? { ...d, isTrusted: trust } : d
+                  )
+                );
+              }
+            }}
+            onRevokeAllOthers={async () => {
+              const current = devices.find((d) => d.isCurrent);
+              const others = devices.filter((d) => !d.isCurrent);
+              // Attempt to untrust others in parallel
+              await Promise.all(
+                others.map((d) =>
+                  fetch("/api/account/trusted-devices", {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sessionId: d.id }),
+                  }).catch(() => undefined)
                 )
               );
-            }}
-            onRevokeAllOthers={() => {
-              setDevices(devices.filter((d) => d.isCurrent));
+              setDevices(current ? [current] : []);
             }}
           />
         )}

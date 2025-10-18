@@ -84,9 +84,6 @@ export function getMailer(): Mailer {
 }
 
 // --- HTML Template Helpers (simple inline styles for snapshot safety) ---
-function currency(amountCents: number) {
-  return "$" + (amountCents / 100).toFixed(2);
-}
 
 function baseLayout(title: string, bodyHtml: string) {
   return `<!doctype html><html><body style="font-family:Arial,sans-serif;line-height:1.45;color:#222;margin:0;padding:24px;background:#fafafa;">
@@ -103,8 +100,9 @@ export function buildOrderConfirmationHtml(order: Order) {
   return baseLayout(
     `Order #${order.id} received`,
     `<p>Thanks for your order. We've received it and it's now awaiting payment.</p>
-     <p style="margin:12px 0 4px;font-weight:600;">Total: ${currency(
-       order.totalCents
+     <p style="margin:12px 0 4px;font-weight:600;">Total: ${formatPriceCents(
+       order.totalCents,
+       { currency: order.currency }
      )}</p>
      <p style="color:#666;font-size:12px;margin-top:16px;">You will receive another email when payment is confirmed.</p>`
   );
@@ -282,8 +280,9 @@ export function buildPaymentReceiptHtml(order: Order) {
   return baseLayout(
     `Payment received for #${order.id}`,
     `<p>We've captured payment for your order.</p>
-     <p style="margin:12px 0 4px;font-weight:600;">Amount: ${currency(
-       order.totalCents
+     <p style="margin:12px 0 4px;font-weight:600;">Amount: ${formatPriceCents(
+       order.totalCents,
+       { currency: order.currency }
      )}</p>
      <p style="color:#666;font-size:12px;margin-top:16px;">We'll start fulfilling it shortly.</p>`
   );
@@ -313,8 +312,11 @@ export async function sendOrderConfirmation(user: User, order: Order) {
   await mailer.send({
     to: user.email,
     subject: `Order #${order.id} confirmation`,
-    text: `We received your order totaling ${(order.totalCents / 100).toFixed(
-      2
+    text: `We received your order totaling ${formatPriceCents(
+      order.totalCents,
+      {
+        currency: order.currency,
+      }
     )}. Thank you!`,
     html,
   });
@@ -326,9 +328,9 @@ export async function sendPaymentReceipt(user: User, order: Order) {
   await mailer.send({
     to: user.email,
     subject: `Payment received for order #${order.id}`,
-    text: `Your payment for ${(order.totalCents / 100).toFixed(
-      2
-    )} has been captured. We'll start processing your order.`,
+    text: `Your payment for ${formatPriceCents(order.totalCents, {
+      currency: order.currency,
+    })} has been captured. We'll start processing your order.`,
     html,
   });
 }

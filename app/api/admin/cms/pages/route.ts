@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
-import { withRequest } from "@/lib/server/logger";
+import { logger, withRequest } from "@/lib/server/logger";
 import { CMSService } from "@/lib/server/cmsService";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +30,7 @@ export const GET = withRequest(async function GET() {
     const pages = await CMSService.getAllPages();
     return NextResponse.json({ pages });
   } catch (error) {
-    console.error("Error fetching CMS pages:", error);
+    logger.error("Error fetching CMS pages:", error);
     return NextResponse.json(
       { error: "Failed to fetch pages" },
       { status: 500 }
@@ -68,7 +68,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
 
     return NextResponse.json({ page });
   } catch (error) {
-    console.error("Error saving CMS page:", error);
+    logger.error("Error saving CMS page:", error);
     return NextResponse.json({ error: "Failed to save page" }, { status: 500 });
   }
 });
@@ -102,7 +102,7 @@ export const DELETE = withRequest(async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting CMS page:", error);
+    logger.error("Error deleting CMS page:", error);
     return NextResponse.json(
       { error: "Failed to delete page" },
       { status: 500 }

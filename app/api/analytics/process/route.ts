@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { withRequest } from "@/lib/server/logger";
 import { captureError, trackPerformance } from "@/lib/server/errors";
 import { prisma } from "@/lib/server/prisma";
@@ -22,7 +23,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     const { date } = await req.json();
     const processDate = date ? new Date(date) : new Date();
 
-    console.log(
+    logger.info(
       `Processing analytics for date: ${
         processDate.toISOString().split("T")[0]
       }`
@@ -66,7 +67,7 @@ async function processBasicAnalytics(date: Date) {
   );
   const nextDay = new Date(dateOnly.getTime() + 24 * 60 * 60 * 1000);
 
-  console.log(
+  logger.info(
     `Processing analytics from ${dateOnly.toISOString()} to ${nextDay.toISOString()}`
   );
 
@@ -173,10 +174,10 @@ async function processBasicAnalytics(date: Date) {
       },
     });
 
-    console.log(`Analytics processing completed:`, results);
+    logger.info(`Analytics processing completed:`, results);
     return results;
   } catch (error) {
-    console.error("Error in analytics processing:", error);
+    logger.error("Error in analytics processing:", error);
     results.errors.push(
       error instanceof Error ? error.message : "Unknown error"
     );

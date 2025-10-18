@@ -44,11 +44,11 @@ export function ReviewModeration() {
       if (response.ok) {
         setReviews(data.queue || []);
       } else {
-        console.error("Failed to fetch moderation queue:", data.error);
+        
       }
     } catch (error) {
-      console.error("Error:", error);
-      console.error("Fetch error:", error);
+      
+      
     } finally {
       setLoading(false);
     }
@@ -98,8 +98,8 @@ export function ReviewModeration() {
         alert(`Failed to ${action} review: ${data.error}`);
       }
     } catch (error) {
-      console.error("Error:", error);
-      console.error(`${action} error:`, error);
+      
+      
       alert(`Failed to ${action} review`);
     } finally {
       setActionLoading((prev) => ({ ...prev, [reviewId]: false }));

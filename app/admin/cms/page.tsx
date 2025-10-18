@@ -108,8 +108,7 @@ export default function CMSManagement() {
         const imagesData = await imagesRes.json();
         setHomeImages(imagesData.images || null);
       }
-    } catch (error) {
-      console.error("Error loading CMS data:", error);
+    } catch {
       showMessage("Failed to load CMS data", "error");
     } finally {
       setLoading(false);
@@ -151,8 +150,7 @@ export default function CMSManagement() {
       } else {
         throw new Error("Failed to save page");
       }
-    } catch (error) {
-      console.error("Error saving page:", error);
+    } catch {
       showMessage("Failed to save page", "error");
     }
   };
@@ -169,8 +167,7 @@ export default function CMSManagement() {
       } else {
         throw new Error("Failed to delete page");
       }
-    } catch (error) {
-      console.error("Error deleting page:", error);
+    } catch {
       showMessage("Failed to delete page", "error");
     }
   };
@@ -188,8 +185,7 @@ export default function CMSManagement() {
       } else {
         throw new Error("Failed to save settings");
       }
-    } catch (error) {
-      console.error("Error saving settings:", error);
+    } catch {
       showMessage("Failed to save settings", "error");
     }
   };
@@ -211,7 +207,6 @@ export default function CMSManagement() {
         throw new Error(errorData.error || "Failed to save images");
       }
     } catch (error) {
-      console.error("Error saving images:", error);
       showMessage(
         error instanceof Error ? error.message : "Failed to save images",
         "error"
@@ -786,8 +781,7 @@ export default function CMSManagement() {
                               } else {
                                 throw new Error("Failed to reset images");
                               }
-                            } catch (error) {
-                              console.error("Error resetting images:", error);
+                            } catch {
                               showMessage("Failed to reset images", "error");
                             }
                           }

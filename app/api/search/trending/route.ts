@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 
 export async function GET() {
   try {
@@ -16,8 +17,8 @@ export async function GET() {
 
     return NextResponse.json({ trending: mockTrending });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Error fetching trending searches:", error);
+    logger.error("Error:", error);
+    logger.error("Error fetching trending searches:", error);
     return NextResponse.json({ trending: [] });
   }
 }

@@ -87,7 +87,7 @@ export function ReviewsCarousel({
           }
         }
       } catch (error) {
-        console.error("Error fetching reviews:", error);
+        
       } finally {
         setIsLoading(false);
       }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth/next";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { MFAService } from "@/lib/server/mfa";
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptionsEnhanced);
 
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // First verify the user can regenerate backup codes
     const verifyResult = await MFAService.verifyMFA(
-      session.user.email,
+      session.user.id,
       confirmationToken
     );
 
@@ -47,11 +48,11 @@ export async function POST(request: NextRequest) {
 
     // Regenerate backup codes
     const newBackupCodes = await MFAService.regenerateBackupCodes(
-      session.user.email
+      session.user.id
     );
 
     // Log security event
-    console.log(`Backup codes regenerated for user ${session.user.email}`, {
+    logger.info(`Backup codes regenerated for user ${session.user.id}`, {
       timestamp: new Date().toISOString(),
       codesGenerated: newBackupCodes.length,
     });
@@ -67,8 +68,8 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Backup codes regeneration error:", error);
+    logger.error("Error:", error);
+    logger.error("Backup codes regeneration error:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

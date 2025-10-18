@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function Footer() {
   return (
     <footer className="border-t border-neutral-200 dark:border-neutral-700 mt-12 py-10 text-sm bg-neutral-50 dark:bg-neutral-900">
@@ -11,7 +13,7 @@ export function Footer() {
               Help
             </li>
             <li className="hover:text-neutral-900 dark:hover:text-white cursor-pointer transition-colors">
-              Track order
+              <Link href="/tracking">Track order</Link>{" "}
             </li>
             <li className="hover:text-neutral-900 dark:hover:text-white cursor-pointer transition-colors">
               Delivery & returns

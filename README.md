@@ -2,7 +2,7 @@
 
 # DYOFFICIALLETTE
 
-Modern fashion e‑commerce demo (Next.js 14 + Tailwind). Production‑style architecture: storefront, admin, checkout → payment simulation, analytics, and trending discovery.
+Modern fashion e‑commerce demo (Next.js 14 + Tailwind). Production‑style architecture: storefront, admin, checkout → Stripe payments (Payment Element + Apple/Google Pay), analytics, and trending discovery.
 
 <p>
 <a href="#"><img alt="Build" src="https://img.shields.io/badge/build-passing-brightgreen" /></a>
@@ -20,7 +20,7 @@ Modern fashion e‑commerce demo (Next.js 14 + Tailwind). Production‑style arc
 - Search relevance + time‑decay trending algorithm
 - Wishlist + cart (local → server sync) & discount engine
 - Admin suite (products, orders, categories, discounts, inventory overview)
-- Simulated Stripe-ready checkout (idempotent + webhook finalization)
+- Stripe-ready checkout: Payment Element and Payment Request Button (Apple Pay / Google Pay) with idempotent order creation and webhook finalization
 
 ## 🚀 Quick Start
 
@@ -33,6 +33,28 @@ npm run dev
 ```
 
 Visit: http://localhost:3000 | Admin: /admin (see demo accounts below)
+
+## 🚀 Production Commands
+
+```bash
+# Environment validation
+npm run env:validate:production
+
+# Database optimization
+npm run db:optimize
+
+# Cache warming
+npm run cache:warm
+
+# Performance analysis
+npm run performance:analyze
+
+# Deployment readiness check
+npm run deployment:readiness
+
+# Production deployment
+npm run production:deploy
+```
 
 ## � Seed Data Options
 
@@ -68,7 +90,10 @@ Next.js 14, TypeScript, Prisma, NextAuth, Tailwind, Stripe (simulated), Jest.
 - Discount codes (fixed / percent / limits / windows)
 - Trending & recently viewed personalization slices
 - Order lifecycle + metrics instrumentation
+- Express checkout with Apple Pay / Google Pay on Checkout and Cart
 - **Advanced Analytics** - Comprehensive business intelligence dashboard with user behavior tracking, conversion funnels, revenue analytics, and real-time insights
+- **Performance Optimization** - Database optimization, Redis caching, connection pooling, and performance monitoring for production-scale operations
+- **Production Deployment** - Complete deployment infrastructure with Docker, environment validation, health checks, and zero-downtime deployment automation
 
 ## 🔍 Search & Trending
 
@@ -86,6 +111,22 @@ Products, brands, categories, orders, discount codes, basic inventory + social m
 - Search analytics and funnel optimization
 - Real-time monitoring and historical insights
 
+**Performance Dashboard** (`/admin/performance`) - Production performance monitoring with:
+
+- Database optimization and query analysis
+- Redis caching management and statistics
+- Connection pool monitoring and health checks
+- Real-time performance metrics and recommendations
+- Automated optimization tools and cache warming
+
+**Production Deployment** - Enterprise-ready deployment system with:
+
+- Zero-downtime deployment automation
+- Docker and container orchestration
+- Environment validation and health monitoring
+- Performance optimization and cache warming
+- Comprehensive backup and rollback capabilities
+
 ## 🧪 Tests
 
 Key coverage: checkout flow, search expansion, trending decay, money formatting, order transitions.
@@ -97,6 +138,11 @@ Reviews (create/vote/report), advanced variant management, bundles, product rela
 ## 📄 Full Technical Documentation
 
 See `ARCHITECTURE.md` (deep data models, algorithms, roadmap, activation steps).
+
+Operational runbooks:
+
+- Daily shipping report (10pm CSV): `docs/daily-shipping-report.md` — endpoint, auth header, required env, scheduling, and local run scripts.
+- Wallets (Apple Pay / Google Pay): `docs/payments-wallets.md` — setup, domain verification, env, and troubleshooting.
 
 ## ⚖️ License / Attribution
 
@@ -198,7 +244,7 @@ Copy `.env.example` → `.env` and adjust. Key variables:
 | ---------------------------------- | ---------------------------------------------------- |
 | NEXTAUTH_SECRET                    | Session encryption secret                            |
 | DATABASE_URL                       | Prisma connection (SQLite file or Postgres URL)      |
-| NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY | Enables real PaymentElement UI                       |
+| NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY | Enables real Payment UI (Payment Element + PRB)      |
 | STRIPE_SECRET_KEY                  | Server-side Stripe API calls                         |
 | STRIPE_WEBHOOK_SECRET              | Verifies incoming Stripe webhooks                    |
 | RESEND_API_KEY                     | Email provider (optional; logs to console if absent) |
@@ -220,9 +266,19 @@ stripe listen --events payment_intent.succeeded --forward-to http://localhost:30
 4. Copy the `whsec_...` secret to `STRIPE_WEBHOOK_SECRET` and restart.
 5. Use test card `4242 4242 4242 4242` in checkout.
 
+### Apple Pay / Google Pay (Wallets)
+
+See `docs/payments-wallets.md` for complete setup and domain verification steps. Summary:
+
+- Set `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` and `STRIPE_SECRET_KEY`
+- Deploy the Apple Pay association file at `public/.well-known/apple-developer-merchantid-domain-association`
+- Verify the domain in Stripe/Apple, then test on supported devices/browsers
+
 ## Simulated Payment Mode
 
 If `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is missing, checkout falls back to a simulated payment confirmation screen (no external network call); a synthetic webhook payload finalizes the order & metrics.
+
+Wallets will not be shown without a publishable key and domain verification (for Apple Pay).
 
 ## Sentry
 

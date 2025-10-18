@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import {
   trackEvent,
   trackPageView,
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
                 ...eventData,
                 path: event.properties?.path || "/",
                 title: event.properties?.title,
-                timeOnPage: event.properties?.timeOnPage,
+                duration: event.properties?.timeOnPage,
               });
               break;
 
@@ -113,7 +114,7 @@ export async function POST(req: NextRequest) {
 
           processedCount++;
         } catch (error) {
-          console.error("Error processing event:", error);
+          logger.error("Error processing event:", error);
           errorCount++;
         }
       });

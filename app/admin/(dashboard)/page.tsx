@@ -147,6 +147,8 @@ export default async function AdminHomePage() {
                 text="Personalization"
               />
               <ActionLink href="/admin/inventory" text="Inventory" />
+              <ActionLink href="/admin/shipping" text="Shipping Dashboard" />
+              <ActionLink href="/admin/notifications" text="Notifications" />
               <ActionLink href="/admin/social" text="Social Commerce" />
               <ActionLink href="/admin/users/analytics" text="User Analytics" />
               <ActionLink href="/admin/security" text="Security" />

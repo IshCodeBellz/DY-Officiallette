@@ -42,7 +42,7 @@ export default function ProductClient({ product }: ProductClientProps) {
 
   // Gallery interaction & enhancements (keyboard, swipe, preload, zoom modal)
   useEffect(() => {
-    if (!product.images.length) return;
+    if (!Array.isArray(product.images) || product.images.length === 0) return;
     const root = document.getElementById("gallery-root");
     if (!root) return;
     const slides = Array.from(
@@ -229,7 +229,7 @@ export default function ProductClient({ product }: ProductClientProps) {
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();
-    if (product.sizes.length && !size) {
+    if (Array.isArray(product.sizes) && product.sizes.length && !size) {
       alert("Please select a size");
       return;
     }
@@ -238,7 +238,8 @@ export default function ProductClient({ product }: ProductClientProps) {
         productId: product.id,
         name: product.name,
         priceCents: product.priceCents,
-        image: product.image,
+        image:
+          product.image || (product.images?.[0] ?? "") || "/placeholder.svg",
         size: size || undefined,
       },
       1
@@ -261,7 +262,7 @@ export default function ProductClient({ product }: ProductClientProps) {
       productId: product.id,
       name: product.name,
       priceCents: product.priceCents,
-      image: product.image,
+      image: product.image || (product.images?.[0] ?? "") || "/placeholder.svg",
       size: size || undefined,
     });
     try {
@@ -288,7 +289,7 @@ export default function ProductClient({ product }: ProductClientProps) {
 
   return (
     <form className="space-y-4" onSubmit={handleAdd}>
-      {product.sizes.length > 0 && (
+      {Array.isArray(product.sizes) && product.sizes.length > 0 && (
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wide mb-1">
             Size

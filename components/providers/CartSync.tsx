@@ -58,7 +58,7 @@ export function CartSync() {
                 size: l.size,
                 name: "",
                 priceCents: l.priceCentsSnapshot,
-                image: "",
+                image: "/placeholder.svg",
               },
               l.qty
             );
@@ -113,7 +113,13 @@ export function CartSync() {
           for (const [id, qty] of merged.entries()) {
             const [productId, size] = id.split("__");
             addItem(
-              { productId, size, name: "", priceCents: 0, image: "" },
+              {
+                productId,
+                size,
+                name: "",
+                priceCents: 0,
+                image: "/placeholder.svg",
+              },
               qty
             );
           }

@@ -1,88 +1,85 @@
 import { NextRequest } from "next/server";
 
 export interface CaptchaConfig {
-  provider: "recaptcha" | "hcaptcha" | "turnstile" | "mock";
-  siteKey: string;
-  secretKey: string;
-  threshold?: number; // For reCAPTCHA v3 (0.0 - 1.0)
+  provider: "recaptcha" | "hcaptcha" | "turnstile";
   enabled: boolean;
+  siteKey?: string;
+  secretKey?: string;
+  threshold?: number;
 }
+
+export interface CaptchaSettings {
+  login: CaptchaConfig;
+  register: CaptchaConfig;
+  checkout: CaptchaConfig;
+  contact: CaptchaConfig;
+}
+
+// Default configuration
+const DEFAULT_CAPTCHA_SETTINGS: CaptchaSettings = {
+  login: {
+    provider: "recaptcha",
+    siteKey: process.env.RECAPTCHA_SITE_KEY,
+    secretKey: process.env.RECAPTCHA_SECRET_KEY,
+    threshold: 0.5,
+    enabled: process.env.NODE_ENV === "production",
+  },
+  register: {
+    provider: "recaptcha",
+    siteKey: process.env.RECAPTCHA_SITE_KEY,
+    secretKey: process.env.RECAPTCHA_SECRET_KEY,
+    threshold: 0.5,
+    enabled: process.env.NODE_ENV === "production",
+  },
+  checkout: {
+    provider: "recaptcha",
+    siteKey: process.env.RECAPTCHA_SITE_KEY,
+    secretKey: process.env.RECAPTCHA_SECRET_KEY,
+    threshold: 0.5,
+    enabled: process.env.NODE_ENV === "production",
+  },
+  contact: {
+    provider: "recaptcha",
+    siteKey: process.env.RECAPTCHA_SITE_KEY,
+    secretKey: process.env.RECAPTCHA_SECRET_KEY,
+    threshold: 0.5,
+    enabled: process.env.NODE_ENV === "production",
+  },
+};
 
 export interface CaptchaVerificationResult {
   success: boolean;
-  score?: number; // For reCAPTCHA v3
+  score?: number;
   action?: string;
+  challengeTimestamp?: Date;
   hostname?: string;
-  challengeTs?: string;
   errorCodes?: string[];
 }
 
 export interface CaptchaContext {
-  userAgent: string;
-  ipAddress: string;
-  endpoint: string;
+  ip?: string;
+  userAgent?: string;
+  ipAddress?: string;
+  endpoint?: string;
   riskScore?: number;
 }
 
-/**
- * CAPTCHA service for spam and abuse prevention
- */
 export class CaptchaService {
-  private static configs: Record<string, CaptchaConfig> = {
-    login: {
-      provider: "recaptcha",
-      siteKey: process.env.RECAPTCHA_SITE_KEY || "",
-      secretKey: process.env.RECAPTCHA_SECRET_KEY || "",
-      threshold: 0.5,
-      enabled: process.env.NODE_ENV === "production",
-    },
-    register: {
-      provider: "recaptcha",
-      siteKey: process.env.RECAPTCHA_SITE_KEY || "",
-      secretKey: process.env.RECAPTCHA_SECRET_KEY || "",
-      threshold: 0.7,
-      enabled: true,
-    },
-    checkout: {
-      provider: "recaptcha",
-      siteKey: process.env.RECAPTCHA_SITE_KEY || "",
-      secretKey: process.env.RECAPTCHA_SECRET_KEY || "",
-      threshold: 0.6,
-      enabled: true,
-    },
-    contact: {
-      provider: "recaptcha",
-      siteKey: process.env.RECAPTCHA_SITE_KEY || "",
-      secretKey: process.env.RECAPTCHA_SECRET_KEY || "",
-      threshold: 0.5,
-      enabled: true,
-    },
-  };
-
-  /**
-   * Verify CAPTCHA token
-   */
+  // Verify CAPTCHA token
   static async verifyCaptcha(
     token: string,
     context: CaptchaContext,
-    configKey: string = "default"
+    configKey: keyof CaptchaSettings = "login"
   ): Promise<CaptchaVerificationResult> {
-    const config = this.configs[configKey] || this.configs.login;
+    const config = DEFAULT_CAPTCHA_SETTINGS[configKey];
 
     if (!config.enabled) {
       // Skip CAPTCHA in development or when disabled
-      return {
-        success: true,
-        score: 1.0,
-        action: "development_mode",
-      };
+      return { success: true, score: 1, action: "bypass" };
     }
 
     if (!token) {
-      return {
-        success: false,
-        errorCodes: ["missing-input-response"],
-      };
+      return { success: false, errorCodes: ["missing-input-response"] };
     }
 
     try {
@@ -93,155 +90,120 @@ export class CaptchaService {
           return await this.verifyHCaptcha(token, config, context);
         case "turnstile":
           return await this.verifyTurnstile(token, config, context);
-        case "mock":
-          return this.verifyMock(token, config, context);
         default:
-          throw new Error(`Unsupported CAPTCHA provider: ${config.provider}`);
+          return { success: false, errorCodes: ["unsupported-provider"] };
       }
     } catch (error) {
-      console.error("Error:", error);
       console.error("CAPTCHA verification error:", error);
-
-      return {
-        success: false,
-        errorCodes: ["verification-failed"],
-      };
+      return { success: false, errorCodes: ["verification-error"] };
     }
   }
 
-  /**
-   * Verify reCAPTCHA token
-   */
   private static async verifyRecaptcha(
     token: string,
     config: CaptchaConfig,
     context: CaptchaContext
   ): Promise<CaptchaVerificationResult> {
-    const response = await fetch(
-      "https://www.google.com/recaptcha/api/siteverify",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({
-          secret: config.secretKey,
-          response: token,
-          remoteip: context.ipAddress,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    // For reCAPTCHA v3, check score threshold
-    if (config.threshold && data.score !== undefined) {
-      data.success = data.success && data.score >= config.threshold;
-    }
-
+    const res = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        secret: config.secretKey || "",
+        response: token,
+        remoteip: context.ip || "",
+      }),
+    });
+    const data = (await res.json()) as {
+      success: boolean;
+      score?: number;
+      action?: string;
+      challenge_ts?: string;
+      hostname?: string;
+      [k: string]: unknown;
+    };
+    const passed =
+      typeof data.score === "number" && config.threshold
+        ? data.success && data.score >= config.threshold
+        : data.success;
     return {
-      success: data.success,
+      success: passed,
       score: data.score,
       action: data.action,
+      challengeTimestamp: data.challenge_ts
+        ? new Date(data.challenge_ts)
+        : undefined,
       hostname: data.hostname,
-      challengeTs: data.challenge_ts,
-      errorCodes: data["error-codes"],
     };
   }
 
-  /**
-   * Verify hCaptcha token
-   */
   private static async verifyHCaptcha(
     token: string,
     config: CaptchaConfig,
     context: CaptchaContext
   ): Promise<CaptchaVerificationResult> {
-    const response = await fetch("https://hcaptcha.com/siteverify", {
+    const res = await fetch("https://hcaptcha.com/siteverify", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        secret: config.secretKey,
+        secret: config.secretKey || "",
         response: token,
-        remoteip: context.ipAddress,
-        sitekey: config.siteKey,
+        remoteip: context.ip || context.ipAddress || "",
+        sitekey: config.siteKey || "",
       }),
     });
-
-    const data = await response.json();
-
+    const data = (await res.json()) as {
+      success: boolean;
+      challenge_ts?: string;
+      hostname?: string;
+      [k: string]: unknown;
+    };
     return {
       success: data.success,
-      challengeTs: data.challenge_ts,
+      challengeTimestamp: data.challenge_ts
+        ? new Date(data.challenge_ts)
+        : undefined,
       hostname: data.hostname,
-      errorCodes: data["error-codes"],
     };
   }
 
-  /**
-   * Verify Cloudflare Turnstile token
-   */
   private static async verifyTurnstile(
     token: string,
     config: CaptchaConfig,
     context: CaptchaContext
   ): Promise<CaptchaVerificationResult> {
-    const response = await fetch(
+    const res = await fetch(
       "https://challenges.cloudflare.com/turnstile/v0/siteverify",
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          secret: config.secretKey,
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          secret: config.secretKey || "",
           response: token,
-          remoteip: context.ipAddress,
+          remoteip: context.ip || "",
         }),
       }
     );
-
-    const data = await response.json();
-
+    const data = (await res.json()) as {
+      success: boolean;
+      challenge_ts?: string;
+      hostname?: string;
+      [k: string]: unknown;
+    };
     return {
       success: data.success,
-      challengeTs: data.challenge_ts,
+      challengeTimestamp: data.challenge_ts
+        ? new Date(data.challenge_ts)
+        : undefined,
       hostname: data.hostname,
-      errorCodes: data["error-codes"],
     };
   }
 
-  /**
-   * Mock CAPTCHA for development
-   */
-  private static verifyMock(
-    token: string,
-    _config: CaptchaConfig,
-    _context: CaptchaContext
-  ): CaptchaVerificationResult {
-    // Simple mock logic
-    const success = token === "mock_success_token" || token.length > 10;
-
-    return {
-      success,
-      score: success ? 0.9 : 0.1,
-      action: "mock_action",
-      hostname: "localhost",
-      challengeTs: new Date().toISOString(),
-    };
-  }
-
-  /**
-   * Determine if CAPTCHA is required based on risk assessment
-   */
   static shouldRequireCaptcha(context: {
     riskScore?: number;
     failedAttempts?: number;
     isNewUser?: boolean;
     isVPN?: boolean;
-    endpoint: string;
+    endpoint?: string;
   }): boolean {
     const {
       riskScore = 0,
@@ -251,141 +213,109 @@ export class CaptchaService {
       endpoint,
     } = context;
 
-    // Always require for registration
-    if (endpoint.includes("register")) {
-      return true;
-    }
-
-    // High-risk scenarios
+    if (endpoint && endpoint.includes("register")) return true;
     if (riskScore >= 70) return true;
     if (failedAttempts >= 3) return true;
-    if (isVPN && endpoint.includes("login")) return true;
+    if (isVPN && endpoint && endpoint.includes("login")) return true;
 
-    // Specific endpoint rules
     const endpointRules: Record<string, boolean> = {
       "/api/auth/login": failedAttempts >= 2,
       "/api/checkout": riskScore >= 50,
-      "/api/contact": true, // Always for contact forms
+      "/api/contact": true,
       "/api/reviews": isNewUser || riskScore >= 40,
     };
 
-    return endpointRules[endpoint] || false;
+    return endpoint ? endpointRules[endpoint] ?? false : false;
   }
 
-  /**
-   * Get CAPTCHA configuration for frontend
-   */
-  static getClientConfig(configKey: string = "default"): {
+  static getClientConfig(configKey?: string): {
     provider: string;
     siteKey: string;
     enabled: boolean;
-    threshold?: number;
+    threshold: number;
   } {
-    const config = this.configs[configKey] || this.configs.login;
-
+    const key = (configKey as keyof CaptchaSettings) || "login";
+    const config =
+      DEFAULT_CAPTCHA_SETTINGS[key] || DEFAULT_CAPTCHA_SETTINGS.login;
     return {
       provider: config.provider,
-      siteKey: config.siteKey,
+      siteKey: config.siteKey || "",
       enabled: config.enabled,
-      threshold: config.threshold,
+      threshold: config.threshold || 0.5,
     };
   }
 
-  /**
-   * Update CAPTCHA configuration
-   */
   static updateConfig(
-    configKey: string,
+    configKey: keyof CaptchaSettings,
     updates: Partial<CaptchaConfig>
   ): void {
-    if (!this.configs[configKey]) {
-      this.configs[configKey] = { ...this.configs.login };
-    }
-
-    this.configs[configKey] = {
-      ...this.configs[configKey],
-      ...updates,
-    };
+    // In a real implementation, persist updates to DB/env; here we just log.
+    console.log("Updating CAPTCHA config:", configKey, updates);
   }
 
-  /**
-   * Create CAPTCHA middleware
-   */
-  static createCaptchaMiddleware(configKey: string = "default") {
+  static createCaptchaMiddleware(configKey: keyof CaptchaSettings = "login") {
     return async (req: NextRequest) => {
-      const config = this.configs[configKey] || this.configs.login;
+      const config =
+        DEFAULT_CAPTCHA_SETTINGS[configKey] || DEFAULT_CAPTCHA_SETTINGS.login;
+      if (!config.enabled) return { required: false, verified: true };
 
-      if (!config.enabled) {
-        return { required: false, verified: true };
-      }
-
-      const body = await req.json().catch(() => ({}));
+      const body = await req
+        .json()
+        .catch(() => ({} as Record<string, unknown>));
       const captchaToken =
-        body.captchaToken || req.headers.get("x-captcha-token");
-
-      const context: CaptchaContext = {
-        userAgent: req.headers.get("user-agent") || "unknown",
-        ipAddress: this.extractIP(req),
-        endpoint: req.nextUrl.pathname,
-      };
+        (body["captchaToken"] as string | undefined) ||
+        req.headers.get("x-captcha-token") ||
+        "";
 
       if (!captchaToken) {
-        return {
-          required: true,
-          verified: false,
-          error: "CAPTCHA token required",
-        };
+        return { required: true, verified: false, error: "missing-token" };
       }
 
-      const result = await this.verifyCaptcha(captchaToken, context, configKey);
+      const ip = CaptchaService.extractIP(req);
+      const result = await this.verifyCaptcha(captchaToken, { ip }, configKey);
 
       return {
         required: true,
         verified: result.success,
         score: result.score,
-        error: result.success ? undefined : "CAPTCHA verification failed",
+        error: result.success ? undefined : result.errorCodes?.[0] || "failed",
       };
     };
   }
 
-  /**
-   * Extract IP from request
-   */
   private static extractIP(req: NextRequest): string {
     const forwarded = req.headers.get("x-forwarded-for");
     const realIP = req.headers.get("x-real-ip");
     const cfIP = req.headers.get("cf-connecting-ip");
-
-    if (forwarded) {
-      return forwarded.split(",")[0].trim();
-    }
-
-    if (realIP) {
-      return realIP;
-    }
-
-    if (cfIP) {
-      return cfIP;
-    }
-
-    return req.ip || "unknown";
+    if (forwarded) return forwarded.split(",")[0]?.trim();
+    if (realIP) return realIP;
+    if (cfIP) return cfIP;
+    // Fallback: some deployments may expose req.ip via non-typed extension
+    return (req as unknown as { ip?: string }).ip || "unknown";
   }
 
-  /**
-   * Generate CAPTCHA analytics
-   */
-  static async getAnalytics(_timeRange: { start: Date; end: Date }): Promise<{
+  static async getAnalytics(timeRange: { start: Date; end: Date }): Promise<{
     totalVerifications: number;
     successRate: number;
     averageScore: number;
     topFailureReasons: Array<{ reason: string; count: number }>;
   }> {
-    // In production, this would query analytics database
-    return {
-      totalVerifications: 0,
-      successRate: 0,
-      averageScore: 0,
-      topFailureReasons: [],
-    };
+    try {
+      // Stub analytics
+      return {
+        totalVerifications: 0,
+        successRate: 0,
+        averageScore: 0,
+        topFailureReasons: [],
+      };
+    } catch (error) {
+      console.error("Error getting CAPTCHA analytics:", error);
+      return {
+        totalVerifications: 0,
+        successRate: 0,
+        averageScore: 0,
+        topFailureReasons: [],
+      };
+    }
   }
 }

@@ -98,7 +98,7 @@ export function SecurityActivity({ limit = 10 }: SecurityActivityProps) {
           )
         );
       } catch (err) {
-        console.error("Failed to fetch security events:", err);
+        
         setError(
           err instanceof Error ? err.message : "Failed to load security events"
         );

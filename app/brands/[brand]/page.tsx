@@ -48,8 +48,8 @@ export default function BrandPage({ params }: { params: { brand: string } }) {
           setBrand(data.brand);
         }
       } catch (error) {
-        console.error("Error:", error);
-        console.error("Failed to fetch brand:", error);
+        
+        
         setNotFound(true);
       } finally {
         setLoading(false);

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
@@ -15,6 +16,8 @@ import { decrementSizeStock } from "@/lib/server/inventory";
 import { debug } from "@/lib/server/debug";
 import { withRequest, error as logError } from "@/lib/server/logger";
 import { ExtendedSession } from "@/lib/types";
+import { OrderEventService } from "@/lib/server/orderEventService";
+import { validateAndNormalizeAddress } from "@/lib/server/address/validateAddress";
 
 // Basic Phase 3 draft checkout endpoint:
 // 1. Reads authenticated user's cart
@@ -62,7 +65,9 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       expires: "",
     };
   } else {
-    session = (await getServerSession(authOptionsEnhanced)) as ExtendedSession | null;
+    session = (await getServerSession(
+      authOptionsEnhanced
+    )) as ExtendedSession | null;
     uid = session?.user?.id;
   }
   if (!uid) {
@@ -200,6 +205,25 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     idempotencyKey,
   } = parsed.data;
 
+  // Validate/normalize addresses if provider configured
+  try {
+    const va = await validateAndNormalizeAddress(shippingAddress);
+    if (va && va.valid === false) {
+      return NextResponse.json({ error: "invalid_address" }, { status: 422 });
+    }
+    if (va.normalized) Object.assign(shippingAddress, va.normalized);
+    if (billingAddress) {
+      const vb = await validateAndNormalizeAddress(billingAddress);
+      if (vb && vb.valid === false) {
+        return NextResponse.json(
+          { error: "invalid_billing_address" },
+          { status: 422 }
+        );
+      }
+      if (vb.normalized) Object.assign(billingAddress, vb.normalized);
+    }
+  } catch {}
+
   if (idempotencyKey) {
     const existing = await prisma.order.findFirst({
       where: {
@@ -331,37 +355,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
         },
       });
 
-      await tx.orderEvent.create({
-        data: {
-          orderId: order.id,
-          kind: "CREATED",
-          message: "Order created and awaiting payment",
-          meta: JSON.stringify({
-            subtotalCents: subtotal,
-            discountCents,
-            taxCents,
-            shippingCents,
-            totalCents,
-            discountApplied: !!discountMeta.id,
-          }),
-        },
-      });
-
-      if (discountMeta.id) {
-        await tx.orderEvent.create({
-          data: {
-            orderId: order.id,
-            kind: "DISCOUNT_APPLIED",
-            message: `Discount code ${discountMeta.code} applied`,
-            meta: JSON.stringify({
-              code: discountMeta.code,
-              valueCents: discountMeta.valueCents,
-              percent: discountMeta.percent,
-              discountCents,
-            }),
-          },
-        });
-      }
+      // Enhanced order events will be created after transaction
 
       for (const line of cart.lines) {
         await tx.orderItem.create({
@@ -374,6 +368,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
             qty: line.qty,
             unitPriceCents: line.priceCentsSnapshot,
             lineTotalCents: line.priceCentsSnapshot * line.qty,
+            priceCentsSnapshot: line.priceCentsSnapshot,
           },
         });
         if (line.size) {
@@ -432,6 +427,43 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       );
     }
     throw error;
+  }
+
+  // Create enhanced order events after transaction
+  try {
+    await OrderEventService.createEvent({
+      orderId: result.id,
+      kind: "ORDER_CREATED",
+      message: "Order created and awaiting payment",
+      userId: session?.user?.id,
+      metadata: {
+        subtotalCents: subtotal,
+        discountCents,
+        taxCents,
+        shippingCents,
+        totalCents,
+        discountApplied: !!discountMeta.id,
+        paymentProvider: "STRIPE",
+      },
+    });
+
+    if (discountMeta.id) {
+      await OrderEventService.createEvent({
+        orderId: result.id,
+        kind: "DISCOUNT_APPLIED",
+        message: `Discount code ${discountMeta.code} applied`,
+        userId: session?.user?.id,
+        metadata: {
+          discountCode: discountMeta.code,
+          discountValueCents: discountMeta.valueCents,
+          discountPercent: discountMeta.percent,
+          totalDiscountCents: discountCents,
+        },
+      });
+    }
+  } catch (error) {
+    logger.error("Failed to create enhanced order events:", error);
+    // Don't fail the order creation for event logging issues
   }
 
   // Send rich order confirmation email (includes line items & addresses)

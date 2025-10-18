@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { ReviewService } from "@/lib/server/reviewService";
 import { getServerSession } from "next-auth";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function POST(
   request: NextRequest,
@@ -94,8 +95,8 @@ export async function POST(
       { status: 400 }
     );
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Review action API error:", error);
+    logger.error("Error:", error);
+    logger.error("Review action API error:", error);
     return NextResponse.json(
       {
         success: false,

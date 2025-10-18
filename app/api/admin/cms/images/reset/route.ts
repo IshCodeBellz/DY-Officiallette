@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
-import { withRequest } from "@/lib/server/logger";
+import { withRequest, error as logError } from "@/lib/server/logger";
 import { CMSService } from "@/lib/server/cmsService";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +35,9 @@ export const POST = withRequest(async function POST() {
       message: "Images reset to defaults successfully",
     });
   } catch (error) {
-    console.error("Error resetting homepage images:", error);
+    logError("Error resetting homepage images", {
+      err: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: "Failed to reset images" },
       { status: 500 }

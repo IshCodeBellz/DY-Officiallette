@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { SocialWishlistService } from "@/lib/server/socialWishlistService";
 
 export async function GET(
@@ -25,8 +26,8 @@ export async function GET(
       data: wishlist,
     });
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Get shared wishlist API error:", error);
+    logger.error("Error:", error);
+    logger.error("Get shared wishlist API error:", error);
     return NextResponse.json(
       {
         success: false,

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
 import { withRequest } from "@/lib/server/logger";
 import {
@@ -67,7 +68,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       email: user.email,
     });
   } catch (error) {
-      console.error("Error:", error);
+    logger.error("Error:", error);
     return createErrorResponse(
       error instanceof Error
         ? error

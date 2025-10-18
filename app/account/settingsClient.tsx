@@ -23,7 +23,7 @@ export default function AccountSettingsClient({
       const res = await fetch("/api/account/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ action: "update_profile", name }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {

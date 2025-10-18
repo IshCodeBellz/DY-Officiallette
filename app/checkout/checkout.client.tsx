@@ -1,15 +1,18 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { loadStripe } from "@stripe/stripe-js";
+import type { PaymentRequest } from "@stripe/stripe-js";
 import {
   Elements,
   PaymentElement,
+  PaymentRequestButtonElement,
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
 import { useCart } from "@/components/providers/CartProvider";
 import { useCurrency } from "@/components/providers/CurrencyProvider";
 import { useSession } from "next-auth/react";
+import AddressAutocomplete from "@/components/address/AddressAutocomplete";
 
 const stripePromise =
   typeof window !== "undefined" &&
@@ -24,6 +27,7 @@ interface PrimedOrderData {
   subtotalCents: number;
   discountCents: number;
   totalCents: number;
+  currency: string;
 }
 
 export default function CheckoutClient() {
@@ -49,6 +53,85 @@ export default function CheckoutClient() {
       }
   >({ state: "idle" });
   const lastValidated = useRef<string>("");
+
+  // Addresses & shipping form state
+  type AddressDTO = {
+    id: string;
+    fullName: string;
+    line1: string;
+    line2: string | null;
+    city: string;
+    region: string | null;
+    postalCode: string;
+    country: string;
+    phone: string | null;
+    isDefault: boolean;
+  };
+  const [addresses, setAddresses] = useState<AddressDTO[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<
+    string | "custom" | null
+  >(null);
+  const [shipping, setShipping] = useState({
+    fullName: "",
+    line1: "",
+    line2: "",
+    city: "",
+    region: "",
+    postalCode: "",
+    country: "US",
+    phone: "",
+  });
+
+  useEffect(() => {
+    let active = true;
+    async function loadAddresses() {
+      if (authStatus !== "authenticated") return;
+      try {
+        const res = await fetch("/api/addresses", { cache: "no-store" });
+        if (!res.ok) return;
+        const list: AddressDTO[] = await res.json();
+        if (!active) return;
+        setAddresses(list || []);
+        if (list && list.length > 0) {
+          const def = list[0];
+          setSelectedAddressId(def.id);
+          setShipping({
+            fullName: def.fullName || "",
+            line1: def.line1 || "",
+            line2: def.line2 || "",
+            city: def.city || "",
+            region: def.region || "",
+            postalCode: def.postalCode || "",
+            country: def.country || "US",
+            phone: def.phone || "",
+          });
+        }
+      } catch {
+        // ignore
+      }
+    }
+    loadAddresses();
+    return () => {
+      active = false;
+    };
+  }, [authStatus]);
+
+  function applyAddress(id: string | "custom") {
+    setSelectedAddressId(id);
+    if (id === "custom") return; // keep current edits
+    const addr = addresses.find((a) => a.id === id);
+    if (!addr) return;
+    setShipping({
+      fullName: addr.fullName || "",
+      line1: addr.line1 || "",
+      line2: addr.line2 || "",
+      city: addr.city || "",
+      region: addr.region || "",
+      postalCode: addr.postalCode || "",
+      country: addr.country || "US",
+      phone: addr.phone || "",
+    });
+  }
 
   // Debounced live validation of discount code
   useEffect(() => {
@@ -112,18 +195,18 @@ export default function CheckoutClient() {
         }),
       });
       const fd = new FormData(e.target as HTMLFormElement);
-      const shipping = {
-        fullName: fd.get("fullName") as string,
-        line1: fd.get("line1") as string,
-        line2: (fd.get("line2") as string) || undefined,
-        city: fd.get("city") as string,
-        region: (fd.get("region") as string) || undefined,
-        postalCode: fd.get("postalCode") as string,
-        country: fd.get("country") as string,
-        phone: (fd.get("phone") as string) || undefined,
+      // Use controlled shipping state (prefilled with default address but editable)
+      const shippingPayload = {
+        fullName: shipping.fullName,
+        line1: shipping.line1,
+        line2: shipping.line2 || undefined,
+        city: shipping.city,
+        region: shipping.region || undefined,
+        postalCode: shipping.postalCode,
+        country: shipping.country,
+        phone: shipping.phone || undefined,
       };
-      const discountCode =
-        ((fd.get("discountCode") as string) || "").trim() || undefined;
+      const discountCode = discountInput.trim() || undefined;
       // Ensure we only send validated code (avoid typos mid-change)
       const codeToSend =
         discountCode && discountCode.toUpperCase() === lastValidated.current
@@ -134,7 +217,7 @@ export default function CheckoutClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          shippingAddress: shipping,
+          shippingAddress: shippingPayload,
           email,
           discountCode: codeToSend,
           idempotencyKey,
@@ -185,6 +268,7 @@ export default function CheckoutClient() {
         subtotalCents: checkoutData.subtotalCents,
         discountCents: checkoutData.discountCents,
         totalCents: checkoutData.totalCents,
+        currency: checkoutData.currency || "USD",
       });
       setStep("payment");
     } catch (err) {
@@ -329,41 +413,152 @@ export default function CheckoutClient() {
         <div className="md:col-span-2 font-medium text-neutral-700 dark:text-neutral-300">
           Shipping
         </div>
+        {addresses.length > 0 && (
+          <div className="md:col-span-2 -mt-2 mb-1">
+            <label className="text-xs text-neutral-600 dark:text-neutral-400 mr-2">
+              Saved address
+            </label>
+            <div className="relative">
+              <select
+                className="input w-full pr-12 appearance-none bg-transparent"
+                value={selectedAddressId ?? "custom"}
+                onChange={(e) => applyAddress(e.target.value as string)}
+              >
+                {addresses.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {`${a.fullName} — ${a.city}, ${a.country}${
+                      a.isDefault ? " (default)" : ""
+                    }`}
+                  </option>
+                ))}
+                <option value="custom">Use a different address…</option>
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.94l3.71-3.71a.75.75 0 1 1 1.06 1.06l-4.24 4.25a.75.75 0 0 1-1.06 0L5.21 8.29a.75.75 0 0 1 .02-1.08z" />
+                </svg>
+              </span>
+            </div>
+            <button
+              type="button"
+              className="mt-1 text-xs underline text-neutral-600"
+              onClick={() =>
+                setShipping({
+                  fullName: "",
+                  line1: "",
+                  line2: "",
+                  city: "",
+                  region: "",
+                  postalCode: "",
+                  country: "US",
+                  phone: "",
+                })
+              }
+            >
+              Clear fields
+            </button>
+          </div>
+        )}
         <input
           name="fullName"
           required
           placeholder="Full name"
           className="input"
+          value={shipping.fullName}
+          autoComplete="name"
+          onChange={(e) =>
+            setShipping((s) => ({ ...s, fullName: e.target.value }))
+          }
         />
         <input
           name="email"
           type="email"
           placeholder="Email (optional)"
           className="input"
+          autoComplete="email"
+        />
+        <AddressAutocomplete
+          value={shipping.line1}
+          country={shipping.country}
+          onChange={(v) => setShipping((s) => ({ ...s, line1: v }))}
+          onSelect={(parts) =>
+            setShipping((s) => ({
+              ...s,
+              line1: parts.line1 || s.line1,
+              city: parts.city || s.city,
+              region: parts.region || s.region,
+              postalCode: parts.postalCode || s.postalCode,
+              country: parts.country || s.country,
+            }))
+          }
         />
         <input
-          name="line1"
-          required
-          placeholder="Address line 1"
+          name="line2"
+          placeholder="Address line 2"
           className="input"
+          value={shipping.line2}
+          autoComplete="address-line2"
+          onChange={(e) =>
+            setShipping((s) => ({ ...s, line2: e.target.value }))
+          }
         />
-        <input name="line2" placeholder="Address line 2" className="input" />
-        <input name="city" required placeholder="City" className="input" />
-        <input name="region" placeholder="Region / State" className="input" />
+        <input
+          name="city"
+          required
+          placeholder="City"
+          className="input"
+          value={shipping.city}
+          autoComplete="address-level2"
+          onChange={(e) => setShipping((s) => ({ ...s, city: e.target.value }))}
+        />
+        <input
+          name="region"
+          placeholder="Region / State"
+          className="input"
+          value={shipping.region}
+          autoComplete="address-level1"
+          onChange={(e) =>
+            setShipping((s) => ({ ...s, region: e.target.value }))
+          }
+        />
         <input
           name="postalCode"
           required
           placeholder="Postal code"
           className="input"
+          value={shipping.postalCode}
+          autoComplete="postal-code"
+          onChange={(e) =>
+            setShipping((s) => ({ ...s, postalCode: e.target.value }))
+          }
         />
         <input
           name="country"
           required
           placeholder="Country"
           className="input"
-          defaultValue="US"
+          value={shipping.country}
+          autoComplete="country"
+          onChange={(e) =>
+            setShipping((s) => ({ ...s, country: e.target.value }))
+          }
         />
-        <input name="phone" placeholder="Phone" className="input" />
+        <input
+          name="phone"
+          placeholder="Phone"
+          className="input"
+          value={shipping.phone}
+          autoComplete="tel"
+          onChange={(e) =>
+            setShipping((s) => ({ ...s, phone: e.target.value }))
+          }
+        />
         <div className="md:col-span-2 mt-4 font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-2">
           <span>Discount code</span>
         </div>
@@ -472,6 +667,69 @@ function PaymentStep({
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [prAvailable, setPrAvailable] = useState(false);
+  const paymentRequestRef = useRef<PaymentRequest | null>(null);
+
+  // Initialize Payment Request Button (Apple Pay / Google Pay)
+  useEffect(() => {
+    if (!stripe || !primed) return;
+    const country = primed.currency?.toUpperCase() === "GBP" ? "GB" : "US";
+    const currency = (primed.currency || "USD").toLowerCase();
+    const pr = stripe.paymentRequest({
+      country,
+      currency,
+      total: { label: "DY OFFICIALETTE Order", amount: primed.totalCents },
+      requestPayerName: true,
+      requestPayerEmail: true,
+      requestShipping: false,
+    });
+
+    pr.canMakePayment().then((result) => {
+      if (result) {
+        paymentRequestRef.current = pr;
+        setPrAvailable(true);
+      } else {
+        setPrAvailable(false);
+      }
+    });
+
+    // Handle wallet payment method
+    pr.on("paymentmethod", async (ev) => {
+      try {
+        setSubmitting(true);
+        setErr(null);
+        const { error, paymentIntent } = await stripe.confirmCardPayment(
+          primed.clientSecret,
+          {
+            payment_method: ev.paymentMethod.id,
+          },
+          { handleActions: true }
+        );
+        if (error) {
+          await ev.complete("fail");
+          setErr(error.message || "Payment error");
+          setSubmitting(false);
+          return;
+        }
+        await ev.complete("success");
+        if (paymentIntent && paymentIntent.status === "succeeded") {
+          onSuccess();
+        } else {
+          // If additional actions were required and completed, consider it success
+          onSuccess();
+        }
+      } catch (e) {
+        await ev.complete("fail");
+        setErr(e instanceof Error ? e.message : "Payment error");
+      } finally {
+        setSubmitting(false);
+      }
+    });
+
+    return () => {
+      // No explicit teardown required; element unmount handles listeners
+    };
+  }, [stripe, primed, onSuccess]);
 
   async function handlePay(e: React.FormEvent) {
     e.preventDefault();
@@ -501,6 +759,16 @@ function PaymentStep({
     <div className="container mx-auto px-4 py-12 max-w-lg">
       <h1 className="text-2xl font-semibold mb-6">Payment</h1>
       <form onSubmit={handlePay} className="space-y-4">
+        {prAvailable && paymentRequestRef.current && (
+          <div className="mb-2">
+            <PaymentRequestButtonElement
+              options={{ paymentRequest: paymentRequestRef.current }}
+            />
+            <div className="text-xs text-neutral-500 mt-2">
+              Or pay with your card below
+            </div>
+          </div>
+        )}
         <PaymentElement />
         {err && (
           <div className="bg-red-100 text-red-600 p-2 rounded text-sm">

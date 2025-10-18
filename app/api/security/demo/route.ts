@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { RateLimitService, RateLimitConfigs } from "@/lib/server/rateLimit";
 import { IPSecurityService } from "@/lib/server/ipSecurity";
 import { CaptchaService } from "@/lib/server/captcha";
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     const ip = IPSecurityService.extractIP(request);
     const userAgent = request.headers.get("user-agent") || "unknown";
 
-    console.log(`Security demo request from IP: ${ip}`);
+    logger.info(`Security demo request from IP: ${ip}`);
 
     // 1. RATE LIMITING CHECK
     const rateLimitKey = RateLimitService.generateIPKey(
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     // 2. IP SECURITY ANALYSIS
     const ipInfo = await IPSecurityService.analyzeIP(ip);
-    console.log(`IP Analysis:`, {
+    logger.info(`IP Analysis:`, {
       ip: ipInfo.ip,
       country: ipInfo.country,
       riskScore: ipInfo.riskScore,
@@ -229,8 +230,8 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Security demo error:", error);
+    logger.error("Error:", error);
+    logger.error("Security demo error:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -341,8 +342,8 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Security config error:", error);
+    logger.error("Error:", error);
+    logger.error("Security config error:", error);
 
     return NextResponse.json(
       {

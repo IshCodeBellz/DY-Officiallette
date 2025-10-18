@@ -160,8 +160,8 @@ export const SecurityEventLog: React.FC<SecurityEventLogProps> = ({
 
       setEvents(mockEvents);
     } catch (error) {
-      console.error("Error:", error);
-      console.error("Failed to load security events:", error);
+      
+      
     } finally {
       setLoading(false);
     }

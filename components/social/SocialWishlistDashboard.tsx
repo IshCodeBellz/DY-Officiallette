@@ -47,8 +47,8 @@ export default function SocialWishlistDashboard() {
         setSharedWithMe(sharedData.wishlists || []);
       }
     } catch (error) {
-      console.error("Error:", error);
-      console.error("Failed to load wishlists:", error);
+      
+      
     } finally {
       setLoading(false);
     }
@@ -214,8 +214,8 @@ function WishlistCard({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error("Error:", error);
-      console.error("Failed to copy link:", error);
+      
+      
     }
   }
 
@@ -362,7 +362,7 @@ function CreateWishlistForm({
         setError(data.error || "Failed to create wishlist");
       }
     } catch (error) {
-      console.error("Error:", error);
+      
       setError("Network error occurred");
     } finally {
       setLoading(false);

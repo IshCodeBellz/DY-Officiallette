@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth/next";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { MFAService } from "@/lib/server/mfa";
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptionsEnhanced);
 
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     // First verify the user can disable MFA with their current token
     const verifyResult = await MFAService.verifyMFA(
-      session.user.email,
+      session.user.id,
       confirmationToken
     );
 
@@ -47,10 +48,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Disable MFA
-    await MFAService.disableMFA(session.user.email);
+    await MFAService.disableMFA(session.user.id);
 
     // Log security event
-    console.log(`MFA disabled for user ${session.user.email}`, {
+    logger.info(`MFA disabled for user ${session.user.id}`, {
       reason: reason || "User requested",
       timestamp: new Date().toISOString(),
     });
@@ -63,8 +64,8 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("MFA disable error:", error);
+    logger.error("Error:", error);
+    logger.error("MFA disable error:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

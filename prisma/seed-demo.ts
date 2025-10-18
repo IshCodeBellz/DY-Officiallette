@@ -129,6 +129,7 @@ async function main() {
         qty: 1,
         size: products[0].sizeVariants[0]?.label || null,
         unitPriceCents: products[0].priceCents,
+        priceCentsSnapshot: products[0].priceCents,
         lineTotalCents: products[0].priceCents,
       },
       {
@@ -139,6 +140,7 @@ async function main() {
         qty: 2,
         size: products[1].sizeVariants[0]?.label || null,
         unitPriceCents: products[1].priceCents,
+        priceCentsSnapshot: products[1].priceCents,
         lineTotalCents: products[1].priceCents * 2,
       },
     ],
@@ -166,6 +168,7 @@ async function main() {
       qty: 1,
       size: products[2].sizeVariants[0]?.label || null,
       unitPriceCents: products[2].priceCents,
+      priceCentsSnapshot: products[2].priceCents,
       lineTotalCents: products[2].priceCents,
     },
   });

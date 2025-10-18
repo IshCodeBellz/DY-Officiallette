@@ -62,6 +62,8 @@ describe("order status transition guard", () => {
     const res: any = await (statusRoute as any).POST(req, { params: { id } });
     expect(res.status).toBe(400);
     const json = await res.json();
-    expect(json.error).toBe("invalid_transition");
+    // Service now returns a descriptive error string including allowed transitions
+    expect(typeof json.error).toBe("string");
+    expect(json.error).toMatch(/Invalid transition/i);
   });
 });

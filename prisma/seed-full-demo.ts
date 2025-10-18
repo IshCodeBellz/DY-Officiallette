@@ -201,6 +201,7 @@ async function main() {
         size: product.sizeVariants[0]?.label || "ONE",
         qty,
         unitPriceCents: product.priceCents,
+        priceCentsSnapshot: product.priceCents,
         lineTotalCents: product.priceCents * qty,
       },
     });

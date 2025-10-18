@@ -90,8 +90,6 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
 
       setSessions(parsedSessions);
     } catch (error) {
-      console.error("Error:", error);
-      console.error("Failed to load sessions:", error);
       setError("Failed to load session information");
 
       // Mock data for development
@@ -150,8 +148,10 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
     setTerminating((prev) => new Set(prev).add(sessionId));
 
     try {
-      const response = await fetch(`/api/account/sessions/${sessionId}`, {
+      const response = await fetch(`/api/account/sessions`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
       });
 
       if (!response.ok) {
@@ -162,8 +162,6 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
       // Remove session from list
       setSessions((prev) => prev.filter((session) => session.id !== sessionId));
     } catch (error) {
-      console.error("Error:", error);
-      console.error("Failed to terminate session:", error);
       setError("Failed to terminate session");
     } finally {
       setTerminating((prev) => {
@@ -188,7 +186,7 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
     });
 
     try {
-      const response = await fetch("/api/account/sessions/terminate-others", {
+      const response = await fetch("/api/account/sessions/terminate-all", {
         method: "POST",
       });
 
@@ -200,8 +198,6 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
       // Remove other sessions from list
       setSessions((prev) => prev.filter((session) => session.isCurrent));
     } catch (error) {
-      console.error("Error:", error);
-      console.error("Failed to terminate other sessions:", error);
       setError("Failed to terminate other sessions");
     } finally {
       setTerminating(new Set());

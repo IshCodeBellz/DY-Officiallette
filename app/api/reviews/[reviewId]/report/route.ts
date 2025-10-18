@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { ReviewService } from "@/lib/server/reviewService";
 import { z } from "zod";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const reportSchema = z.object({
   reason: z.enum([
@@ -50,11 +51,11 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: result.message,
+      message: result.message ?? "Report received",
     });
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Report review error:", error);
+    logger.error("Error:", error);
+    logger.error("Report review error:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

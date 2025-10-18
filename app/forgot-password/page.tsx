@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
         setSuccess(true);
       }
     } catch (error) {
-      console.error("Error:", error);
+      
       setError("Network error. Please check your connection.");
     } finally {
       setLoading(false);

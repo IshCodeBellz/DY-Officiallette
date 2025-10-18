@@ -8,5 +8,13 @@
         "message": "Do not format prices with toFixed(2) directly on price/subtotal/total/amount. Use formatPriceCents() with integer cents instead."
       }
     ]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["lib/server/*_clean.ts", "lib/server/shipping/**/*.ts"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "warn"
+      }
+    }
+  ]
 }

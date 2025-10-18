@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth/next";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { MFAService } from "@/lib/server/mfa";
@@ -39,8 +40,8 @@ export async function POST() {
       },
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("MFA setup error:", error);
+    logger.error("Error:", error);
+    logger.error("MFA setup error:", error);
     captureError(error as Error, {
       userId: session?.user?.id,
     });
@@ -78,8 +79,8 @@ export async function GET() {
       data: mfaStatus,
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("MFA status error:", error);
+    logger.error("Error:", error);
+    logger.error("MFA status error:", error);
     captureError(error as Error, {
       userId: session?.user?.id,
     });

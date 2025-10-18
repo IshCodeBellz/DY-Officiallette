@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { ReviewService } from "@/lib/server/reviewService";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 /**
  * POST /api/reviews/[reviewId]/vote
@@ -37,8 +38,8 @@ export async function POST(
       newVoteCount: result.newVoteCount,
     });
   } catch (error) {
-      console.error("Error:", error);
-    console.error("Vote review error:", error);
+    logger.error("Error:", error);
+    logger.error("Vote review error:", error);
     return NextResponse.json(
       { error: "Failed to record vote" },
       { status: 500 }

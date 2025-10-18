@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { error as logError } from "@/lib/server/logger";
 import { prisma } from "@/lib/server/prisma";
+import { generateDeviceFingerprint } from "@/lib/security";
 import { IPSecurityService } from "@/lib/server/ipSecurity";
 
 export const dynamic = "force-dynamic";
@@ -89,6 +90,13 @@ export async function GET(request: NextRequest) {
       take: 20, // Limit to last 20 sessions
     });
 
+    // Load trusted devices for this user and build a lookup set
+    const trustedDevices = await prisma.trustedDevice.findMany({
+      where: { userId: session.user.id, trusted: true },
+      select: { deviceId: true },
+    });
+    const trustedSet = new Set(trustedDevices.map((d) => d.deviceId));
+
     // Transform database sessions to API format
     const sessions = await Promise.all(
       userSessions.map(async (dbSession) => {
@@ -108,7 +116,9 @@ export async function GET(request: NextRequest) {
               }
             }
           } catch (error) {
-            console.warn("Failed to get location for session:", error);
+            logError("Failed to get location for session", {
+              err: error instanceof Error ? error.message : String(error),
+            });
           }
         }
 
@@ -116,6 +126,13 @@ export async function GET(request: NextRequest) {
         const isCurrent =
           dbSession.ipAddress === currentIP &&
           dbSession.userAgent === currentUserAgent;
+
+        // Compute device fingerprint to check trusted state
+        const fingerprint = generateDeviceFingerprint(
+          dbSession.userAgent || "unknown",
+          dbSession.ipAddress || "unknown"
+        );
+        const isTrusted = trustedSet.has(fingerprint);
 
         // Calculate risk score based on session data
         let riskScore = 10; // Base score
@@ -139,6 +156,7 @@ export async function GET(request: NextRequest) {
           isCurrent,
           isActive: true, // All sessions without endTime are active
           riskScore: Math.min(riskScore, 100),
+          isTrusted,
           firstSeen: dbSession.startTime,
         };
       })
@@ -158,9 +176,16 @@ export async function GET(request: NextRequest) {
           }
         }
       } catch (error) {
-        console.warn("Failed to get current location:", error);
+        logError("Failed to get current location", {
+          err: error instanceof Error ? error.message : String(error),
+        });
       }
 
+      const fingerprint = generateDeviceFingerprint(
+        currentUserAgent || "unknown",
+        currentIP || "unknown"
+      );
+      const isTrusted = trustedSet.has(fingerprint);
       sessions.push({
         id: "current",
         name: currentDeviceInfo.deviceName,
@@ -173,6 +198,7 @@ export async function GET(request: NextRequest) {
         isCurrent: true,
         isActive: true,
         riskScore: IPSecurityService.isPrivateIP(currentIP) ? 5 : 25,
+        isTrusted,
         firstSeen: new Date(),
       });
     }
@@ -209,8 +235,28 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // In a real implementation, you would delete the session from the database
-    // For now, we'll just return success
+    // End the selected session by setting endTime
+    await prisma.userSession.updateMany({
+      where: { id: sessionId, userId: session.user.id, endTime: null },
+      data: { endTime: new Date(), updatedAt: new Date() },
+    });
+
+    // Optional: log a security event for session termination
+    try {
+      await prisma.securityEvent.create({
+        data: {
+          userId: session.user.id,
+          ipAddress: request.headers.get("x-forwarded-for") || "Unknown",
+          userAgent: request.headers.get("user-agent") || undefined,
+          eventType: "SESSION_TERMINATED",
+          severity: "low",
+          details: JSON.stringify({ sessionId }),
+          blocked: false,
+        },
+      });
+    } catch {
+      // Non-critical; ignore logging errors
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

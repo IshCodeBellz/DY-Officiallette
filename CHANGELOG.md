@@ -1,5 +1,14 @@
 ## Unreleased
 
+### Wallets: Apple Pay & Google Pay (October 17, 2025)
+
+- Removed deprecated user-level MFA fields (mfaSecret, mfaBackupCodes); MFA data now stored exclusively in MfaDevice. Migration: `remove-user-mfa-fields`.
+
+- Added Payment Request Button to checkout and cart pages
+- Created Apple Pay domain association file scaffold under `public/.well-known/`
+- Implemented Stripe PaymentIntent confirmation flow with wallet-backed payment methods
+- Documentation: `docs/payments-wallets.md`, updated `README.md` and `DEPLOYMENT.md`
+
 ### Advanced Analytics Implementation (October 8, 2025)
 
 #### Comprehensive Analytics System

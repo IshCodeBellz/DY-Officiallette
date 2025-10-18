@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { logger } from "@/lib/server/logger";
 import { ReviewService } from "@/lib/server/reviewService";
 import { getServerSession } from "next-auth";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
@@ -41,8 +42,8 @@ export async function GET(request: NextRequest) {
       data: result,
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Get reviews API error:", error);
+    logger.error("Error:", error);
+    logger.error("Get reviews API error:", error);
     return NextResponse.json(
       {
         success: false,
@@ -107,8 +108,8 @@ export async function POST(request: NextRequest) {
       data: result.review,
     });
   } catch (error) {
-    console.error("Error:", error);
-    console.error("Create review API error:", error);
+    logger.error("Error:", error);
+    logger.error("Create review API error:", error);
     return NextResponse.json(
       {
         success: false,

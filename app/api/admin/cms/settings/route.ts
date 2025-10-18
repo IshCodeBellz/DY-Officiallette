@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptionsEnhanced } from "@/lib/server/authOptionsEnhanced";
 import { prisma } from "@/lib/server/prisma";
-import { withRequest } from "@/lib/server/logger";
+import { logger, withRequest } from "@/lib/server/logger";
 import { CMSService } from "@/lib/server/cmsService";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +30,7 @@ export const GET = withRequest(async function GET() {
     const settings = await CMSService.getSiteSettings();
     return NextResponse.json({ settings });
   } catch (error) {
-    console.error("Error fetching site settings:", error);
+    logger.error("Error fetching site settings:", error);
     return NextResponse.json(
       { error: "Failed to fetch settings" },
       { status: 500 }
@@ -59,7 +59,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     const updatedSettings = await CMSService.updateSiteSettings(settings);
     return NextResponse.json({ settings: updatedSettings });
   } catch (error) {
-    console.error("Error updating site settings:", error);
+    logger.error("Error updating site settings:", error);
     return NextResponse.json(
       { error: "Failed to update settings" },
       { status: 500 }

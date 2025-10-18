@@ -86,7 +86,7 @@ export const CaptchaWidget: React.FC<CaptchaProps> = ({
               break;
           }
         } catch (error) {
-          console.error("Error:", error);
+          
           console.warn("Error cleaning up CAPTCHA widget:", error);
         }
       }
@@ -122,8 +122,8 @@ export const CaptchaWidget: React.FC<CaptchaProps> = ({
       setIsLoading(false);
       setIsReady(true);
     } catch (error) {
-      console.error("Error:", error);
-      console.error("Failed to load CAPTCHA:", error);
+      
+      
       setError("Failed to load CAPTCHA. Please refresh the page.");
       setIsLoading(false);
     }
@@ -247,8 +247,8 @@ export const CaptchaWidget: React.FC<CaptchaProps> = ({
           break;
       }
     } catch (error) {
-      console.error("Error:", error);
-      console.error("Error rendering CAPTCHA widget:", error);
+      
+      
       setError("Failed to render CAPTCHA widget");
     }
   };
@@ -274,8 +274,8 @@ export const CaptchaWidget: React.FC<CaptchaProps> = ({
       }
       setError(null);
     } catch (error) {
-      console.error("Error:", error);
-      console.error("Error resetting CAPTCHA:", error);
+      
+      
     }
   };
 
