@@ -131,7 +131,8 @@ jobs:
           PGPASSWORD: postgres
         run: |
           echo "Testing Prisma connection..."
-          if npx prisma db execute --stdin <<< "SELECT 1 as test;"; then
+          # Explicitly provide the database URL so Prisma doesn't require --schema
+          if npx prisma db execute --url "$DATABASE_URL" --stdin <<< "SELECT 1 as test;"; then
             echo "✅ Prisma connection successful"
           else
             echo "❌ Prisma connection test failed"

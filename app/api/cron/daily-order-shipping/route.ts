@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "../../../../lib/server/logger";
-import { sendDailyOrderShippingReport } from "../../../../lib/server/reports/orderShippingReport";
+import { sendDailyOrderShippingReport } from "@/lib/server/reports/orderShippingReport";
 
 export async function POST(request: NextRequest) {
   try {
