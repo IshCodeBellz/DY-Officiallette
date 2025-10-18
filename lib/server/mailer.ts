@@ -70,7 +70,8 @@ let _mailer: Mailer | null = null;
 export function getMailer(): Mailer {
   if (_mailer) return _mailer;
   // In CI or test environments, avoid hitting external APIs.
-  const isCiOrTest = process.env.CI === "true" || process.env.NODE_ENV === "test";
+  const isCiOrTest =
+    process.env.CI === "true" || process.env.NODE_ENV === "test";
   if (!isCiOrTest && process.env.RESEND_API_KEY) {
     const driver = new ResendDriver(process.env.RESEND_API_KEY);
     _mailer = {

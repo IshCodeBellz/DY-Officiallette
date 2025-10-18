@@ -12,7 +12,8 @@ export function getStripe(): Stripe | null {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) return null;
   // Treat known placeholder or fake keys as simulate mode
-  const isPlaceholder = /sk_(test|live)_fake/i.test(key) || key.includes("fake_key_for_ci");
+  const isPlaceholder =
+    /sk_(test|live)_fake/i.test(key) || key.includes("fake_key_for_ci");
   if (isPlaceholder) return null;
   _stripe = new Stripe(key, { apiVersion: "2024-06-20" });
   return _stripe;
