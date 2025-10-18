@@ -1,3 +1,7 @@
+import path from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Relax build blockers so we can produce artifacts while fixing lint/type issues
@@ -27,6 +31,14 @@ const nextConfig = {
       { protocol: "https", hostname: "media.about.nike.com" },
       { protocol: "https", hostname: "static.runnea.com" },
     ],
+  },
+  webpack: (config) => {
+    // Ensure TS path alias '@/*' works in all environments (e.g., Vercel)
+    config.resolve = config.resolve || {};
+    config.resolve.alias = config.resolve.alias || {};
+    const projectRoot = path.resolve(__dirname);
+    config.resolve.alias["@"] = projectRoot;
+    return config;
   },
 };
 export default nextConfig;
