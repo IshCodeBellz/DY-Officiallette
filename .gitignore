@@ -50,6 +50,10 @@ artifacts/
 tmp/
 temp/
 
+# Keep server reports module tracked
+!lib/server/reports/
+!lib/server/reports/**
+
 ### Next.js specific
 .next/
 out/
