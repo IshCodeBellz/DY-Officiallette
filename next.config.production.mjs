@@ -1,4 +1,5 @@
 import { dirname, join } from "path";
+import path from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -66,6 +67,11 @@ const nextConfig = {
 
   // Webpack configuration
   webpack: (config, { dev, isServer }) => {
+    // Ensure TS path alias '@/*' works in production builds (e.g., Vercel)
+    config.resolve = config.resolve || {};
+    config.resolve.alias = config.resolve.alias || {};
+    config.resolve.alias["@"] = process.cwd();
+
     // Production optimizations
     if (!dev) {
       config.optimization.minimize = true;
