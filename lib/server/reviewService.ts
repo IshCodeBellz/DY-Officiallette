@@ -179,6 +179,9 @@ export class ReviewService {
         },
       });
 
+      // Update analytics after creating a review
+      await this.updateProductReviewAnalytics(data.productId);
+
       return { success: true, review };
     } catch (e) {
       return { success: false, error: "Failed to create review" };
@@ -189,8 +192,44 @@ export class ReviewService {
     reviewId: string,
     userId: string
   ): Promise<{ success: boolean; error?: string; newVoteCount?: number }> {
-    // For now, return a mocked increment
-    return { success: true, newVoteCount: Math.floor(Math.random() * 50) + 1 };
+    // Enforce one-vote-per-user via ReviewVote unique constraint; increment counters if new
+    try {
+      await prisma.reviewVote.create({ data: { reviewId, userId } });
+    } catch {
+      // Duplicate vote: do not update counters
+      const current = await prisma.productReview.findUnique({
+        where: { id: reviewId },
+        select: { helpfulVotes: true },
+      });
+      return {
+        success: true,
+        newVoteCount: current?.helpfulVotes ?? undefined,
+      };
+    }
+
+    const updated = await prisma.productReview.update({
+      where: { id: reviewId },
+      data: {
+        helpfulVotes: { increment: 1 },
+        totalVotes: { increment: 1 },
+      },
+      select: { helpfulVotes: true, productId: true },
+    });
+
+    // Update analytics helpfulVotes count
+    await prisma.reviewAnalytics.upsert({
+      where: { productId: updated.productId },
+      update: { helpfulVotes: { increment: 1 } },
+      create: {
+        productId: updated.productId,
+        totalReviews: 0,
+        averageRating: 0,
+        ratingCounts: JSON.stringify({}),
+        helpfulVotes: 1,
+      },
+    });
+
+    return { success: true, newVoteCount: updated.helpfulVotes };
   }
 
   static async reportReview(
@@ -198,16 +237,33 @@ export class ReviewService {
     userId: string,
     reason: string
   ): Promise<{ success: boolean; message?: string; error?: string }> {
-    // TODO: persist report to moderation queue / database
-    console.log("reportReview", { reviewId, userId, reason });
-    return { success: true, message: "Report submitted" };
+    // Persist the report and unpublish for moderation
+    try {
+      const review = await prisma.productReview.update({
+        where: { id: reviewId },
+        data: { isPublished: false },
+        select: { productId: true },
+      });
+
+      await prisma.reviewReport.create({ data: { reviewId, userId, reason } });
+
+      await this.updateProductReviewAnalytics(review.productId);
+
+      return { success: true, message: "Report submitted for moderation" };
+    } catch {
+      return { success: false, error: "Failed to report review" };
+    }
   }
 
   static async getModerationQueue(
     limit = 50
   ): Promise<Array<{ id: string; rating: number; comment: string }>> {
     const rows = await prisma.productReview
-      .findMany({ take: limit, orderBy: { createdAt: "desc" } })
+      .findMany({
+        where: { isPublished: false },
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      })
       .catch(() => []);
     return (rows as ProductReview[]).map((r) => ({
       id: r.id,
@@ -218,19 +274,49 @@ export class ReviewService {
 
   static async approveReview(
     reviewId: string,
-    adminId: string
+    adminId: string,
+    note?: string
   ): Promise<{ success: boolean; message?: string; error?: string }> {
-    // Placeholder: mark review as approved
-    console.log("approveReview", { reviewId, adminId });
-    return { success: true, message: "Review approved" };
+    try {
+      const updated = await prisma.productReview.update({
+        where: { id: reviewId },
+        data: {
+          isPublished: true,
+          moderatedBy: adminId,
+          moderatedAt: new Date(),
+          moderationNote: note ?? undefined,
+        },
+        select: { productId: true },
+      });
+      await this.updateProductReviewAnalytics(updated.productId);
+      return { success: true, message: "Review approved" };
+    } catch {
+      return { success: false, error: "Failed to approve review" };
+    }
   }
 
   static async rejectReview(
     reviewId: string,
-    adminId: string
+    adminId: string,
+    note?: string
   ): Promise<{ success: boolean; message?: string; error?: string }> {
-    console.log("rejectReview", { reviewId, adminId });
-    return { success: true, message: "Review rejected" };
+    // Reject by unpublishing and recording moderator & optional note
+    try {
+      const updated = await prisma.productReview.update({
+        where: { id: reviewId },
+        data: {
+          isPublished: false,
+          moderatedBy: adminId,
+          moderatedAt: new Date(),
+          moderationNote: note ?? undefined,
+        },
+        select: { productId: true },
+      });
+      await this.updateProductReviewAnalytics(updated.productId);
+      return { success: true, message: "Review rejected" };
+    } catch {
+      return { success: false, error: "Failed to reject review" };
+    }
   }
 
   static async deleteReview(
@@ -238,7 +324,11 @@ export class ReviewService {
     adminId: string
   ): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
-      await prisma.productReview.delete({ where: { id: reviewId } });
+      const deleted = await prisma.productReview.delete({
+        where: { id: reviewId },
+        select: { productId: true },
+      });
+      await this.updateProductReviewAnalytics(deleted.productId);
       return { success: true, message: "Review deleted" };
     } catch {
       return { success: false, error: "Failed to delete review" };
@@ -253,7 +343,7 @@ export class ReviewService {
   }> {
     try {
       const rows = await prisma.productReview.findMany({
-        where: { productId },
+        where: { productId, isPublished: true },
         select: { rating: true, isVerified: true },
       });
       const total = rows.length;
@@ -295,5 +385,26 @@ export class ReviewService {
         verifiedReviewsPercentage: 0,
       };
     }
+  }
+
+  private static async updateProductReviewAnalytics(productId: string) {
+    const analytics = await this.getProductReviewAnalytics(productId);
+    await prisma.reviewAnalytics.upsert({
+      where: { productId },
+      update: {
+        totalReviews: analytics.totalReviews,
+        averageRating: analytics.averageRating,
+        ratingCounts: JSON.stringify(analytics.ratingDistribution),
+        lastReviewAt: new Date(),
+      },
+      create: {
+        productId,
+        totalReviews: analytics.totalReviews,
+        averageRating: analytics.averageRating,
+        ratingCounts: JSON.stringify(analytics.ratingDistribution),
+        helpfulVotes: 0,
+        lastReviewAt: new Date(),
+      },
+    });
   }
 }
