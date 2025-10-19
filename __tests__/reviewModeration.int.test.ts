@@ -13,7 +13,11 @@ describe("review moderation flow", () => {
   beforeAll(async () => {
     // Create a user and a product
     const user = await prisma.user.create({
-      data: { email: `rm-${Date.now()}@ex.com`, passwordHash: "x", isAdmin: false },
+      data: {
+        email: `rm-${Date.now()}@ex.com`,
+        passwordHash: "x",
+        isAdmin: false,
+      },
     });
     userId = user.id;
 
@@ -41,7 +45,11 @@ describe("review moderation flow", () => {
 
   it("report -> queue -> approve -> removed from queue", async () => {
     // Report the review
-    const reported = await ReviewService.reportReview(reviewId, userId, "abusive");
+    const reported = await ReviewService.reportReview(
+      reviewId,
+      userId,
+      "abusive"
+    );
     expect(reported.success).toBe(true);
 
     // It should now be in the moderation queue
@@ -59,7 +67,9 @@ describe("review moderation flow", () => {
     expect(found2).toBeFalsy();
 
     // Basic analytics check: reviewAnalytics row exists
-    const ra = await prisma.reviewAnalytics.findUnique({ where: { productId } });
+    const ra = await prisma.reviewAnalytics.findUnique({
+      where: { productId },
+    });
     expect(ra).toBeTruthy();
   });
 });
