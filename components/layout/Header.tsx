@@ -7,6 +7,7 @@ import { DarkModeToggle } from "./DarkModeToggle";
 import { CurrencySelector } from "../ui/CurrencySelector";
 import { DynamicLogo } from "./DynamicLogo";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 
 export function Header() {
@@ -15,6 +16,7 @@ export function Header() {
   const { data: session, status } = useSession();
   const prevAuth = useRef<boolean>(!!session);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const menuOpenedAt = useRef<number>(0);
   const pathname = usePathname();
   const [paidCount, setPaidCount] = useState<number | null>(null);
 
@@ -94,10 +96,10 @@ export function Header() {
     prevAuth.current = !!session;
   }, [session, clearCart, clearWishlist]);
 
-  // Close drawer after navigation
+  // Close drawer after navigation (only when the route changes)
   useEffect(() => {
-    if (mobileMenuOpen) setMobileMenuOpen(false);
-  }, [pathname, mobileMenuOpen]);
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   // Body scroll lock
   useEffect(() => {
@@ -108,6 +110,16 @@ export function Header() {
       document.body.style.overflow = prev;
     };
   }, [mobileMenuOpen]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
     <>
@@ -120,7 +132,7 @@ export function Header() {
       <header className="bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700 sticky top-0 z-40">
         <div className="container mx-auto px-2 md:px-4 lg:px-6">
           {/* Main Header Row */}
-          <div className="flex items-center h-16 gap-2 md:gap-4">
+          <div className="flex items-center h-16 gap-2 md:gap-4 justify-between">
             {/* Logo */}
             <DynamicLogo
               className="flex items-center shrink-0"
@@ -166,40 +178,17 @@ export function Header() {
                     </>
                   )}
                   <div className="relative group">
-                    <button className="text-neutral-900 dark:text-white font-medium hover:text-red-600 dark:hover:text-red-400 text-xs truncate max-w-20">
+                    <button
+                      onClick={() => {
+                        menuOpenedAt.current = Date.now();
+                        setMobileMenuOpen(true);
+                      }}
+                      aria-controls="site-mobile-menu"
+                      aria-expanded={mobileMenuOpen}
+                      className="text-neutral-900 dark:text-white font-medium hover:text-red-600 dark:hover:text-red-400 text-xs truncate max-w-20"
+                    >
                       {session.user?.name?.split(" ")[0] || "Account"}
                     </button>
-                    <div className="header-dropdown">
-                      <div className="py-2">
-                        <div className="px-3 py-2 border-b border-neutral-200 dark:border-neutral-700">
-                          <p className="text-xs font-medium text-neutral-900 dark:text-white truncate">
-                            {session.user?.name || session.user?.email}
-                          </p>
-                        </div>
-                        <Link
-                          href="/account"
-                          className="block px-3 py-2 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700"
-                        >
-                          My Account
-                        </Link>
-                        <button
-                          onClick={() => {
-                            try {
-                              clearCart();
-                              clearWishlist();
-                              if (typeof window !== "undefined") {
-                                localStorage.removeItem("app.cart.v1");
-                                localStorage.removeItem("app.wishlist.v1");
-                              }
-                            } catch {}
-                            signOut();
-                          }}
-                          className="block w-full text-left px-3 py-2 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700"
-                        >
-                          Sign out
-                        </button>
-                      </div>
-                    </div>
                   </div>
                 </div>
               ) : (
@@ -249,7 +238,7 @@ export function Header() {
             </nav>
 
             {/* Mobile Controls */}
-            <div className="flex md:hidden items-center gap-2">
+            <div className="flex md:hidden items-center gap-2 ml-auto">
               <DarkModeToggle />
               <Link
                 href="/saved"
@@ -284,8 +273,10 @@ export function Header() {
                 </span>
               </Link>
               <button
+                type="button"
                 onClick={() => setMobileMenuOpen(true)}
                 aria-label="Open menu"
+                aria-expanded={mobileMenuOpen}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
               >
                 <svg
@@ -354,180 +345,192 @@ export function Header() {
           </div>
         </div>
       </header>
-      {mobileMenuOpen && (
-        <div className="md:hidden">
-          <div
-            className="fixed inset-0 bg-black/55 backdrop-blur-sm z-[60]"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          <div className="fixed top-0 right-0 h-full w-80 max-w-[92%] bg-white dark:bg-neutral-900 z-[61] shadow-xl flex flex-col will-change-transform animate-slide-in">
-            <div className="flex items-center justify-between pl-4 pr-2 h-16 border-b border-neutral-200 dark:border-neutral-700">
-              <span className="font-semibold text-sm text-neutral-900 dark:text-white">
-                Menu
-              </span>
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                aria-label="Close menu"
-                className="rounded-full h-10 w-10 inline-flex items-center justify-center border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-900 dark:text-white"
-              >
-                <span className="text-lg leading-none">×</span>
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto px-4 py-5 text-sm space-y-6">
-              {status === "loading" && (
-                <div className="h-5 w-32 bg-neutral-200 dark:bg-neutral-700 animate-pulse rounded" />
-              )}
-              {status !== "loading" && session && (
-                <div className="space-y-2">
-                  <div className="font-medium truncate text-neutral-900 dark:text-white">
-                    {session.user?.name || session.user?.email}
-                  </div>
-                  {session.user?.isAdmin && (
-                    <div className="space-y-1">
-                      <Link
-                        href="/admin"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
-                      >
-                        Admin Dashboard
-                      </Link>
-                      <Link
-                        href="/admin/orders?status=PAID"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
-                      >
-                        Orders
-                      </Link>
+      {mobileMenuOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div>
+            <div
+              className="fixed inset-0 bg-black/55 backdrop-blur-sm z-[100]"
+              onClick={() => setMobileMenuOpen(false)}
+              aria-hidden="true"
+            />
+            <div
+              className="fixed top-0 right-0 h-full w-80 max-w-[92%] bg-white dark:bg-neutral-900 z-[101] shadow-xl flex flex-col will-change-transform animate-slide-in"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Mobile menu"
+            >
+              <div className="flex items-center justify-between pl-4 pr-2 h-16 border-b border-neutral-200 dark:border-neutral-700">
+                <span className="font-semibold text-sm text-neutral-900 dark:text-white">
+                  Menu
+                </span>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  aria-label="Close menu"
+                  className="rounded-full h-10 w-10 inline-flex items-center justify-center border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-900 dark:text-white"
+                >
+                  <span className="text-lg leading-none">×</span>
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-4 py-5 text-sm space-y-6">
+                {status === "loading" && (
+                  <div className="h-5 w-32 bg-neutral-200 dark:bg-neutral-700 animate-pulse rounded" />
+                )}
+                {status !== "loading" && session && (
+                  <div className="space-y-2">
+                    <div className="font-medium truncate text-neutral-900 dark:text-white">
+                      {session.user?.name || session.user?.email}
                     </div>
-                  )}
-                  <Link
-                    href="/account"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
-                  >
-                    My Account
-                  </Link>
-                  <button
-                    onClick={() => {
-                      try {
-                        clearCart();
-                        clearWishlist();
-                        if (typeof window !== "undefined") {
-                          localStorage.removeItem("app.cart.v1");
-                          localStorage.removeItem("app.wishlist.v1");
-                        }
-                      } catch {}
-                      signOut();
-                    }}
-                    className="block hover:text-brand-accent text-left w-full text-neutral-700 dark:text-neutral-300"
-                  >
-                    Sign out
-                  </button>
-                </div>
-              )}
-              {status !== "loading" && !session && (
-                <div className="space-y-2">
-                  <Link
-                    href="/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block hover:text-brand-accent font-medium text-neutral-900 dark:text-white"
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    href="/register"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
-                  >
-                    Create account
-                  </Link>
-                </div>
-              )}
-              <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
-                <p className="text-[10px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400 uppercase">
-                  Categories
-                </p>
-                {/* Primary Categories */}
-                <div className="space-y-3">
-                  {[
-                    { href: "/new-in", label: "New In" },
-                    { href: "/womens", label: "Women" },
-                    { href: "/mens", label: "Men" },
-                    { href: "/footwear", label: "Shoes" },
-                    { href: "/accessories", label: "Accessories" },
-                    { href: "/brands", label: "Brands" },
-                  ].map((item) => (
+                    {session.user?.isAdmin && (
+                      <div className="space-y-1">
+                        <Link
+                          href="/admin"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
+                        >
+                          Admin Dashboard
+                        </Link>
+                        <Link
+                          href="/admin/orders?status=PAID"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
+                        >
+                          Orders
+                        </Link>
+                      </div>
+                    )}
                     <Link
-                      key={item.href}
-                      href={item.href}
+                      href="/account"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="block text-base font-medium text-neutral-900 dark:text-white hover:text-brand-accent py-1"
+                      className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
                     >
-                      {item.label}
+                      My Account
                     </Link>
-                  ))}
-                </div>
-
-                {/* Subcategories */}
-                <div className="pt-3 border-t border-neutral-200 dark:border-neutral-700">
-                  <p className="text-[10px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400 uppercase mb-2">
-                    Popular Categories
+                    <button
+                      onClick={() => {
+                        try {
+                          clearCart();
+                          clearWishlist();
+                          if (typeof window !== "undefined") {
+                            localStorage.removeItem("app.cart.v1");
+                            localStorage.removeItem("app.wishlist.v1");
+                          }
+                        } catch {}
+                        signOut();
+                      }}
+                      className="block hover:text-brand-accent text-left w-full text-neutral-700 dark:text-neutral-300"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+                {status !== "loading" && !session && (
+                  <div className="space-y-2">
+                    <Link
+                      href="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block hover:text-brand-accent font-medium text-neutral-900 dark:text-white"
+                    >
+                      Sign in
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
+                    >
+                      Create account
+                    </Link>
+                  </div>
+                )}
+                <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
+                  <p className="text-[10px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400 uppercase">
+                    Categories
                   </p>
-                  <div className="grid grid-cols-2 gap-1.5 text-[13px]">
+                  {/* Primary Categories */}
+                  <div className="space-y-3">
                     {[
-                      { href: "/women/dresses", label: "Women · Dresses" },
-                      { href: "/women/outerwear", label: "Women · Outerwear" },
-                      { href: "/men/outerwear", label: "Men · Outerwear" },
-                      { href: "/men/denim", label: "Men · Denim" },
+                      { href: "/new-in", label: "New In" },
+                      { href: "/womens", label: "Women" },
+                      { href: "/mens", label: "Men" },
+                      { href: "/footwear", label: "Shoes" },
+                      { href: "/accessories", label: "Accessories" },
+                      { href: "/brands", label: "Brands" },
                     ].map((item) => (
                       <Link
                         key={item.href}
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className="px-2 py-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-transparent focus:outline-none focus:ring-2 focus:ring-neutral-300 dark:focus:ring-neutral-600 text-neutral-700 dark:text-neutral-300"
+                        className="block text-base font-medium text-neutral-900 dark:text-white hover:text-brand-accent py-1"
                       >
                         {item.label}
                       </Link>
                     ))}
                   </div>
+
+                  {/* Subcategories */}
+                  <div className="pt-3 border-t border-neutral-200 dark:border-neutral-700">
+                    <p className="text-[10px] font-semibold tracking-wide text-neutral-500 dark:text-neutral-400 uppercase mb-2">
+                      Popular Categories
+                    </p>
+                    <div className="grid grid-cols-2 gap-1.5 text-[13px]">
+                      {[
+                        { href: "/women/dresses", label: "Women · Dresses" },
+                        {
+                          href: "/women/outerwear",
+                          label: "Women · Outerwear",
+                        },
+                        { href: "/men/outerwear", label: "Men · Outerwear" },
+                        { href: "/men/denim", label: "Men · Denim" },
+                      ].map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="px-2 py-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-transparent focus:outline-none focus:ring-2 focus:ring-neutral-300 dark:focus:ring-neutral-600 text-neutral-700 dark:text-neutral-300"
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
+                  <Link
+                    href="/saved"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-between text-neutral-700 dark:text-neutral-300 hover:text-brand-accent"
+                  >
+                    <span>Saved Items</span>
+                    <span className="text-xs bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center">
+                      {wishItems.length}
+                    </span>
+                  </Link>
+                  <Link
+                    href="/social/wishlists"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
+                  >
+                    Social Wishlists
+                  </Link>
+                  <Link
+                    href="/bag"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-between text-neutral-700 dark:text-neutral-300 hover:text-brand-accent"
+                  >
+                    <span>Bag</span>
+                    <span className="text-xs bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center">
+                      {totalQuantity}
+                    </span>
+                  </Link>
                 </div>
               </div>
-              <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
-                <Link
-                  href="/saved"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between text-neutral-700 dark:text-neutral-300 hover:text-brand-accent"
-                >
-                  <span>Saved Items</span>
-                  <span className="text-xs bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center">
-                    {wishItems.length}
-                  </span>
-                </Link>
-                <Link
-                  href="/social/wishlists"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block hover:text-brand-accent text-neutral-700 dark:text-neutral-300"
-                >
-                  Social Wishlists
-                </Link>
-                <Link
-                  href="/bag"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between text-neutral-700 dark:text-neutral-300 hover:text-brand-accent"
-                >
-                  <span>Bag</span>
-                  <span className="text-xs bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-full h-5 min-w-5 px-1.5 flex items-center justify-center">
-                    {totalQuantity}
-                  </span>
-                </Link>
+              <div className="px-4 py-3 border-t border-neutral-200 dark:border-neutral-700 text-[10px] text-neutral-500 dark:text-neutral-400">
+                © {new Date().getFullYear()} DYOFFICIALLETTE
               </div>
             </div>
-            <div className="px-4 py-3 border-t border-neutral-200 dark:border-neutral-700 text-[10px] text-neutral-500 dark:text-neutral-400">
-              © {new Date().getFullYear()} DYOFFICIALLETTE
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   );
 }
