@@ -72,10 +72,17 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     displayOrder,
     isActive,
   } = parsed.data;
-  const exists = await prisma.category.findFirst({
-    where: { OR: [{ slug }, { name }] },
+  // Enforce slug uniqueness globally (DB has unique constraint)
+  const slugExists = await prisma.category.findUnique({ where: { slug } });
+  if (slugExists)
+    return NextResponse.json({ error: "exists" }, { status: 409 });
+
+  // Allow duplicate names across different parents; enforce uniqueness within the same parent scope
+  const nameExists = await prisma.category.findFirst({
+    where: { name, parentId: parentId ?? null },
   });
-  if (exists) return NextResponse.json({ error: "exists" }, { status: 409 });
+  if (nameExists)
+    return NextResponse.json({ error: "exists" }, { status: 409 });
 
   // If parentId is provided, verify it exists
   if (parentId) {
