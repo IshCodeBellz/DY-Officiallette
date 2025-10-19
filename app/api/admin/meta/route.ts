@@ -25,7 +25,7 @@ export const GET = withRequest(async function GET() {
     }),
     prisma.category.findMany({
       orderBy: { name: "asc" },
-      select: { id: true, name: true, slug: true },
+      select: { id: true, name: true, slug: true, parentId: true },
     }),
   ]);
   return NextResponse.json({ brands, categories });

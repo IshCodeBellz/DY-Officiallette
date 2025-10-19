@@ -23,6 +23,7 @@ interface MetaCategory {
   id: string;
   name: string;
   slug: string;
+  parentId?: string | null;
 }
 
 export default function NewProductPage() {
@@ -211,11 +212,19 @@ export default function NewProductPage() {
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Select a category (optional)</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
+                    {categories.map((c) => {
+                      const parent = categories.find(
+                        (p) => p.id === c.parentId
+                      );
+                      const label = parent
+                        ? `${parent.name} / ${c.name}`
+                        : c.name;
+                      return (
+                        <option key={c.id} value={c.id}>
+                          {label}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               </div>
