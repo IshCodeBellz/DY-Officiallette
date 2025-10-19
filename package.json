@@ -55,7 +55,8 @@
     "load-test:database": "npx tsx load-testing/test-database.ts",
     "load-test:monitor": "npx tsx load-testing/monitor-system.ts",
     "load-test:quick": "npx tsx load-testing/run-load-tests.ts --duration 2m --users 20,10,5",
-    "load-test:stress": "npx tsx load-testing/run-load-tests.ts --duration 10m --users 100,50,20"
+    "load-test:stress": "npx tsx load-testing/run-load-tests.ts --duration 10m --users 100,50,20",
+    "docs:audit": "npx tsx scripts/scan-docs-placeholders.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.17.1",
