@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { reviewId, action } = body;
+  const { reviewId, action, reason, note } = body;
 
     if (!reviewId || !action) {
       return NextResponse.json(
@@ -64,10 +64,10 @@ export async function POST(request: NextRequest) {
     let result;
     switch (action) {
       case "approve":
-        result = await ReviewService.approveReview(reviewId, admin.id);
+        result = await ReviewService.approveReview(reviewId, admin.id, note || reason);
         break;
       case "reject":
-        result = await ReviewService.rejectReview(reviewId, admin.id);
+        result = await ReviewService.rejectReview(reviewId, admin.id, note || reason);
         break;
       case "delete":
         result = await ReviewService.deleteReview(reviewId, admin.id);

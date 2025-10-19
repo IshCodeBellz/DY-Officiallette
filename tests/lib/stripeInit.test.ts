@@ -3,7 +3,8 @@ import { getStripe } from "@/lib/server/stripe";
 describe("stripe init", () => {
   test("returns Stripe instance when real key is available; null in CI/test", () => {
     const s = getStripe();
-    const isCiOrTest = process.env.CI === "true" || process.env.NODE_ENV === "test";
+    const isCiOrTest =
+      process.env.CI === "true" || process.env.NODE_ENV === "test";
     if (isCiOrTest) {
       // In CI/test we intentionally simulate and do not initialize Stripe
       expect(s).toBeNull();
