@@ -134,9 +134,10 @@ export default async function WomensSubcategoryPage({
         {products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map((product) => (
-              <div
+              <Link
+                href={`/product/${product.id}`}
                 key={product.id}
-                className="group bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                className="group block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-gray-300"
               >
                 <div className="aspect-square bg-gray-100 relative overflow-hidden">
                   {product.images[0] ? (
@@ -175,7 +176,7 @@ export default async function WomensSubcategoryPage({
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (

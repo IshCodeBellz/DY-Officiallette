@@ -313,6 +313,13 @@
 			"command": "npm run -s build",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "Type Check (one-off)",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }
