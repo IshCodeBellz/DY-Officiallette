@@ -278,6 +278,20 @@
 				"$tsc"
 			],
 			"group": "build"
+		},
+		{
+			"label": "Install tsx",
+			"type": "shell",
+			"command": "npm i -D tsx@^4.15.7",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Run prisma seed",
+			"type": "shell",
+			"command": "npm run -s prisma:seed",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }
