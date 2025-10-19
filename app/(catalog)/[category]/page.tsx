@@ -483,7 +483,12 @@ export default function CategoryPage({
                   io.observe(el);
                 }}
               >
-                <Link href={`/product/${p.id}`} className="absolute inset-0">
+                {/* Full-card clickable layer (beneath controls) */}
+                <Link
+                  href={`/product/${p.id}`}
+                  className="absolute inset-0 z-[1]"
+                  aria-label={`View ${p.name}`}
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <Image
                     src={p.image || "/placeholder.png"}
@@ -493,7 +498,8 @@ export default function CategoryPage({
                     className="object-cover w-full h-full group-hover:scale-105 transition-transform"
                   />
                 </Link>
-                <div className="absolute top-2 right-2 flex flex-col gap-2">
+                {/* Action buttons stack above link */}
+                <div className="absolute top-2 right-2 flex flex-col gap-2 z-20">
                   <button
                     onClick={() => {
                       const already = inWish;
@@ -642,7 +648,8 @@ export default function CategoryPage({
                     )}
                   </div>
                 </div>
-                <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs">
+                {/* Info overlay should not block navigation */}
+                <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs pointer-events-none z-10">
                   <div className="font-semibold truncate">{p.name}</div>
                   <div className="text-white">
                     <ClientPrice

@@ -21,13 +21,39 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const sortBy = searchParams.get("sortBy") || "newest";
+    // Parse and sanitize pagination and filter params
+    const clamp = (n: number, min: number, max: number) =>
+      Math.min(max, Math.max(min, n));
+
+    const rawPage = Number(searchParams.get("page"));
+    const page =
+      Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
+
+    const rawLimit = Number(searchParams.get("limit"));
+    const limitUnsanitized =
+      Number.isFinite(rawLimit) && rawLimit > 0 ? Math.floor(rawLimit) : 10;
+    const limit = clamp(limitUnsanitized, 1, 50); // prevent abuse with huge limits
+
+    const allowedSort = new Set([
+      "newest",
+      "highest",
+      "lowest",
+      "most_helpful",
+    ]);
+    const sortByParam = searchParams.get("sortBy") || "newest";
+    const sortBy = allowedSort.has(sortByParam) ? sortByParam : "newest";
+
     const verified = searchParams.get("verified") === "true" ? true : undefined;
-    const minRating = searchParams.get("minRating")
-      ? parseInt(searchParams.get("minRating")!)
-      : undefined;
+
+    /* eslint-disable-next-line */
+    let minRating: number | undefined = undefined;
+    const rawMinRating = searchParams.get("minRating");
+    if (rawMinRating !== null) {
+      const n = Number(rawMinRating);
+      if (Number.isFinite(n)) {
+        minRating = clamp(Math.floor(n), 1, 5);
+      }
+    }
 
     const result = await ReviewService.getProductReviews(productId, {
       page,
