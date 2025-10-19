@@ -22,7 +22,7 @@ export default async function ProductPage({
     include: {
       images: { orderBy: { position: "asc" } },
       sizeVariants: true,
-      category: true,
+      category: { include: { parent: true } },
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   })) as any; // Temporary type assertion while Prisma client is being regenerated
@@ -37,6 +37,47 @@ export default async function ProductPage({
   const fromParam =
     typeof searchParams?.from === "string" ? searchParams?.from : undefined;
   const backCategorySlug = fromParam || product.category?.slug;
+
+  function resolveCategoryPath(slug?: string | null): string | null {
+    if (!slug) return null;
+    const s = slug.toLowerCase();
+    // If slug already matches a top-level category we support, return as /slug
+    const topLevels = [
+      "womens",
+      "mens",
+      "womens-clothing",
+      "mens-clothing",
+      "denim",
+      "footwear",
+      "accessories",
+      "sportswear",
+      "dresses",
+      "outerwear",
+      "brands",
+    ];
+    if (topLevels.includes(s)) return `/${s}`;
+
+    // Support composite slugs like womens-tops, mens-shirts, shoes-trainers, accessories-bags
+    const prefixes = ["womens", "mens", "women", "men", "shoes", "accessories"];
+    for (const p of prefixes) {
+      if (s.startsWith(`${p}-`)) {
+        const rest = s.slice(p.length + 1);
+        const norm = p === "women" ? "womens" : p === "men" ? "mens" : p;
+        return `/${norm}/${rest}`;
+      }
+    }
+
+    // If category has a parent, stitch as /parent/child
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const parentSlug: string | undefined = (product.category?.parent as any)
+      ?.slug;
+    if (parentSlug) {
+      return `/${parentSlug}/${s}`;
+    }
+
+    // Fallback: treat as top-level
+    return `/${s}`;
+  }
   // Pre-shape lightweight client payload
   interface ProductImage {
     id: string;
@@ -93,9 +134,9 @@ export default async function ProductPage({
         }}
       />
       <div className="lg:col-span-2 -mt-4 mb-2">
-        {backCategorySlug && (
+        {resolveCategoryPath(backCategorySlug) && (
           <Link
-            href={`/${backCategorySlug}`}
+            href={resolveCategoryPath(backCategorySlug) || "/"}
             className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-neutral-900 group"
           >
             <svg

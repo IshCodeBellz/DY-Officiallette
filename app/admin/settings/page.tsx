@@ -4,6 +4,63 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/server/prisma";
 import { SystemSettingsService } from "@/lib/server/systemSettingsService";
 import Link from "next/link";
+import { revalidatePath } from "next/cache";
+
+function FeatureToggle({
+  initialEnabled,
+  settingKey,
+  label,
+  modifiedBy,
+}: {
+  initialEnabled: boolean;
+  settingKey: string;
+  label: string;
+  modifiedBy: string;
+}) {
+  // Client component is required; wrap in a separate file if needed. Inline here using 'use client' pragma.
+  return (
+    <div className="flex items-center gap-3">
+      <form
+        action={async (formData: FormData) => {
+          "use server";
+          const enabled = formData.get("enabled") === "on";
+          await SystemSettingsService.setSetting(
+            settingKey,
+            enabled,
+            "boolean",
+            "features",
+            modifiedBy,
+            {
+              isPublic: true,
+              description:
+                "Hide brands that currently have no active products on the public Brands page",
+            }
+          );
+          revalidatePath("/brands");
+          revalidatePath("/api/brands");
+        }}
+      >
+        <label className="flex items-center cursor-pointer select-none">
+          <input
+            type="checkbox"
+            name="enabled"
+            defaultChecked={initialEnabled}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <span className="ml-2 text-sm text-gray-700">{label}</span>
+        </label>
+        <div>
+          <button
+            type="submit"
+            className="mt-2 inline-flex items-center rounded bg-blue-600 text-white px-3 py-1 text-xs hover:bg-blue-700"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
 
 export const revalidate = 300; // 5 minutes
 
@@ -141,7 +198,14 @@ export default async function SettingsPage() {
                       )}
                     </div>
                     <div className="md:col-span-1">
-                      {setting.type === "boolean" ? (
+                      {setting.key === "features.hide_zero_product_brands" ? (
+                        <FeatureToggle
+                          initialEnabled={setting.value === "true"}
+                          settingKey={setting.key}
+                          label="Hide zero-product brands on public page"
+                          modifiedBy={user.email}
+                        />
+                      ) : setting.type === "boolean" ? (
                         <label className="flex items-center">
                           <input
                             type="checkbox"
