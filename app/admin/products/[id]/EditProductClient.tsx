@@ -28,6 +28,7 @@ interface MetaCategory {
   id: string;
   name: string;
   slug: string;
+  parentId?: string | null;
 }
 
 interface Product {
@@ -340,11 +341,15 @@ export function EditProductClient({ product }: { product: Product }) {
             className="w-full border rounded px-3 py-2 text-sm"
           >
             <option value="">(None)</option>
-            {metaCategories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
+            {metaCategories.map((c) => {
+              const parent = metaCategories.find((p) => p.id === c.parentId);
+              const label = parent ? `${parent.name} / ${c.name}` : c.name;
+              return (
+                <option key={c.id} value={c.id}>
+                  {label}
+                </option>
+              );
+            })}
           </select>
         </div>
         <div className="space-y-1 max-w-xs">
