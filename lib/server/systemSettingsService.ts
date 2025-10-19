@@ -405,6 +405,15 @@ export class SystemSettingsService {
         description: "Enable social media login",
         isPublic: true,
       },
+      {
+        key: "features.hide_zero_product_brands",
+        value: false,
+        type: "boolean" as const,
+        category: "features",
+        description:
+          "Hide brands that currently have no active products on the public Brands page",
+        isPublic: true,
+      },
     ];
 
     try {
