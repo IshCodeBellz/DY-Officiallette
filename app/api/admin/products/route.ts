@@ -16,6 +16,7 @@ const productSchema = z.object({
   priceCents: z.number().int().positive(),
   brandId: z.string().optional(),
   categoryId: z.string().optional(),
+  gender: z.string().optional().nullable(),
   isJersey: z.boolean().optional(),
   // Accept jerseyConfig as either a JSON object or a string (for legacy clients)
   jerseyConfig: z
@@ -121,6 +122,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
           name: rest.name,
           description: rest.description,
           priceCents: rest.priceCents,
+          gender: rest.gender ?? undefined,
           // these may be rejected if client not migrated
           ...(typeof rest.isJersey === "boolean"
             ? { isJersey: rest.isJersey }
@@ -185,6 +187,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
               name: rest.name,
               description: rest.description,
               priceCents: rest.priceCents,
+              gender: rest.gender ?? undefined,
               ...(typeof rest.isJersey === "boolean"
                 ? { isJersey: rest.isJersey }
                 : {}),
@@ -225,6 +228,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
             name: rest.name,
             description: rest.description,
             priceCents: rest.priceCents,
+            gender: rest.gender ?? undefined,
             ...(typeof rest.isJersey === "boolean"
               ? { isJersey: rest.isJersey }
               : {}),
@@ -252,6 +256,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
             name: rest.name,
             description: rest.description,
             priceCents: rest.priceCents,
+            gender: rest.gender ?? undefined,
             brand: rest.brandId ? { connect: { id: rest.brandId } } : undefined,
             category: rest.categoryId
               ? { connect: { id: rest.categoryId } }

@@ -15,6 +15,7 @@ const productUpdateSchema = z.object({
   priceCents: z.number().int().positive(),
   brandId: z.string().optional().nullable(),
   categoryId: z.string().optional().nullable(),
+  gender: z.string().optional().nullable(),
   isJersey: z.boolean().optional(),
   jerseyConfig: z.string().optional().nullable(),
   images: z
@@ -143,6 +144,7 @@ export async function PUT(
       priceCents: rest.priceCents,
       brandId: rest.brandId ?? undefined,
       categoryId: rest.categoryId ?? undefined,
+      gender: rest.gender ?? undefined,
       images: {
         create: images.map((im, idx) => ({
           url: im.url,
