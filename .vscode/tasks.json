@@ -413,6 +413,22 @@
 			"isBackground": false,
 			"problemMatcher": [],
 			"group": "build"
+		},
+		{
+			"label": "Prisma Migrate Deploy",
+			"type": "shell",
+			"command": "npx prisma migrate deploy",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Build (Production)",
+			"type": "shell",
+			"command": "npm run -s build:production",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }
