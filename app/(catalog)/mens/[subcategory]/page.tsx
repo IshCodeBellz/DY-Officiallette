@@ -40,6 +40,7 @@ export default async function MensSubcategoryPage({
     categoryId: string;
     isActive: boolean;
     deletedAt: null;
+    gender?: { in: string[] };
     priceCents?: { gte?: number; lte?: number };
     brand?: { name: { contains: string; mode: "insensitive" } };
   } = {
@@ -47,6 +48,8 @@ export default async function MensSubcategoryPage({
     isActive: true,
     deletedAt: null,
   };
+  // Always constrain to men's or unisex for this route
+  where.gender = { in: ["men", "unisex"] };
 
   // Apply brand filter
   if (searchParams.brand) {

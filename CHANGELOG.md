@@ -49,9 +49,9 @@
 
 - **Resend Integration**: Confirmed production-ready Resend API configuration with live credentials
 - **Professional Templates**: 5 branded email templates (verification, password reset, order confirmation, payment receipt)
-- **Domain Configuration**: Email sending configured for dy-officiallette.com domain
+- **Domain Configuration**: Email sending configured for nvrstl.com domain
 - **Rich Order Emails**: Detailed order confirmations with line items, delivery addresses, and pricing breakdowns
-- **Responsive Design**: Mobile-friendly HTML email templates with consistent DY Officiallette branding
+- **Responsive Design**: Mobile-friendly HTML email templates with consistent NVRSTL branding
 - **Production Documentation**: Created comprehensive EMAIL_PRODUCTION_SETUP.md guide
 
 #### Technical Implementation

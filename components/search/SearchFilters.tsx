@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useCurrency } from "@/components/providers/CurrencyProvider";
+import { currencyService } from "@/lib/currency";
 
 interface FilterOption {
   id: string;
@@ -13,10 +15,16 @@ interface FilterGroup {
   label: string;
   options: FilterOption[];
 }
+type Facets = {
+  categories?: Array<{ id: string; slug: string; name: string; count: number }>;
+  brands?: Array<{ id: string; name: string; count: number }>;
+  priceRange?: { min: number; max: number };
+};
 
-export default function SearchFilters() {
+export default function SearchFilters({ facets }: { facets?: Facets }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { currentCurrency, formatPrice, convertPrice } = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<
     Record<string, string[]>
@@ -28,7 +36,11 @@ export default function SearchFilters() {
       {
         id: "category",
         label: "Category",
-        options: [
+        options: facets?.categories?.map((c) => ({
+          id: c.slug,
+          label: c.name,
+          count: c.count,
+        })) || [
           { id: "clothing", label: "Clothing", count: 1250 },
           { id: "shoes", label: "Shoes", count: 340 },
           { id: "accessories", label: "Accessories", count: 890 },
@@ -38,7 +50,11 @@ export default function SearchFilters() {
       {
         id: "brand",
         label: "Brand",
-        options: [
+        options: facets?.brands?.map((b) => ({
+          id: b.id,
+          label: b.name,
+          count: b.count,
+        })) || [
           { id: "nike", label: "Nike", count: 156 },
           { id: "adidas", label: "Adidas", count: 134 },
           { id: "zara", label: "Zara", count: 203 },
@@ -49,10 +65,30 @@ export default function SearchFilters() {
         id: "price",
         label: "Price Range",
         options: [
-          { id: "0-25", label: "Under $25", count: 456 },
-          { id: "25-50", label: "$25 - $50", count: 789 },
-          { id: "50-100", label: "$50 - $100", count: 623 },
-          { id: "100+", label: "Over $100", count: 234 },
+          {
+            id: "0-25",
+            label: `Under ${formatPrice(convertPrice(2500))}`,
+            count: 456,
+          },
+          {
+            id: "25-50",
+            label: `${formatPrice(convertPrice(2500))} - ${formatPrice(
+              convertPrice(5000)
+            )}`,
+            count: 789,
+          },
+          {
+            id: "50-100",
+            label: `${formatPrice(convertPrice(5000))} - ${formatPrice(
+              convertPrice(10000)
+            )}`,
+            count: 623,
+          },
+          {
+            id: "100+",
+            label: `Over ${formatPrice(convertPrice(10000))}`,
+            count: 234,
+          },
         ],
       },
       {
@@ -78,7 +114,7 @@ export default function SearchFilters() {
         ],
       },
     ],
-    []
+    [currentCurrency, formatPrice, convertPrice]
   );
 
   useEffect(() => {

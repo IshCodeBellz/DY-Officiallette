@@ -430,7 +430,7 @@ export class CMSService {
     const settings = await this.getSiteSettings();
 
     return {
-      logoText: (settings.logoText as string) || "DYOFFICIALLETTE",
+      logoText: (settings.logoText as string) || "NVRSTL",
       logoImageUrl: (settings.logoImageUrl as string) || undefined,
       logoType: (settings.logoType as "text" | "image" | "combined") || "text",
       logoTextPrefix: (settings.logoTextPrefix as string) || "DY",
@@ -519,7 +519,7 @@ export class CMSService {
    */
   static async resetLogoToDefault(): Promise<void> {
     const defaultLogo = {
-      logoText: "DYOFFICIALLETTE",
+      logoText: "NVRSTL",
       logoImageUrl: null,
       logoType: "text" as const,
       logoTextPrefix: "DY",

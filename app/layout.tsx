@@ -11,9 +11,9 @@ import { LiveRegion } from "../components/a11y/LiveRegion";
 import { CurrencyNotification } from "../components/ui/CurrencyNotification";
 
 export const metadata: Metadata = {
-  title: "DYOFFICIALLETTE",
+  title: "NVRSTL",
   description:
-    "DYOFFICIALLETTE fashion storefront built with Next.js 14 & Tailwind (educational demo)",
+    "NVRSTL fashion storefront built with Next.js 14 & Tailwind (educational demo)",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

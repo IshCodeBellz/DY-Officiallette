@@ -71,7 +71,7 @@ export function Footer() {
       </div>
       <div className="container mx-auto px-4 mt-10 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p className="text-xs text-neutral-500 dark:text-neutral-400">
-          &copy; {new Date().getFullYear()} DYOFFICIALLETTE. Independent demo
+          &copy; {new Date().getFullYear()} NVRSTL. Independent demo
           project.
         </p>
         <div className="flex gap-4 text-xs text-neutral-500 dark:text-neutral-400">

@@ -41,6 +41,7 @@ interface Product {
   priceCents: number;
   brandId: string | null;
   categoryId: string | null;
+  gender?: string | null;
   images: ImageInput[];
   sizeVariants: SizeInput[];
   deletedAt?: Date | null;
@@ -58,6 +59,7 @@ export function EditProductClient({ product }: { product: Product }) {
   const [categoryId, setCategoryId] = useState<string | "">(
     product.categoryId || ""
   );
+  const [gender, setGender] = useState<string>((product as any).gender || "");
   const [images, setImages] = useState<ImageInput[]>(
     [...product.images].sort((a, b) => a.position - b.position)
   );
@@ -195,6 +197,7 @@ export function EditProductClient({ product }: { product: Product }) {
           priceCents: Math.round(parseFloat(price || "0") * 100) || 0,
           brandId: brandId || undefined,
           categoryId: categoryId || undefined,
+          gender: gender || undefined,
           isJersey,
           jerseyConfig: jerseyConfig || undefined,
           images: payloadImages,
@@ -249,6 +252,7 @@ export function EditProductClient({ product }: { product: Product }) {
         priceCents: isNaN(priceFloat) ? 0 : Math.round(priceFloat * 100),
         brandId: brandId || undefined,
         categoryId: categoryId || undefined,
+        gender: gender || undefined,
         isJersey,
         jerseyConfig: jerseyConfig || undefined,
         images: images
@@ -373,6 +377,19 @@ export function EditProductClient({ product }: { product: Product }) {
                 </option>
               );
             })}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Gender</label>
+          <select
+            value={gender}
+            onChange={(e) => setGender(e.target.value)}
+            className="w-full border rounded px-3 py-2 text-sm"
+          >
+            <option value="">Unspecified</option>
+            <option value="women">Women</option>
+            <option value="men">Men</option>
+            <option value="unisex">Unisex</option>
           </select>
         </div>
         <div className="space-y-1 max-w-xs">

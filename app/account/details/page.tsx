@@ -420,7 +420,7 @@ export default function AccountDetailsPage() {
                     </select>
                   </div>
                   <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                    You must be 16 or above to use DYOFFICIALLETTE
+                    You must be 16 or above to use NVRSTL
                   </p>
                 </div>
 
@@ -751,7 +751,7 @@ export default function AccountDetailsPage() {
                 <div className="text-xs text-neutral-500 dark:text-neutral-400 space-y-2 pt-4 border-t border-neutral-200 dark:border-neutral-600">
                   <p>
                     *By ticking the SMS box, you are agreeing to receive texts
-                    from or on behalf of DYOFFICIALLETTE, our family of
+                    from or on behalf of NVRSTL, our family of
                     companies, or one of its third-party associates, to any
                     telephone number you provide. These texts could be sent
                     using an automated telephone system. Agreement is not a

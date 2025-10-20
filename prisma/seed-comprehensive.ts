@@ -2,7 +2,7 @@ import { prisma } from "../lib/server/prisma";
 import { hash } from "bcryptjs";
 
 /**
- * Comprehensive Sample Data Seeder for DYOFFICIALLETTE
+ * Comprehensive Sample Data Seeder for NVRSTL
  * Populates database with realistic e-commerce data
  */
 

@@ -40,7 +40,7 @@ Sentry.init({
   // Custom tags for all events
   initialScope: {
     tags: {
-      component: "dyofficiallette",
+      component: "nvrstl",
       runtime: typeof window !== "undefined" ? "client" : "server",
     },
   },

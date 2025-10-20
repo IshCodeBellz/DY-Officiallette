@@ -525,7 +525,7 @@ export function Header() {
                 </div>
               </div>
               <div className="px-4 py-3 border-t border-neutral-200 dark:border-neutral-700 text-[10px] text-neutral-500 dark:text-neutral-400">
-                © {new Date().getFullYear()} DYOFFICIALLETTE
+                © {new Date().getFullYear()} NVRSTL
               </div>
             </div>
           </div>,
