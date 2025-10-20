@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import AccountSettingsClient from "./settingsClient";
 import { AccountNavigation } from "@/components/account/AccountNavigation";
 import Link from "next/link";
+import { ClientPrice } from "@/components/ui/ClientPrice";
 
 export const dynamic = "force-dynamic";
 
@@ -256,8 +257,7 @@ export default async function AccountPage() {
                         {lastOrder.status}
                       </p>
                       <p className="mt-1 text-neutral-600 dark:text-neutral-400">
-                        Total {(lastOrder.totalCents / 100).toFixed(2)}{" "}
-                        {lastOrder.currency}
+                        Total <ClientPrice cents={lastOrder.totalCents} />
                       </p>
                     </>
                   ) : (

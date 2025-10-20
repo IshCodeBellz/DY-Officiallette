@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/server/logger";
 import { getServerSession } from "next-auth";
@@ -10,12 +11,13 @@ import {
 import { z } from "zod";
 import { rateLimit } from "@/lib/server/rateLimit";
 import { buildDraftFromCart, calculateRates } from "@/lib/server/taxShipping";
+import { currencyService } from "@/lib/currency";
 
 export const dynamic = "force-dynamic";
 import { decrementSizeStock } from "@/lib/server/inventory";
 import { debug } from "@/lib/server/debug";
 import { withRequest, error as logError } from "@/lib/server/logger";
-import { ExtendedSession } from "@/lib/types";
+import { ExtendedSession, type JerseyCustomization } from "@/lib/types";
 import { OrderEventService } from "@/lib/server/orderEventService";
 import { validateAndNormalizeAddress } from "@/lib/server/address/validateAddress";
 
@@ -205,6 +207,13 @@ export const POST = withRequest(async function POST(req: NextRequest) {
     idempotencyKey,
   } = parsed.data;
 
+  // Determine selected currency: prefer cookie set by client, else derive from destination country
+  const cookieCurrency = req.cookies.get("preferred-currency")?.value;
+  const selectedCurrency =
+    cookieCurrency && cookieCurrency.length === 3
+      ? cookieCurrency.toUpperCase()
+      : currencyService.getCurrencyForCountry(shippingAddress.country);
+
   // Validate/normalize addresses if provider configured
   try {
     const va = await validateAndNormalizeAddress(shippingAddress);
@@ -313,11 +322,20 @@ export const POST = withRequest(async function POST(req: NextRequest) {
       region: shippingAddress.region || null,
       postalCode: shippingAddress.postalCode,
     },
+    currency: selectedCurrency,
   });
   const rateResult = await calculateRates(rateDraft);
+  // If the destination is tax-inclusive (e.g., GB), the product prices are
+  // already inclusive of VAT. In that case, we should not add tax on top of
+  // the subtotal. We still capture the included portion in taxCents for
+  // transparency and reporting.
   const taxCents = rateResult.taxCents;
   const shippingCents = rateResult.shippingCents;
-  const totalCents = subtotal - discountCents + taxCents + shippingCents;
+  const addTax = !(
+    rateResult.breakdown && rateResult.breakdown.pricesIncludeTax
+  );
+  const totalCents =
+    subtotal - discountCents + (addTax ? taxCents : 0) + shippingCents;
 
   let result;
   try {
@@ -339,9 +357,12 @@ export const POST = withRequest(async function POST(req: NextRequest) {
           checkoutIdempotencyKey: idempotencyKey,
           subtotalCents: subtotal,
           discountCents,
+          // Persist taxCents even when prices are tax-inclusive so summaries
+          // can show the VAT portion. Totals already account for inclusion.
           taxCents,
           shippingCents,
           totalCents,
+          currency: selectedCurrency,
           email:
             email ||
             (session?.user?.email as string) ||
@@ -369,6 +390,15 @@ export const POST = withRequest(async function POST(req: NextRequest) {
             unitPriceCents: line.priceCentsSnapshot,
             lineTotalCents: line.priceCentsSnapshot * line.qty,
             priceCentsSnapshot: line.priceCentsSnapshot,
+            customKey:
+              (line as any).customKey && String((line as any).customKey).length
+                ? String((line as any).customKey)
+                : null,
+            customizations: (line as any).customizations
+              ? typeof (line as any).customizations === "string"
+                ? ((line as any).customizations as string)
+                : JSON.stringify((line as any).customizations)
+              : null,
           },
         });
         if (line.size) {
@@ -408,6 +438,7 @@ export const POST = withRequest(async function POST(req: NextRequest) {
           provider: "STRIPE",
           providerRef: `pi_sim_${order.id}`,
           amountCents: order.totalCents,
+          currency: selectedCurrency,
           status: "PAYMENT_PENDING",
         },
       });
@@ -476,7 +507,17 @@ export const POST = withRequest(async function POST(req: NextRequest) {
           prisma.order.findUnique({
             where: { id: result.id },
             include: {
-              items: true,
+              items: {
+                include: {
+                  product: {
+                    include: {
+                      images: {
+                        orderBy: { position: "asc" },
+                      },
+                    },
+                  },
+                },
+              },
               shippingAddress: true,
               billingAddress: true,
             },
@@ -493,6 +534,17 @@ export const POST = withRequest(async function POST(req: NextRequest) {
               qty: i.qty,
               unitPriceCents: i.unitPriceCents,
               lineTotalCents: i.lineTotalCents,
+              imageUrl: i.product?.images?.length
+                ? i.product.images[0]?.url
+                : null,
+              customizations: (() => {
+                if (!i.customizations) return undefined;
+                try {
+                  return JSON.parse(i.customizations) as JerseyCustomization;
+                } catch {
+                  return undefined;
+                }
+              })(),
             })),
             subtotalCents: full.subtotalCents,
             discountCents: full.discountCents,

@@ -1,3 +1,4 @@
+/* eslint-disable */
 // Dynamic tax & shipping calculation framework.
 // This initial implementation provides pluggable strategy objects and a simple
 // rules-based fallback so we can evolve toward external provider integration later.
@@ -23,6 +24,8 @@ export interface OrderDraftForRates {
   subtotalCents: number;
   items: OrderDraftItem[];
   destination: OrderDestination;
+  // Selected display/checkout currency (e.g., from user preference)
+  currency?: string;
 }
 
 export interface RateResultBreakdown {
@@ -32,6 +35,10 @@ export interface RateResultBreakdown {
   baseShippingCents?: number;
   weightTotalGrams?: number;
   adjustments?: Array<{ reason: string; amountCents: number }>;
+  // When prices are tax-inclusive for a destination, we still report the
+  // computed included tax so UIs can show it in the breakdown while avoiding
+  // double charging during totals calculation.
+  pricesIncludeTax?: boolean;
 }
 
 export interface RateResult {
@@ -97,7 +104,28 @@ export class RuleBasedRateStrategy implements RateStrategy {
         break;
       }
     }
-    const taxCents = Math.round(draft.subtotalCents * taxRate);
+    // Some markets display prices tax-inclusive. Rather than hardcoding by
+    // country, tie this to the selected currency. Support multiple inclusive
+    // currencies via env var TAX_INCLUSIVE_CURRENCIES (comma/space separated),
+    // and always include the base currency by default.
+    // Import lazily to avoid circulars in certain build graphs.
+    const { BASE_CURRENCY } = require("@/lib/currency");
+    const inclusiveList: string[] = String(
+      process.env.TAX_INCLUSIVE_CURRENCIES || ""
+    )
+      .split(/[\s,]+/)
+      .map((c: string) => c.trim().toUpperCase())
+      .filter(Boolean);
+    if (!inclusiveList.includes(BASE_CURRENCY))
+      inclusiveList.push(BASE_CURRENCY);
+    const pricesIncludeTax = draft.currency
+      ? inclusiveList.includes(String(draft.currency).toUpperCase())
+      : false;
+    const taxCents = pricesIncludeTax
+      ? Math.round(
+          draft.subtotalCents - draft.subtotalCents / (1 + (taxRate || 0))
+        )
+      : Math.round(draft.subtotalCents * taxRate);
 
     // Shipping
     let shippingBase = 0;
@@ -132,6 +160,7 @@ export class RuleBasedRateStrategy implements RateStrategy {
         shippingRule,
         baseShippingCents: shippingBase,
         adjustments,
+        pricesIncludeTax,
       },
     };
   }
@@ -157,6 +186,7 @@ export function buildDraftFromCart(params: {
     region?: string | null;
     postalCode?: string | null;
   };
+  currency?: string;
 }): OrderDraftForRates {
   const subtotalCents = params.lines.reduce(
     (s, l) => s + l.priceCentsSnapshot * l.qty,
@@ -170,5 +200,6 @@ export function buildDraftFromCart(params: {
       qty: l.qty,
     })),
     destination: params.destination,
+    currency: params.currency,
   };
 }

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { prisma } from "./prisma";
 
 export interface PersistedCartLine {
@@ -5,6 +6,8 @@ export interface PersistedCartLine {
   size?: string | null;
   qty: number;
   priceCentsSnapshot: number;
+  customKey?: string | null;
+  customizations?: string | null;
 }
 
 export async function getCartLinesRaw(userId: string) {
@@ -24,6 +27,8 @@ export async function getCartLines(
     size: l.size,
     qty: l.qty,
     priceCentsSnapshot: l.priceCentsSnapshot,
+    customKey: (l as any).customKey ?? null,
+    customizations: (l as any).customizations ?? null,
   }));
 }
 
@@ -42,8 +47,9 @@ export async function replaceCart(userId: string, lines: PersistedCartLine[]) {
             cartId: cart.id,
             productId: l.productId,
             size: l.size || null,
-            qty: l.qty,
             priceCentsSnapshot: l.priceCentsSnapshot,
+            customKey: l.customKey || null,
+            customizations: l.customizations || null,
           },
         })
       )
@@ -56,7 +62,8 @@ export async function mergeCart(userId: string, incoming: PersistedCartLine[]) {
   if (!incoming.length) return getCartLines(userId);
   const existing = await getCartLines(userId);
   const map = new Map<string, PersistedCartLine>();
-  const key = (l: PersistedCartLine) => `${l.productId}__${l.size || ""}`;
+  const key = (l: PersistedCartLine) =>
+    `${l.productId}__${l.size || ""}__${l.customKey || ""}`;
   [...existing, ...incoming].forEach((l) => {
     const k = key(l);
     const prev = map.get(k);

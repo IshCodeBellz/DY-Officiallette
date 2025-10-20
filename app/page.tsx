@@ -39,10 +39,10 @@ export default async function HomePage() {
             over 850 brands.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-4">
-            <Link href="/womens-clothing" className="btn-primary">
+            <Link href="/womens" className="btn-primary">
               Shop Women
             </Link>
-            <Link href="/mens-clothing" className="btn-outline">
+            <Link href="/mens" className="btn-outline">
               Shop Men
             </Link>
           </div>

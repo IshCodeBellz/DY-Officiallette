@@ -1,6 +1,14 @@
 import { prisma } from "@/lib/server/prisma";
 import { getMailer } from "@/lib/server/mailer";
 import { OrderEventService } from "@/lib/server/orderEventService";
+import {
+  buildRichOrderConfirmationHtml,
+  buildRichOrderConfirmationText,
+  type OrderEmailLine,
+  type RichOrderEmailPayload,
+} from "@/lib/server/mailer";
+import { formatPriceCents } from "@/lib/money";
+import type { JerseyCustomization } from "@/lib/types";
 
 export interface NotificationChannel {
   email?: boolean;
@@ -71,36 +79,19 @@ export class NotificationService {
       id: "ORDER_CONFIRMATION",
       name: "Order Confirmation",
       subject: "Order Confirmation #{{orderNumber}}",
-      textContent: `
-Thank you for your order!
-
-Order #{{orderNumber}}
-Total: {{currency}} {{totalAmount}}
-Estimated delivery: {{deliveryEstimate}}
-
-We'll send you updates as your order progresses.
-
-Best regards,
-DY Official Team
-      `.trim(),
-      htmlContent: `
-<h2>Thank you for your order!</h2>
-<div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-  <h3>Order #{{orderNumber}}</h3>
-  <p><strong>Total:</strong> {{currency}} {{totalAmount}}</p>
-  <p><strong>Estimated delivery:</strong> {{deliveryEstimate}}</p>
-</div>
-<p>We'll send you updates as your order progresses.</p>
-<p>Best regards,<br>DY Official Team</p>
-      `,
+      textContent: `{{orderText}}`,
+      htmlContent: `{{orderHtml}}`,
       smsContent:
         "Order #{{orderNumber}} confirmed! Total: {{currency}}{{totalAmount}}. Track: {{trackingUrl}}",
       variables: [
         "orderNumber",
         "currency",
         "totalAmount",
+        "totalFormatted",
         "deliveryEstimate",
         "trackingUrl",
+        "orderHtml",
+        "orderText",
       ],
     },
 
@@ -415,6 +406,19 @@ DY Official System
           user: {
             select: { email: true, firstName: true, lastName: true },
           },
+          items: {
+            include: {
+              product: {
+                include: {
+                  images: {
+                    orderBy: { position: "asc" },
+                  },
+                },
+              },
+            },
+          },
+          shippingAddress: true,
+          billingAddress: true,
         },
       });
 
@@ -426,17 +430,101 @@ DY Official System
       }
 
       // Prepare base variables
-      const baseVariables = {
+      const totalFormatted = formatPriceCents(order.totalCents, {
+        currency: order.currency,
+      });
+
+      const baseVariables: Record<string, string | number> = {
         orderNumber: orderId.slice(-8).toUpperCase(),
         currency: order.currency,
         totalAmount: (order.totalCents / 100).toFixed(2),
+        totalFormatted,
         customerName:
           [order.user.firstName, order.user.lastName]
             .filter(Boolean)
             .join(" ") || "Customer",
         trackingUrl: `${process.env.NEXTAUTH_URL}/account/orders/${orderId}`,
-        ...additionalVariables,
       };
+
+      for (const [key, value] of Object.entries(additionalVariables)) {
+        if (typeof value === "string" || typeof value === "number") {
+          baseVariables[key] = value;
+        }
+      }
+
+      if (template === "ORDER_CONFIRMATION") {
+        const deliveryEstimate =
+          typeof additionalVariables.deliveryEstimate === "string"
+            ? additionalVariables.deliveryEstimate
+            : undefined;
+
+        const lines: OrderEmailLine[] = order.items.map((item) => {
+          let parsedCustomizations: unknown;
+          if (item.customizations) {
+            try {
+              parsedCustomizations = JSON.parse(item.customizations);
+            } catch {
+              parsedCustomizations = undefined;
+            }
+          }
+          return {
+            name: item.nameSnapshot,
+            sku: item.sku,
+            size: item.size,
+            qty: item.qty,
+            unitPriceCents: item.unitPriceCents,
+            lineTotalCents: item.lineTotalCents,
+            imageUrl: item.product?.images?.[0]?.url || null,
+            customizations: (parsedCustomizations ??
+              null) as JerseyCustomization | null,
+          };
+        });
+
+        if (!order.shippingAddress) {
+          const fallback = `Order #${baseVariables.orderNumber} total ${totalFormatted}`;
+          baseVariables.orderHtml = `<p>${fallback}</p>`;
+          baseVariables.orderText = fallback;
+        } else {
+          const payload: RichOrderEmailPayload = {
+            orderId: order.id,
+            currency: order.currency,
+            lines,
+            subtotalCents: order.subtotalCents,
+            discountCents: order.discountCents,
+            taxCents: order.taxCents,
+            shippingCents: order.shippingCents,
+            totalCents: order.totalCents,
+            shipping: {
+              fullName: order.shippingAddress.fullName,
+              line1: order.shippingAddress.line1,
+              line2: order.shippingAddress.line2,
+              city: order.shippingAddress.city,
+              region: order.shippingAddress.region,
+              postalCode: order.shippingAddress.postalCode,
+              country: order.shippingAddress.country,
+              phone: order.shippingAddress.phone,
+            },
+            billing: order.billingAddress
+              ? {
+                  fullName: order.billingAddress.fullName,
+                  line1: order.billingAddress.line1,
+                  line2: order.billingAddress.line2,
+                  city: order.billingAddress.city,
+                  region: order.billingAddress.region,
+                  postalCode: order.billingAddress.postalCode,
+                  country: order.billingAddress.country,
+                  phone: order.billingAddress.phone,
+                }
+              : undefined,
+            estimatedDelivery:
+              (additionalVariables.deliveryEstimate as string | undefined) ||
+              undefined,
+          };
+
+          baseVariables.orderHtml = buildRichOrderConfirmationHtml(payload);
+          baseVariables.orderText = buildRichOrderConfirmationText(payload);
+        }
+      }
 
       return await this.sendNotification({
         template,
