@@ -25,7 +25,7 @@ export function DynamicLogo({
   textClassName = "",
 }: DynamicLogoProps) {
   const [logoSettings, setLogoSettings] = useState<LogoSettings>({
-    logoText: "DYOFFICIALLETTE",
+    logoText: "NVRSTL",
     logoImageUrl: undefined,
     logoType: "text",
     logoTextPrefix: "DY",
@@ -89,7 +89,7 @@ export function DynamicLogo({
 
     return (
       <span className={`${prefixColor} ${textClassName}`}>
-        {logoSettings.logoText || "DYOFFICIALLETTE"}
+        {logoSettings.logoText || "NVRSTL"}
       </span>
     );
   };

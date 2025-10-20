@@ -19,7 +19,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       logoSettings: {
-        logoText: "DYOFFICIALLETTE",
+        logoText: "NVRSTL",
         logoImageUrl: undefined,
         logoType: "text",
         logoTextPrefix: "DY",

@@ -375,7 +375,7 @@ class MasterDeploymentOrchestrator {
       try {
         console.log("🔄 Building Docker image...");
 
-        const imageName = `dy-officiallette:${this.environment}-${Date.now()}`;
+        const imageName = `nvrstl:${this.environment}-${Date.now()}`;
         execSync(`docker build -t ${imageName} .`, {
           cwd: this.projectRoot,
           stdio: "pipe",

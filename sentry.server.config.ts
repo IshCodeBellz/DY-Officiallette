@@ -52,7 +52,7 @@ Sentry.init({
   // Custom tags for server events
   initialScope: {
     tags: {
-      component: "dyofficiallette-server",
+      component: "nvrstl-server",
       runtime: "server",
     },
   },

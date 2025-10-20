@@ -26,7 +26,7 @@ export async function POST() {
     // Setup TOTP MFA
     const setupResult = await MFAService.setupTOTP(
       session.user.id,
-      "DYOFFICIALLETTE"
+      "NVRSTL"
     );
 
     return NextResponse.json({

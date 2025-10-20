@@ -2,12 +2,12 @@
 
 ## Overview
 
-DYOFFICIALLETTE uses **Resend** as the production email service provider with comprehensive email templates for all user communications.
+NVRSTL uses **Resend** as the production email service provider with comprehensive email templates for all user communications.
 
 ## ✅ Current Production Status
 
 - **Provider**: Resend (configured and ready)
-- **Domain**: dy-officiallette.com
+- **Domain**: nvrstl.com
 - **Templates**: 5 professional email templates implemented
 - **Fallback**: Console logging when API key unavailable
 
@@ -17,7 +17,7 @@ DYOFFICIALLETTE uses **Resend** as the production email service provider with co
 
 ```bash
 # Email Service Configuration
-EMAIL_FROM="DY Officiallette <no-reply@dy-officiallette.com>"
+EMAIL_FROM="NVRSTL <no-reply@nvrstl.com>"
 RESEND_API_KEY="yre_5X19u9fh_HvLJgzHZHskBKV2FGMKr6HtS"
 ```
 
@@ -27,7 +27,7 @@ RESEND_API_KEY="yre_5X19u9fh_HvLJgzHZHskBKV2FGMKr6HtS"
 
 ```bash
 # Set in Railway environment variables
-EMAIL_FROM=DY Officiallette <no-reply@dy-officiallette.com>
+EMAIL_FROM=NVRSTL <no-reply@nvrstl.com>
 RESEND_API_KEY=yre_5X19u9fh_HvLJgzHZHskBKV2FGMKr6HtS
 ```
 
@@ -35,7 +35,7 @@ RESEND_API_KEY=yre_5X19u9fh_HvLJgzHZHskBKV2FGMKr6HtS
 
 ```bash
 # In Vercel dashboard or vercel.json
-EMAIL_FROM="DY Officiallette <no-reply@dy-officiallette.com>"
+EMAIL_FROM="NVRSTL <no-reply@nvrstl.com>"
 RESEND_API_KEY="yre_5X19u9fh_HvLJgzHZHskBKV2FGMKr6HtS"
 ```
 
@@ -43,7 +43,7 @@ RESEND_API_KEY="yre_5X19u9fh_HvLJgzHZHskBKV2FGMKr6HtS"
 
 ```bash
 # In Netlify environment variables
-EMAIL_FROM=DY Officiallette <no-reply@dy-officiallette.com>
+EMAIL_FROM=NVRSTL <no-reply@nvrstl.com>
 RESEND_API_KEY=yre_5X19u9fh_HvLJgzHZHskBKV2FGMKr6HtS
 ```
 
@@ -75,7 +75,7 @@ RESEND_API_KEY=yre_5X19u9fh_HvLJgzHZHskBKV2FGMKr6HtS
 
 ### 5. Base Layout
 
-- **Styling**: Consistent DY Officiallette branding
+- **Styling**: Consistent NVRSTL branding
 - **Responsive**: Mobile-friendly email design
 - **Professional**: Clean, modern email template
 
@@ -134,7 +134,7 @@ console.error("[MAIL:resend_error]", status, body);
 
 ### Domain Authentication
 
-- **SPF Record**: Added for dy-officiallette.com
+- **SPF Record**: Added for nvrstl.com
 - **DKIM**: Configured for email authentication
 - **DMARC**: Set up for enhanced security
 

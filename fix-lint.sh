@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Fix common lint patterns
-cd /Users/ishaqbello/Website/dy-officiallette
+cd /Users/ishaqbello/Website/nvrstl
 
 echo "🔧 Fixing common TypeScript lint errors..."
 

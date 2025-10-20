@@ -22,7 +22,7 @@ interface LogoSettings {
 
 export function LogoManager() {
   const [settings, setSettings] = useState<LogoSettings>({
-    logoText: "DYOFFICIALLETTE",
+    logoText: "NVRSTL",
     logoImageUrl: "",
     logoType: "text",
     logoTextPrefix: "DY",

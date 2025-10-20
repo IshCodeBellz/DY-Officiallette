@@ -23,6 +23,7 @@ export function SubcategoriesGrid({
   subcategories,
 }: SubcategoriesGridProps) {
   const [loading, setLoading] = useState(true);
+  const hasAny = Array.isArray(subcategories) && subcategories.length > 0;
 
   useEffect(() => {
     // Simulate loading for smooth UX
@@ -38,108 +39,83 @@ export function SubcategoriesGrid({
           {title}
         </h1>
         <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
-          Discover our curated collection of {title.toLowerCase()} categories
+          Discover our curated collection of {title.toLowerCase()}{" "}
+          {hasAny ? "categories" : ""}
         </p>
       </header>
 
-      {/* Subcategories Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {loading
-          ? // Loading skeleton
-            Array.from({ length: 8 }).map((_, index) => (
-              <div
-                key={index}
-                className="group relative bg-neutral-100 dark:bg-neutral-800 aspect-[4/5] overflow-hidden rounded-lg animate-pulse"
-              >
-                <div className="absolute inset-0 bg-neutral-200 dark:bg-neutral-700" />
-                <div className="absolute inset-x-0 bottom-0 p-4 space-y-2">
-                  <div className="h-4 bg-neutral-300 dark:bg-neutral-600 rounded w-3/4" />
-                  <div className="h-3 bg-neutral-300 dark:bg-neutral-600 rounded w-1/2" />
-                </div>
-              </div>
-            ))
-          : // Subcategory cards
-            subcategories.map((subcategory) => (
-              <Link
-                key={subcategory.slug}
-                href={subcategory.href}
-                className="group relative bg-neutral-100 dark:bg-neutral-800 aspect-[4/5] overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300"
-              >
-                {/* Background Image */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <Image
-                  src={subcategory.image}
-                  alt={subcategory.name}
-                  width={400}
-                  height={500}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-
-                {/* Content */}
-                <div className="absolute inset-x-0 bottom-0 p-4 text-white">
-                  <h3 className="text-lg font-semibold mb-1 group-hover:text-brand-accent transition-colors">
-                    {subcategory.name}
-                  </h3>
-                  <p className="text-sm text-neutral-200 mb-2 line-clamp-2">
-                    {subcategory.description}
-                  </p>
-                  {subcategory.productCount && (
-                    <p className="text-xs text-neutral-300">
-                      {subcategory.productCount} item
-                      {subcategory.productCount !== 1 ? "s" : ""}
-                    </p>
-                  )}
-                </div>
-
-                {/* Hover Arrow */}
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="w-8 h-8 bg-white/20 backdrop-blur rounded-full flex items-center justify-center">
-                    <svg
-                      className="w-4 h-4 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 8l4 4m0 0l-4 4m4-4H3"
-                      />
-                    </svg>
+      {/* Subcategories Grid - render only if we have any */}
+      {hasAny && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {loading
+            ? // Loading skeleton (only when there are subcategories)
+              Array.from({ length: 8 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="group relative bg-neutral-100 dark:bg-neutral-800 aspect-[4/5] overflow-hidden rounded-lg animate-pulse"
+                >
+                  <div className="absolute inset-0 bg-neutral-200 dark:bg-neutral-700" />
+                  <div className="absolute inset-x-0 bottom-0 p-4 space-y-2">
+                    <div className="h-4 bg-neutral-300 dark:bg-neutral-600 rounded w-3/4" />
+                    <div className="h-3 bg-neutral-300 dark:bg-neutral-600 rounded w-1/2" />
                   </div>
                 </div>
-              </Link>
-            ))}
-      </div>
+              ))
+            : // Subcategory cards
+              subcategories.map((subcategory) => (
+                <Link
+                  key={subcategory.slug}
+                  href={subcategory.href}
+                  className="group relative bg-neutral-100 dark:bg-neutral-800 aspect-[4/5] overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300"
+                >
+                  {/* Background Image */}
+                  <Image
+                    src={subcategory.image}
+                    alt={subcategory.name}
+                    width={400}
+                    height={500}
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
 
-      {/* Empty State */}
-      {!loading && subcategories.length === 0 && (
-        <div className="text-center py-16">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-neutral-100 dark:bg-neutral-700 flex items-center justify-center">
-            <svg
-              className="w-8 h-8 text-neutral-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-              />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-2">
-            No subcategories available
-          </h3>
-          <p className="text-neutral-500 dark:text-neutral-400">
-            Check back soon for new categories
-          </p>
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                  {/* Content */}
+                  <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+                    <h3 className="text-lg font-semibold mb-1 group-hover:text-brand-accent transition-colors">
+                      {subcategory.name}
+                    </h3>
+                    <p className="text-sm text-neutral-200 mb-2 line-clamp-2">
+                      {subcategory.description}
+                    </p>
+                    {subcategory.productCount && (
+                      <p className="text-xs text-neutral-300">
+                        {subcategory.productCount} item
+                        {subcategory.productCount !== 1 ? "s" : ""}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Hover Arrow */}
+                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="w-8 h-8 bg-white/20 backdrop-blur rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 8l4 4m0 0l-4 4m4-4H3"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </Link>
+              ))}
         </div>
       )}
     </div>

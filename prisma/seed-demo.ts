@@ -2,7 +2,7 @@ import { prisma } from "../lib/server/prisma";
 import { hash } from "bcryptjs";
 
 /**
- * Demo Data Seeder for DYOFFICIALLETTE
+ * Demo Data Seeder for NVRSTL
  * Creates sample data to showcase all functionality:
  * - Admin accounts
  * - User accounts with orders

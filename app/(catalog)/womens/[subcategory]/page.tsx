@@ -38,12 +38,11 @@ export default async function WomensSubcategoryPage({
     categoryId: category.id,
     isActive: true,
     deletedAt: null,
+    gender: { in: ["women", "unisex"] },
   };
 
   // Apply filters from search params
-  if (searchParams.gender) {
-    where.gender = searchParams.gender;
-  }
+  // gender is implied by route; ignore explicit searchParam.gender
 
   if (searchParams.brand) {
     where.brand = {

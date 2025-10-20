@@ -1,6 +1,6 @@
 <div align="center">
 
-# DYOFFICIALLETTE
+# NVRSTL
 
 Modern fashion e‑commerce demo (Next.js 14 + Tailwind). Production‑style architecture: storefront, admin, checkout → Stripe payments (Payment Element + Apple/Google Pay), analytics, and trending discovery.
 
@@ -368,7 +368,7 @@ Grid “+” now opens a size popover if the product has size variants. This ens
 ### Email Provider & Templates ✅ **PRODUCTION READY**
 
 - **Production Provider**: Resend API fully configured with branded domain
-- **Professional Templates**: 5 responsive HTML email templates with DY Officiallette branding
+- **Professional Templates**: 5 responsive HTML email templates with NVRSTL branding
 - **Auto-selection**: Resend when `RESEND_API_KEY` is present; console logging fallback for development
 - **Templates**: Email Verification, Password Reset, Order Confirmation (basic + rich), Payment Receipt
 - **Features**: Line items, delivery details, branded styling, mobile-responsive design
