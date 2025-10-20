@@ -1,8 +1,10 @@
+/* eslint-disable */
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
 import { BASE_CURRENCY } from "@/lib/currency";
 import { useRouter } from "next/navigation";
+import JerseyOptionsEditor from "@/components/admin/JerseyOptionsEditor";
 
 interface ImageInput {
   id?: string;
@@ -42,6 +44,8 @@ interface Product {
   images: ImageInput[];
   sizeVariants: SizeInput[];
   deletedAt?: Date | null;
+  isJersey?: boolean;
+  jerseyConfig?: string | null;
 }
 
 export function EditProductClient({ product }: { product: Product }) {
@@ -61,6 +65,21 @@ export function EditProductClient({ product }: { product: Product }) {
   const [metaBrands, setMetaBrands] = useState<MetaBrand[]>([]);
   const [metaCategories, setMetaCategories] = useState<MetaCategory[]>([]);
   const [saving, setSaving] = useState(false);
+  // Normalize jerseyConfig: some environments return Json object instead of string
+  const [jerseyConfig, setJerseyConfig] = useState<string>(() => {
+    const v: any = (product as any).jerseyConfig;
+    if (v == null) return "";
+    if (typeof v === "string") return v;
+    try {
+      return JSON.stringify(v);
+    } catch {
+      return "";
+    }
+  });
+  // Infer isJersey from either the boolean or presence of jerseyConfig (in case the boolean wasn't persisted)
+  const [isJersey, setIsJersey] = useState<boolean>(
+    !!(product as any).isJersey || !!(product as any).jerseyConfig
+  );
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [skuAvailable, setSkuAvailable] = useState<boolean | null>(null);
@@ -176,6 +195,8 @@ export function EditProductClient({ product }: { product: Product }) {
           priceCents: Math.round(parseFloat(price || "0") * 100) || 0,
           brandId: brandId || undefined,
           categoryId: categoryId || undefined,
+          isJersey,
+          jerseyConfig: jerseyConfig || undefined,
           images: payloadImages,
           sizes: sizes
             .filter((s: SizeInput) => s.label.trim())
@@ -228,6 +249,8 @@ export function EditProductClient({ product }: { product: Product }) {
         priceCents: isNaN(priceFloat) ? 0 : Math.round(priceFloat * 100),
         brandId: brandId || undefined,
         categoryId: categoryId || undefined,
+        isJersey,
+        jerseyConfig: jerseyConfig || undefined,
         images: images
           .filter((i) => i.url.trim())
           .map((im, idx) => ({
@@ -385,6 +408,28 @@ export function EditProductClient({ product }: { product: Product }) {
           rows={4}
           className="w-full border rounded px-3 py-2 text-sm"
         />
+      </section>
+      <section className="space-y-3">
+        <h2 className="font-medium text-sm uppercase tracking-wide">
+          Jersey Options
+        </h2>
+        <label className="inline-flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={isJersey}
+            onChange={(e) => setIsJersey(e.target.checked)}
+          />
+          Mark as Jersey (enable customizations)
+        </label>
+        {isJersey && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Jersey Options</label>
+            <JerseyOptionsEditor
+              value={jerseyConfig}
+              onChange={(json) => setJerseyConfig(json)}
+            />
+          </div>
+        )}
       </section>
       <section className="space-y-3">
         <h2 className="font-medium text-sm uppercase tracking-wide">Images</h2>

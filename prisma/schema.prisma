@@ -80,6 +80,9 @@ model Product {
   bundleItems       ProductBundle[]   @relation("BundleItems")
   bundles           ProductBundle[]   @relation("BundleProducts")
   orderItems        OrderItem[]
+  // Jersey-specific flags and config (optional)
+  isJersey         Boolean @default(false)
+  jerseyConfig     Json?   // JSON config of available options (patches, sleeveAds, fonts, price add-ons)
 
   @@index([categoryId])
   @@index([brandId])
@@ -213,13 +216,16 @@ model CartLine {
   size               String?
   qty                Int             @default(1)
   priceCentsSnapshot Int
+  // Client-selected customization snapshot (JSON) and composite key for uniqueness
+  customKey          String?
+  customizations     String?
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   cart               Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
   product            Product         @relation(fields: [productId], references: [id])
   variant            ProductVariant? @relation("VariantCartLines", fields: [variantId], references: [id])
 
-  @@unique([cartId, productId, variantId, size])
+  @@unique([cartId, productId, variantId, size, customKey])
   @@index([productId])
   @@index([variantId])
 }
@@ -317,6 +323,8 @@ model OrderItem {
   unitPriceCents       Int
   priceCentsSnapshot   Int             // Price at time of order
   lineTotalCents       Int
+  customKey            String?
+  customizations       String?
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
   order                Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)

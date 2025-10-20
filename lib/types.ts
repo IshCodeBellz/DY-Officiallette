@@ -1,9 +1,26 @@
+// Optional jersey customization payload attached to cart lines (client-side persisted)
+export interface JerseyCustomization {
+  patch?: string;
+  patch2?: string;
+  sleeveAd?: string;
+  nameAndNumber?: {
+    font: string;
+    name: string;
+    number: string;
+  } | null;
+  notes?: string;
+}
+
 export interface ProductSummary {
   productId: string;
   name: string;
   priceCents: number; // canonical integer minor units
   image: string;
   size?: string;
+  // Unique per-line key for custom selections (e.g., jersey options)
+  lineKey?: string;
+  // Optional client-side metadata for jersey customizations
+  customizations?: JerseyCustomization;
 }
 
 export interface CartItem extends ProductSummary {
@@ -46,8 +63,16 @@ export interface WishlistContextValue extends WishlistState {
   syncing?: boolean; // true while merging with server
 }
 
-export function lineIdFor(productId: string, size?: string) {
-  return size ? `${productId}__${size}` : productId;
+export function lineIdFor(
+  productId: string,
+  size?: string,
+  customKey?: string
+) {
+  // Backward compatible: if no customKey provided, keep existing id format
+  const parts: string[] = [productId];
+  if (size) parts.push(size);
+  if (customKey) parts.push(customKey);
+  return parts.join("__");
 }
 
 // NextAuth session types

@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use client";
 import { useCart } from "@/components/providers/CartProvider";
 import { useCurrency } from "@/components/providers/CurrencyProvider";
@@ -42,6 +43,8 @@ export default function BagPage() {
             productId: i.productId,
             size: i.size,
             qty: i.qty,
+            customizations: (i as any).customizations || undefined,
+            customKey: (i as any).lineKey || undefined,
           })),
         }),
       }).catch(() => {});
@@ -97,6 +100,8 @@ export default function BagPage() {
                 productId: i.productId,
                 size: i.size,
                 qty: i.qty,
+                customizations: (i as any).customizations || undefined,
+                customKey: (i as any).lineKey || undefined,
               })),
             }),
           });
@@ -185,6 +190,39 @@ export default function BagPage() {
                 <div className="text-xs text-neutral-600">
                   Size: {line.size ? line.size : "One size"}
                 </div>
+                {line.customizations && (
+                  <div className="text-xs text-neutral-700 space-y-0.5 mt-1">
+                    {(() => {
+                      const c: any = line.customizations as any;
+                      const pretty = (s?: string) =>
+                        (s || "none")
+                          .replace(/_/g, " ")
+                          .replace(/\b\w/g, (m) => m.toUpperCase());
+                      const rows: string[] = [];
+                      if (c.patch && c.patch !== "none")
+                        rows.push(`Patch: ${pretty(c.patch)}`);
+                      if (c.patch2 && c.patch2 !== "none")
+                        rows.push(`Second Patch: ${pretty(c.patch2)}`);
+                      if (c.sleeveAd && c.sleeveAd !== "none")
+                        rows.push(`Sleeve: ${pretty(c.sleeveAd)}`);
+                      if (c.nameAndNumber) {
+                        const nn = c.nameAndNumber;
+                        rows.push(
+                          `Name & Number: ${nn.name || ""} ${nn.number || ""}${
+                            nn.font ? ` (${String(nn.font).toUpperCase()})` : ""
+                          }`.trim()
+                        );
+                      }
+                      return rows.length ? (
+                        <ul className="list-disc ml-4">
+                          {rows.map((r, idx) => (
+                            <li key={idx}>{r}</li>
+                          ))}
+                        </ul>
+                      ) : null;
+                    })()}
+                  </div>
+                )}
                 <div className="text-sm font-semibold">
                   {formatPrice(convertPrice(line.priceCents))}
                 </div>

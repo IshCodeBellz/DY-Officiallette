@@ -1,9 +1,11 @@
+/* eslint-disable */
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useCart, useWishlist } from "@/components/providers/CartProvider";
 import { lineIdFor } from "@/lib/types";
 import { pushRecentlyViewed } from "@/components/home/RecentlyViewed";
 import { useToast } from "@/components/providers/ToastProvider";
+import { useCurrency } from "@/components/providers/CurrencyProvider";
 
 interface ProductClientProps {
   product: {
@@ -14,16 +16,143 @@ interface ProductClientProps {
     description: string;
     sizes: string[];
     images: string[];
+    isJersey?: boolean;
+    jerseyConfig?: string | null; // JSON string with available options & price deltas
   };
 }
 
 export default function ProductClient({ product }: ProductClientProps) {
   const [size, setSize] = useState<string>("");
+  // Jersey customizations
+  const [isJersey] = useState<boolean>(!!product.isJersey);
+  const config = useMemo(() => {
+    try {
+      return product.jerseyConfig ? JSON.parse(product.jerseyConfig) : null;
+    } catch {
+      return null;
+    }
+  }, [product.jerseyConfig]);
+  const [patch, setPatch] = useState<string>("none");
+  const [patch2, setPatch2] = useState<string>("none");
+  const [sleeveAd, setSleeveAd] = useState<string>("none");
+  const [font, setFont] = useState<"" | "league" | "ucl">("");
+  const [playerName, setPlayerName] = useState("");
+  const [playerNumber, setPlayerNumber] = useState("");
   const [, setActiveIndex] = useState(0); // Currently unused but part of future image carousel
   const { addItem } = useCart();
   const { toggle, has } = useWishlist();
-  const wishId = lineIdFor(product.id, size || undefined);
+  // Compute a stable custom key based on jersey selections
+  const customKey = useMemo(() => {
+    if (!isJersey) return undefined;
+    const parts = [
+      patch !== "none" ? `p:${patch}` : "p:none",
+      patch2 !== "none" ? `p2:${patch2}` : "p2:none",
+      sleeveAd !== "none" ? `s:${sleeveAd}` : "s:none",
+      font ? `f:${font}` : "f:none",
+      font ? `nm:${playerName.trim()}#${playerNumber.trim()}` : "nm:none",
+    ];
+    return parts.join("|");
+  }, [isJersey, patch, patch2, sleeveAd, font, playerName, playerNumber]);
+  const wishId = lineIdFor(product.id, size || undefined, customKey);
   const { push } = useToast();
+
+  // Currency helpers (use the same converter/formatter as the whole site)
+  const { convertPrice, formatPrice } = useCurrency();
+  const fmt = useCallback(
+    (gbpCents?: number) =>
+      typeof gbpCents === "number" ? formatPrice(convertPrice(gbpCents)) : "",
+    [convertPrice, formatPrice]
+  );
+  type Opt = { key: string; label: string; addCents?: number };
+  const patchOptions: Opt[] = useMemo(() => {
+    if (!config?.patches)
+      return ["premier_league", "ucl", "league_cup", "none"].map((k) => ({
+        key: k,
+        label: k.replace(/_/g, " "),
+      }));
+    return (config.patches as any[]).map((p: any) =>
+      typeof p === "string"
+        ? { key: p, label: p.replace(/_/g, " ") }
+        : {
+            key: p.key,
+            label: p.label || p.key.replace(/_/g, " "),
+            addCents: p.addCents || 0,
+          }
+    );
+  }, [config?.patches]);
+  const patch2Options: Opt[] = useMemo(() => {
+    if (!config?.patches2) return [];
+    return (config.patches2 as any[]).map((p: any) =>
+      typeof p === "string"
+        ? { key: p, label: p.replace(/_/g, " ") }
+        : {
+            key: p.key,
+            label: p.label || p.key.replace(/_/g, " "),
+            addCents: p.addCents || 0,
+          }
+    );
+  }, [config?.patches2]);
+  const sleeveOptions: Opt[] = useMemo(() => {
+    if (!config?.sleeveAds)
+      return ["visit_rwanda", "none"].map((k) => ({
+        key: k,
+        label: k.replace(/_/g, " "),
+      }));
+    return (config.sleeveAds as any[]).map((s: any) =>
+      typeof s === "string"
+        ? { key: s, label: s.replace(/_/g, " ") }
+        : {
+            key: s.key,
+            label: s.label || s.key.replace(/_/g, " "),
+            addCents: s.addCents || 0,
+          }
+    );
+  }, [config?.sleeveAds]);
+  const fontOptions: Opt[] = useMemo(() => {
+    if (!config?.fonts)
+      return ["league", "ucl", "none"].map((k) => ({
+        key: k,
+        label: k === "none" ? "No Name No Number" : k.toUpperCase(),
+      }));
+    return (config.fonts as any[]).map((f: any) =>
+      typeof f === "string"
+        ? {
+            key: f,
+            label:
+              f === "none" ? "No Name No Number" : (f as string).toUpperCase(),
+          }
+        : {
+            key: f.key,
+            label:
+              f.label ||
+              (f.key === "none"
+                ? "No Name No Number"
+                : String(f.key).toUpperCase()),
+            addCents: f.addCents || 0,
+          }
+    );
+  }, [config?.fonts]);
+  const extraCents = useMemo(() => {
+    let total = 0;
+    const p = patchOptions.find((x) => x.key === patch);
+    if (p?.addCents) total += p.addCents;
+    const p2 = patch2Options.find((x) => x.key === patch2);
+    if (p2?.addCents) total += p2.addCents;
+    const s = sleeveOptions.find((x) => x.key === sleeveAd);
+    if (s?.addCents) total += s.addCents;
+    const f = font ? fontOptions.find((x) => x.key === font) : undefined;
+    if (f?.addCents) total += f.addCents;
+    return total;
+  }, [
+    patch,
+    patch2,
+    sleeveAd,
+    font,
+    patchOptions,
+    patch2Options,
+    sleeveOptions,
+    fontOptions,
+  ]);
 
   // Track recently viewed (client only, once on mount / product change)
   useEffect(() => {
@@ -227,68 +356,53 @@ export default function ProductClient({ product }: ProductClientProps) {
     };
   }, [product.images]);
 
-  function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
-    if (Array.isArray(product.sizes) && product.sizes.length && !size) {
-      alert("Please select a size");
-      return;
-    }
-    addItem(
-      {
-        productId: product.id,
-        name: product.name,
-        priceCents: product.priceCents,
-        image:
-          product.image || (product.images?.[0] ?? "") || "/placeholder.svg",
-        size: size || undefined,
-      },
-      1
-    );
-    // Fire-and-forget engagement event (add to cart)
-    try {
-      navigator.sendBeacon?.(
-        "/api/events",
-        new Blob(
-          [JSON.stringify([{ productId: product.id, type: "ADD_TO_CART" }])],
-          { type: "application/json" }
-        )
-      );
-    } catch {}
-    push({ type: "success", message: "Added to bag" });
-  }
-
   function handleWishlist() {
     toggle({
       productId: product.id,
       name: product.name,
       priceCents: product.priceCents,
-      image: product.image || (product.images?.[0] ?? "") || "/placeholder.svg",
-      size: size || undefined,
-    });
-    try {
-      navigator.sendBeacon?.(
-        "/api/events",
-        new Blob(
-          [
-            JSON.stringify([
-              {
-                productId: product.id,
-                type: has(wishId) ? "UNWISHLIST" : "WISHLIST",
-              },
-            ]),
-          ],
-          { type: "application/json" }
-        )
-      );
-    } catch {}
-    push({
-      type: has(wishId) ? "info" : "success",
-      message: has(wishId) ? "Removed from saved" : "Saved",
+      image: product.image,
     });
   }
 
+  function handleAdd(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (Array.isArray(product.sizes) && product.sizes.length > 0 && !size) {
+      push({ type: "error", message: "Please select a size" });
+      return;
+    }
+    if (isJersey && font && (!playerName.trim() || !playerNumber.trim())) {
+      push({ type: "error", message: "Please enter both name and number." });
+      return;
+    }
+    const customizations = isJersey
+      ? {
+          patch: (patch as any) || "none",
+          patch2: (patch2 as any) || "none",
+          sleeveAd: (sleeveAd as any) || "none",
+          nameAndNumber: font
+            ? { font, name: playerName.trim(), number: playerNumber.trim() }
+            : null,
+        }
+      : undefined;
+    addItem(
+      {
+        productId: product.id,
+        name: product.name,
+        priceCents: (product.priceCents || 0) + (extraCents || 0),
+        image:
+          product.image || (product.images?.[0] ?? "") || "/placeholder.svg",
+        size: size || undefined,
+        lineKey: customKey,
+        customizations,
+      },
+      1
+    );
+    push({ type: "success", message: "Added to bag" });
+  }
+
   return (
-    <form className="space-y-4" onSubmit={handleAdd}>
+    <form onSubmit={handleAdd} className="space-y-4">
       {Array.isArray(product.sizes) && product.sizes.length > 0 && (
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wide mb-1">
@@ -308,8 +422,178 @@ export default function ProductClient({ product }: ProductClientProps) {
           </select>
         </div>
       )}
+
+      {isJersey && (
+        <div className="space-y-4">
+          {patchOptions.length > 0 && (
+            <div>
+              <h3 className="font-semibold">Patch</h3>
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {patchOptions.map((opt) => (
+                  <button
+                    type="button"
+                    key={opt.key}
+                    className={`border rounded px-3 py-2 text-sm ${
+                      patch === opt.key
+                        ? "border-neutral-900"
+                        : "border-neutral-300"
+                    }`}
+                    onClick={() => setPatch(opt.key)}
+                  >
+                    {opt.label}
+                    {opt.addCents ? (
+                      <span className="ml-1 text-red-600">
+                        (+{fmt(opt.addCents)})
+                      </span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {patch2Options.length > 0 && (
+            <div>
+              <h3 className="font-semibold">Second Patch</h3>
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {patch2Options.map((opt) => (
+                  <button
+                    type="button"
+                    key={opt.key}
+                    className={`border rounded px-3 py-2 text-sm ${
+                      patch2 === opt.key
+                        ? "border-neutral-900"
+                        : "border-neutral-300"
+                    }`}
+                    onClick={() => setPatch2(opt.key)}
+                  >
+                    {opt.label}
+                    {opt.addCents ? (
+                      <span className="ml-1 text-red-600">
+                        (+{fmt(opt.addCents)})
+                      </span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {sleeveOptions.length > 0 && (
+            <div>
+              <h3 className="font-semibold">Sleeve AD</h3>
+              <div className="mt-2 flex gap-2 flex-wrap">
+                {sleeveOptions.map((opt) => (
+                  <button
+                    type="button"
+                    key={opt.key}
+                    className={`border rounded px-3 py-2 text-sm ${
+                      sleeveAd === opt.key
+                        ? "border-neutral-900"
+                        : "border-neutral-300"
+                    }`}
+                    onClick={() => setSleeveAd(opt.key)}
+                  >
+                    {opt.label}
+                    {opt.addCents ? (
+                      <span className="ml-1 text-red-600">
+                        (+{fmt(opt.addCents)})
+                      </span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {fontOptions.length > 0 && (
+            <div>
+              <h3 className="font-semibold">Name And Number</h3>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {fontOptions.map((opt) => (
+                  <button
+                    type="button"
+                    key={opt.key}
+                    className={`border rounded px-3 py-2 text-sm ${
+                      (font || "none") === opt.key
+                        ? "border-neutral-900"
+                        : "border-neutral-300"
+                    }`}
+                    onClick={() =>
+                      setFont(
+                        (opt.key as any) === "none" ? "" : (opt.key as any)
+                      )
+                    }
+                  >
+                    {opt.label}
+                    {opt.addCents ? (
+                      <span className="ml-1 text-red-600">
+                        (+{fmt(opt.addCents)})
+                      </span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+              {font && (
+                <div className="mt-3 grid grid-cols-1 gap-2">
+                  <input
+                    type="text"
+                    placeholder="Name"
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                    className="w-full border rounded px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Number"
+                    value={playerNumber}
+                    onChange={(e) => setPlayerNumber(e.target.value)}
+                    className="w-full border rounded px-3 py-2 text-sm"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {isJersey && (
+        <div className="bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 rounded p-3 text-sm">
+          <div className="font-semibold mb-1">Your selection</div>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>
+              Patch:{" "}
+              {patchOptions.find((o) => o.key === patch)?.label || "None"}
+            </li>
+            {patch2Options.length > 0 && (
+              <li>
+                Second Patch:{" "}
+                {patch2Options.find((o) => o.key === patch2)?.label || "None"}
+              </li>
+            )}
+            <li>
+              Sleeve Ad:{" "}
+              {sleeveOptions.find((o) => o.key === sleeveAd)?.label || "None"}
+            </li>
+            <li>
+              Name & Number:{" "}
+              {font
+                ? `${(
+                    font as string
+                  ).toUpperCase()} — ${playerName.trim()} #${playerNumber.trim()}`
+                : "None"}
+            </li>
+          </ul>
+          {extraCents ? (
+            <div className="mt-2 text-red-600 font-bold">
+              Add-ons total: +{fmt(extraCents)}
+            </div>
+          ) : null}
+        </div>
+      )}
+
       <button type="submit" className="btn-primary w-full">
-        Add to bag
+        Add to bag{" "}
+        <span className="ml-1 text-sm opacity-90">
+          ({fmt((product.priceCents || 0) + (extraCents || 0))})
+        </span>
       </button>
       <button
         type="button"

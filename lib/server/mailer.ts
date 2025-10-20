@@ -1,6 +1,7 @@
 // Simple email abstraction placeholder. Replace with real provider (e.g., Resend, SendGrid, SES)
 import type { Order, User } from "@prisma/client";
 import { formatPriceCents } from "@/lib/money";
+import type { JerseyCustomization } from "@/lib/types";
 
 // Production provider integration (Resend) with graceful fallback.
 interface ProviderDriver {
@@ -119,6 +120,8 @@ export interface OrderEmailLine {
   qty: number;
   unitPriceCents: number;
   lineTotalCents: number;
+  imageUrl?: string | null;
+  customizations?: JerseyCustomization | null;
 }
 export interface OrderEmailAddress {
   fullName: string;
@@ -144,28 +147,110 @@ export interface RichOrderEmailPayload {
   estimatedDelivery?: string; // e.g. "3–5 business days"
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function resolveImageUrl(url?: string | null): string | null {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url)) return url;
+  const base = process.env.NEXTAUTH_URL || process.env.APP_URL || "";
+  if (!base) return null;
+  return `${base.replace(/\/$/, "")}${url.startsWith("/") ? url : `/${url}`}`;
+}
+
+function describeCustomizations(
+  customizations?: JerseyCustomization | null
+): string[] {
+  if (!customizations) return [];
+  /* eslint-disable-next-line */
+  const c: Record<string, unknown> = customizations as any;
+  const pretty = (s?: string) =>
+    (s || "none").replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+  const rows: string[] = [];
+  const patch = c.patch as string | undefined;
+  if (patch && patch !== "none") rows.push(`Patch: ${pretty(patch)}`);
+  const patch2 = c.patch2 as string | undefined;
+  if (patch2 && patch2 !== "none") rows.push(`Second Patch: ${pretty(patch2)}`);
+  const sleeve = c.sleeveAd as string | undefined;
+  if (sleeve && sleeve !== "none") rows.push(`Sleeve: ${pretty(sleeve)}`);
+  const nameAndNumber = c.nameAndNumber as
+    | { font?: string; name?: string; number?: string }
+    | undefined;
+  if (nameAndNumber) {
+    const parts = [nameAndNumber.name, nameAndNumber.number]
+      .filter(Boolean)
+      .join(" ");
+    if (parts) {
+      const font = nameAndNumber.font
+        ? ` (${String(nameAndNumber.font).toUpperCase()})`
+        : "";
+      rows.push(`Name & Number: ${parts}${font}`);
+    }
+  }
+  const notes = c.notes as string | undefined;
+  if (notes) rows.push(`Notes: ${notes}`);
+  return rows;
+}
+
+function renderCustomizationHtml(rows: string[]): string {
+  if (!rows.length) return "";
+  const items = rows.map((r) => `<li>${escapeHtml(r)}</li>`).join("");
+  return `<ul style="margin:6px 0 0 16px;padding:0 0 0 8px;color:#555;font-size:11px;list-style:disc;">${items}</ul>`;
+}
+
+function renderCustomizationText(rows: string[]): string {
+  if (!rows.length) return "";
+  return rows.map((r) => `    - ${r}`).join("\n");
+}
+
 function addressBlock(label: string, a?: OrderEmailAddress) {
   if (!a) return "";
   const parts = [
-    a.line1,
-    a.line2,
-    `${a.city}${a.region ? ", " + a.region : ""} ${a.postalCode}`,
-    a.country,
+    escapeHtml(a.line1),
+    a.line2 ? escapeHtml(a.line2) : null,
+    escapeHtml(
+      `${a.city}${a.region ? ", " + a.region : ""} ${a.postalCode}`.trim()
+    ),
+    escapeHtml(a.country),
   ];
-  return `<div style=\"margin-top:12px;\"><div style=\"font-weight:600;margin-bottom:4px;\">${label}</div><div style=\"font-size:12px;line-height:1.4;color:#333;\">${parts
+  return `<div style="margin-top:12px;"><div style="font-weight:600;margin-bottom:4px;">${label}</div><div style="font-size:12px;line-height:1.4;color:#333;">${parts
     .filter(Boolean)
-    .join("<br/>")}${a.phone ? `<br/>Tel: ${a.phone}` : ""}</div></div>`;
+    .join("<br/>")}${
+    a.phone ? `<br/>Tel: ${escapeHtml(a.phone)}` : ""
+  }</div></div>`;
 }
 
 export function buildRichOrderConfirmationHtml(d: RichOrderEmailPayload) {
   const linesHtml = d.lines
-    .map(
-      (l) => `<tr>
-        <td style=\"padding:6px 8px;border-bottom:1px solid #eee;\">${l.name}${
+    .map((l) => {
+      const resolvedImage = resolveImageUrl(l.imageUrl || undefined);
+      const customizationRows = describeCustomizations(l.customizations);
+      const customizationHtml = renderCustomizationHtml(customizationRows);
+      return `<tr>
+        <td style=\"padding:6px 8px;border-bottom:1px solid #eee;width:76px;\">${
+          resolvedImage
+            ? `<img src="${escapeHtml(resolvedImage)}" alt="${escapeHtml(
+                l.name
+              )}" style="display:block;width:64px;height:64px;object-fit:cover;border-radius:4px;" />`
+            : `<div style="width:64px;height:64px;background:#f0f0f0;border-radius:4px;"></div>`
+        }</td>
+        <td style=\"padding:6px 8px;border-bottom:1px solid #eee;\">${escapeHtml(
+          l.name
+        )}${
         l.size
-          ? `<div style=\"color:#666;font-size:11px;\">Size: ${l.size}</div>`
+          ? `<div style=\"color:#666;font-size:11px;\">Size: ${escapeHtml(
+              l.size
+            )}</div>`
           : ""
-      }<div style=\"color:#999;font-size:10px;\">SKU: ${l.sku}</div></td>
+      }<div style=\"color:#999;font-size:10px;\">SKU: ${escapeHtml(
+        l.sku
+      )}</div>${customizationHtml}</td>
         <td style=\"padding:6px 8px;text-align:center;border-bottom:1px solid #eee;\">${
           l.qty
         }</td>
@@ -177,8 +262,8 @@ export function buildRichOrderConfirmationHtml(d: RichOrderEmailPayload) {
           l.lineTotalCents,
           { currency: d.currency }
         )}</td>
-      </tr>`
-    )
+      </tr>`;
+    })
     .join("");
 
   const money = (c: number) => formatPriceCents(c, { currency: d.currency });
@@ -212,7 +297,7 @@ export function buildRichOrderConfirmationHtml(d: RichOrderEmailPayload) {
     `Order #${d.orderId} details`,
     `<p style=\"margin:0 0 12px;\">Thanks for your order—it's been received and is awaiting payment confirmation.</p>
      <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;border:1px solid #eee;font-size:12px;\">
-       <thead><tr style=\"background:#fafafa;\"><th align=\"left\" style=\"padding:8px 8px;border-bottom:1px solid #eee;\">Item</th><th style=\"padding:8px 8px;border-bottom:1px solid #eee;\">Qty</th><th align=\"right\" style=\"padding:8px 8px;border-bottom:1px solid #eee;\">Unit</th><th align=\"right\" style=\"padding:8px 8px;border-bottom:1px solid #eee;\">Line</th></tr></thead>
+       <thead><tr style=\"background:#fafafa;\"><th align=\"left\" style=\"padding:8px 8px;border-bottom:1px solid #eee;\">Item</th><th align=\"left\" style=\"padding:8px 8px;border-bottom:1px solid #eee;\">Details</th><th style=\"padding:8px 8px;border-bottom:1px solid #eee;\">Qty</th><th align=\"right\" style=\"padding:8px 8px;border-bottom:1px solid #eee;\">Unit</th><th align=\"right\" style=\"padding:8px 8px;border-bottom:1px solid #eee;\">Line</th></tr></thead>
        <tbody>${linesHtml}</tbody>
      </table>
      ${summary}
@@ -229,14 +314,16 @@ export function buildRichOrderConfirmationHtml(d: RichOrderEmailPayload) {
 
 export function buildRichOrderConfirmationText(d: RichOrderEmailPayload) {
   const lines = d.lines
-    .map(
-      (l) =>
-        `${l.name}${l.size ? ` (Size: ${l.size})` : ""} x${
-          l.qty
-        } @ ${formatPriceCents(l.unitPriceCents, {
-          currency: d.currency,
-        })} = ${formatPriceCents(l.lineTotalCents, { currency: d.currency })}`
-    )
+    .map((l) => {
+      const baseLine = `${l.name}${l.size ? ` (Size: ${l.size})` : ""} x${
+        l.qty
+      } @ ${formatPriceCents(l.unitPriceCents, {
+        currency: d.currency,
+      })} = ${formatPriceCents(l.lineTotalCents, { currency: d.currency })}`;
+      const customizationRows = describeCustomizations(l.customizations);
+      const customizationText = renderCustomizationText(customizationRows);
+      return customizationText ? `${baseLine}\n${customizationText}` : baseLine;
+    })
     .join("\n");
   const money = (c: number) => formatPriceCents(c, { currency: d.currency });
   const addr = (a: OrderEmailAddress) =>

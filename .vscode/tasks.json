@@ -355,6 +355,64 @@
 			"command": "npm run -s build",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "Type Check (one-off)",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Type Check (one-off)",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Type Check (one-off)",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Type Check (one-off)",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Type Check (one-off)",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Type Check (one-off)",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build (production)",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Prod Build",
+			"type": "shell",
+			"command": "npm run -s build",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }

@@ -85,7 +85,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = useCallback((item: ProductSummary, qty: number = 1) => {
     setItems((prev) => {
-      const lineId = lineIdFor(item.productId, item.size);
+      const lineId = lineIdFor(item.productId, item.size, item.lineKey);
       const existing = prev.find((i) => i.id === lineId);
       if (existing) {
         return prev.map((i) =>
@@ -213,7 +213,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
   const add = useCallback(
     (item: ProductSummary) => {
-      const id = lineIdFor(item.productId, item.size);
+      const id = lineIdFor(item.productId, item.size, item.lineKey);
       setItems((prev) =>
         prev.some((i) => i.id === id) ? prev : [...prev, { id, ...item }]
       );
@@ -232,7 +232,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
   const toggle = useCallback(
     (item: ProductSummary) => {
-      const id = lineIdFor(item.productId, item.size);
+      const id = lineIdFor(item.productId, item.size, item.lineKey);
       setItems((prev) => {
         if (prev.some((i) => i.id === id)) {
           optimisticServer("remove", { id });

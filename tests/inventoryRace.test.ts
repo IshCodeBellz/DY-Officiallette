@@ -5,6 +5,9 @@ import { decrementSizeStock } from "@/lib/server/inventory";
 
 describe("inventory race hardening", () => {
   beforeEach(async () => {
+    // Ensure dependent rows are cleared first to avoid FK violations
+    await prisma.orderItem.deleteMany();
+    await prisma.order.deleteMany();
     await prisma.cartLine.deleteMany();
     await prisma.cart.deleteMany();
     await prisma.sizeVariant.deleteMany();
