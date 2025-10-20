@@ -42,6 +42,7 @@ export async function GET(req: NextRequest) {
   const category = searchParams.get("category") || undefined; // category slug
   const brand = searchParams.get("brand") || undefined; // brand id
   const size = searchParams.get("size") || undefined;
+  const gender = searchParams.get("gender") || undefined; // men | women | unisex
   const min = parseFloat(searchParams.get("min") || "0");
   const max = parseFloat(searchParams.get("max") || "100000000");
   const sort = (searchParams.get("sort") || "newest").toLowerCase();
@@ -60,6 +61,7 @@ export async function GET(req: NextRequest) {
   if (category) where.category = { slug: category };
   if (brand) where.brandId = brand;
   if (size) where.sizes = { some: { label: size } };
+  if (gender) where.gender = { in: [gender, "unisex"] };
   let expandedTerms: string[] = [];
   if (q) {
     const raw = q.toLowerCase();
